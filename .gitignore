@@ -1,0 +1,8 @@
+CMakeCache.txt
+Makefile
+cmake_install.cmake
+*.so
+CMakeFiles
+*.swp
+*.swo
+*.pyc

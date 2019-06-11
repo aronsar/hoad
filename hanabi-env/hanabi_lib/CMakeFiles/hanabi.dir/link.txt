@@ -1,0 +1,2 @@
+/usr/bin/ar qc libhanabi.a  CMakeFiles/hanabi.dir/hanabi_card.cc.o CMakeFiles/hanabi.dir/hanabi_game.cc.o CMakeFiles/hanabi.dir/hanabi_hand.cc.o CMakeFiles/hanabi.dir/hanabi_history_item.cc.o CMakeFiles/hanabi.dir/hanabi_move.cc.o CMakeFiles/hanabi.dir/hanabi_observation.cc.o CMakeFiles/hanabi.dir/hanabi_state.cc.o CMakeFiles/hanabi.dir/util.cc.o CMakeFiles/hanabi.dir/canonical_encoders.cc.o
+/usr/bin/ranlib libhanabi.a
