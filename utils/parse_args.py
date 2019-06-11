@@ -1,12 +1,4 @@
 import argparse
-import os
-
-def find_newrunID(outdir):
-    run_names = [fname for fname in os.listdir(outdir) if "run" in fname]
-    run_names.sort(key=lambda f: int(filter(str.isdigit, f)))
-    lastrunID = int(filter(str.isdigit, run_names[-1]))
-
-    return lastrunID + 1 #newrunID
 
 def parse():
     parser = argparse.ArgumentParser()
@@ -42,13 +34,4 @@ def parse():
                              "next available number.")
 
     args = parser.parse_args()
-
-    if args.newrun:
-        newrunID = find_newrunID(args.outdir)
-        os.mkdir(os.path.join(args.outdir, 'run%03d'%newrunID))
-        args.ckptdir = os.path.join(args.outdir, 'run%03d'%newrunID, 'checkpoints/')
-        args.resultdir = os.path.join(args.outdir, 'run%03d'%newrunID, 'results/')
-        os.mkdir(args.ckptdir)
-        os.mkdir(args.resultdir)
-
     return args

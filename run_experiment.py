@@ -3,7 +3,7 @@
 # by splitting up the tasts into separate scripts/modules.
 
 #import statements
-from utils import parse_args
+from utils import parse_args, dir_utils
 import create_data
 import train
 import evaluate
@@ -11,7 +11,8 @@ import evaluate
 def main():
     #parse arguments
     args = parse_args.parse()    
-    
+    args = dir_utils.resolve_run_directory(args)
+
     #create/load data
     data = create_data.main(args)
 
