@@ -4,7 +4,7 @@
 
 #import statements
 from utils import parse_args, dir_utils
-import create_data
+import load_data
 import train
 import evaluate
 
@@ -14,10 +14,10 @@ def main():
     args = dir_utils.resolve_run_directory(args)
 
     #create/load data
-    data = create_data.main(args)
+    data_loader = load_data.main(args)
 
     #train model/load model
-    model = train.main(data, args)
+    model = train.main(data_loader, args)
 
     #evaluate model
     evaluate.main(data, model, args)

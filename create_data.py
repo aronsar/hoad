@@ -1,1 +1,1 @@
-# Copy over code from earlier version.
+# this script creates data using python 2 and rainbow agents
