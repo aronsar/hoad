@@ -7,6 +7,9 @@ from utils import parse_args, dir_utils
 import load_data
 import train
 import evaluate
+import tensorflow as tf
+
+tf.enable_eager_execution()
 
 def main():
     #parse arguments
@@ -14,10 +17,10 @@ def main():
     args = dir_utils.resolve_run_directory(args)
 
     #create/load data
-    data_loader = load_data.main(args)
+    data = load_data.main(args)
 
     #train model/load model
-    model = train.main(data_loader, args)
+    model = train.main(data, args)
 
     #evaluate model
     evaluate.main(data, model, args)
