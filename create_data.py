@@ -9,6 +9,16 @@ sys.path.insert() #FIXME
 from hanabi_env import rl_env
 
 
+def import_agents(agentdir, agent_config)
+    available_agents = {}
+    for agent_filename in os.listdir(agentdir):
+        agent_name = os.path.splitext(agent_filename)[0]
+        agent_module_name = agentdir + "." + agent_name
+        agent_module = importlib.import_module(agent_module_name)
+        available_agents[agent_name] = agent_module.Agent(agent_config)
+
+    return available_agents
+
 def one_hot_vectorized_action(agent, obs):
     action = agent.act(obs)
     one_hot_vector = [0]*len(obs['legal_moves'])
@@ -19,10 +29,12 @@ def one_hot_vectorized_action(agent, obs):
 
 @gin_configurable
 class DataCreator:
-    def __init__(self, args
-            num_players=2
-            num_games=50
-            game_type='Hanabi-Full'):
+    def __init__(self, args,
+            num_players=2,
+            num_games=50,
+            game_type='Hanabi-Full',
+            num_unique_agents=6):
+        
         self.num_players = num_players
         self.num_games = num_games
         self.environment = rl_env.make(game_type, num_players=self.num_players)
@@ -30,12 +42,13 @@ class DataCreator:
                 'players': self.num_players,
                 'num_moves': environment.num_moves(),
                 'observation_size': environment.vectorized_observation_shape()[0]}
+        self.available_agents = import_agents(args.agentdir, self.agent_config)
 
 
     def create_data():
         raw_data = defaultdict(list)
 
-        for playing_agent in available_agents:
+        for playing_agent in self.available_agents.keys():
             for game_num in range(self.num_games):
                 raw_data[playing_agent].append([[],[]])
                 observations = environment.reset()
@@ -45,7 +58,7 @@ class DataCreator:
                     for agent_id in range(self.num_players):
                         observation = observations['player_observations'][agent_id]
                         action_vec, action = one_hot_vectorized_action(
-                                AGENT_CLASSES[playing_agent], observation)
+                                self.available_agents[playing_agent], observation)
                         raw_data[playing_agent][game_num][0].append(
                                 observation['vectorized'])
                         raw_data[playing_agent][game_num][1].append(action_vec)
