@@ -1,5 +1,8 @@
 import os
 
+def resolve_datapath(datadir):
+    return datapath
+
 def find_newrunID(outdir):
     run_names = [fname for fname in os.listdir(outdir) if "run" in fname]
     #possible awkward bug: if you put a file inside outdir that is not

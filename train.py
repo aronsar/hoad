@@ -2,7 +2,7 @@
 
 from utils import parse_args
 import importlib
-import create_data
+import load_data
 
 @gin_configurable
 class Trainer:
@@ -25,21 +25,22 @@ def main(data, args):
     mode_module = importlib.import_module(args.mode)                          
     model = mode_module.build_model(args)
 
-    model.compile(optimizer = trainer.optimizer,
-                  loss = trainer.loss,
-                  metrics = trainer.metrics)
+    model.compile(
+            optimizer = trainer.optimizer,
+            loss = trainer.loss,
+            metrics = trainer.metrics)
 
-    tr_history = model.fit(x = data.tr_input_data, 
-                           y = data.tr_labels,
-                           verbose = 2, # one line per epoch
-                           batch_size = trainer.batch_size, 
-                           epochs = trainer.epochs, # = total data / batch_size
-                           validation_split = 0.1, # fraction of data used for val
-                           shuffle = True)
+    tr_history = model.fit_generator(
+            generator = data.generator('train'),
+            verbose = 2, # one line per epoch
+            batch_size = trainer.batch_size, 
+            epochs = trainer.epochs, # = total data / batch_size
+            validation_split = 0.1, # fraction of data used for val
+            shuffle = True)
               
     return model
 
 if __name__ == "__main__":
     args = parse_args.parse()
-    data = create_data.main(args)
+    data = load_data.main(args)
     main(data, args)

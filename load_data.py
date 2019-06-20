@@ -2,40 +2,33 @@
 # Load the data if it already exists, otherwise create it
 
 from utils import parse_args
+from utils import dir_utils
 
 @gin.configurable
 class Dataset:
     def __init__(self, 
                  args, 
-                 batch_size=1, 
-                 train_test_split=.9, 
-                 num_unseen_agents=1,
-                 test_agent=0):
+                 batch_size=1): 
         self.train_data = {} # gameplay data given to model
         self.validation_data = {} # data not given to model, from same agents as train
         self.test_data = {} # data from agents totally unseen to model
         self.batch_size = batch_size
         
-    def resolve_datapath(self, datadir):
-        return datapath
-    
-
     def read(self, raw_data)
         # split up raw_data into train, validation, and test
-        
-        self.test_agent = random.choice(list(self.all_data.keys()))
+        test_agent = random.choice(list(self.all_data.keys()))
 
         for agent in raw_data:
-            if agent == self.test_agent:
+            if agent == test_agent:
                 continue
-            split_idx = int(0.9 * len(self.raw_data[agent]))
+            split_idx = int(0.9 * len(raw_data[agent]))
             self.train_data[agent] = self.raw_data[agent][:split_idx]
             self.validation_data[agent] = self.raw_data[agent][split_idx:]
         
-        self.test_data[self.test_agent] = self.raw_data[self.test_agent]
+        self.test_data[test_agent] = raw_data[test_agent]
 
 
-    def generate_data(self, batch_type='train'):
+    def generator(self, batch_type='train'):
         if batch_type == 'train':
             data_bank = self.train_data
         elif batch_type == 'validation':
@@ -73,20 +66,20 @@ class Dataset:
         
         agent_obs = np.array(agent_obs)
         agent_act = np.array(agent_act)
-
-        return np_adhoc_games, game_lengths, agent_obs, agent_act
-        #return (inputs, targets)
+        
+        #FIXME: needs to return same_act
+        return ([np_adhoc_games, game_lengths, agent_obs], agent_act)
 
 def main(args):
     data = Dataset(args) # gin configured
-    data.path = data.resolve_datapath(args.datadir)
+    datapath = dir_utils.resolve_datapath(args.datadir)
     
     try:
-        raw_data = pickle.load(open(data.path, "rb"))
+        raw_data = pickle.load(open(datapath, "rb"))
 
-    except: FileNotFoundError
+    except: IOError
         # call data creator script
-        raw_data = pickle.load(open(data.path, "rb"))
+        raw_data = pickle.load(open(datapath, "rb"))
     
     data.read(raw_data)
 
