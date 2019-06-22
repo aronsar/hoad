@@ -1,9 +1,43 @@
-import stuff
+import create_data
+#import train
 
-# configure the data creator
+# one batch includes:
+    # BATCH_SIZE * num_adhoc_games
+    # BATCH_SIZE *
+    # BATCH_SIZE * ...
+#TODO: finish comment
+
+
+# configure the data creator/loader
+__main__.Dataset.game_type = 'Hanabi-Full'
+__main__.Dataset.num_players = 2
+__main__.Dataset.num_unique_agents = 6
+__main__.Dataset.num_games = 150
 
 
 # configure the trainer
+#train.Trainer.optimizer = keras.optimizers.Adam(
+#        lr=0.001, 
+#        beta_1=0.9, 
+#        beta_2=0.999, 
+#        epsilon=None, 
+#        decay=0.0, 
+#        amsgrad=False)
+#train.Trainer.loss = keras.losses.categorical_crossentropy
+#train.Trainer.metrics = ['accuracy']
+#train.Trainer.metrics = {'output_a': 'accuracy'} # for multi-output model
+#train.Trainer.batch_size = 32
+#train.Trainer.epochs = 10
+
+
+# configure the network
+#build_model.cfg = {
+#        'num_adhoc_games' : 10,
+#        'hidden1_dim' : 512,
+#        'top_head1_dim' : 256,
+#        'bot_head1_dim' : 256,
+#        'agent_hidden2_dim' : 128,
+#        'agent_hidden3_dim' : 64} 
 
 
 # configure the evaluator

@@ -6,16 +6,16 @@
 from utils import parse_args, dir_utils
 import load_data
 import train
-import evaluate
+#import evaluate
 import tensorflow as tf
-
-tf.enable_eager_execution()
+import keras
 
 def main():
     #parse arguments
-    args = parse_args.parse()    
+    args = parse_args.parse_with_resolved_paths()    
     args = dir_utils.resolve_run_directory(args)
 
+    import pdb; pdb.set_trace()
     #create/load data
     data = load_data.main(args)
 
