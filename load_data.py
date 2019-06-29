@@ -6,6 +6,8 @@ from utils import dir_utils
 import gin
 from subprocess import call
 import pickle
+import random
+
 
 @gin.configurable
 class Dataset(object):
@@ -14,7 +16,7 @@ class Dataset(object):
             game_type='Hanabi-Full',
             num_players=2,
             num_unique_agents=6,
-            num_games=42):
+            num_games=150):
 
         self.game_type = game_type
         self.num_players = num_players
@@ -27,14 +29,14 @@ class Dataset(object):
         
     def read(self, raw_data):
         # split up raw_data into train, validation, and test
-        test_agent = random.choice(list(self.all_data.keys()))
+        test_agent = random.choice(list(raw_data.keys()))
 
         for agent in raw_data:
             if agent == test_agent:
                 continue
             split_idx = int(0.9 * len(raw_data[agent]))
-            self.train_data[agent] = self.raw_data[agent][:split_idx]
-            self.validation_data[agent] = self.raw_data[agent][split_idx:]
+            self.train_data[agent] = raw_data[agent][:split_idx]
+            self.validation_data[agent] = raw_data[agent][split_idx:]
         
         self.test_data[test_agent] = raw_data[test_agent]
 
@@ -82,7 +84,7 @@ class Dataset(object):
         return ([np_adhoc_games, game_lengths, agent_obs], agent_act)
 
 def main(args):
-    data = Dataset(args)
+    data = Dataset()
     args = parse_args.resolve_datapath(args,
         data.game_type,
         data.num_players,

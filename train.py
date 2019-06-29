@@ -5,6 +5,7 @@ import gin
 
 @gin.configurable
 class Trainer(object):
+    @gin.configurable
     def __init__(self, args,
                  optimizer=None,
                  loss=None,

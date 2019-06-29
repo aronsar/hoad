@@ -48,7 +48,6 @@ def resolve_datapath(args,
         num_games=50):
     
     if args.datapath == None:
-        import pdb; pdb.set_trace()
         data_filename = game_type + "_" + str(num_players) + "_" \
                 + str(num_unique_agents) + "_" + str(num_games) + ".pkl"
         args.datapath = os.path.join(args.datadir, data_filename)
