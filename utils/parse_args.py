@@ -5,7 +5,7 @@ import argparse
 def parse():
     parser = argparse.ArgumentParser()
     parser.add_argument('--mode', 
-                        default='full_model',
+                        default='full_gan',
                         help='which part of ablation study or baseline to run')
 
     parser.add_argument('--modedir',
