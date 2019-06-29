@@ -1,5 +1,7 @@
 # ganabi
 
+**For the baseline project, use Python 2.7 and Tensorflow 1.14.**
+
 ### Getting Started:
 ```
 fork/clone repo into your home folder
