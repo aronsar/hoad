@@ -1,6 +1,6 @@
 # ganabi
 
-**For the baseline project, use Python 2.7 and Tensorflow 1.14.**
+Because DeepMind wrote their Rainbow agents in Py 2.7 and tf 1.x, the data creation script, which interfaces with that code, uses Py 2.7 and tf 1.x. However, once the data is produced, we only use Py 3.6 and tf 2.0 for building and training our models.
 
 ### Getting Started:
 ```
