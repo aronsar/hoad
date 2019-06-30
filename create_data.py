@@ -9,10 +9,13 @@ sys.path.insert(0, './hanabi-env') #FIXME
 import rl_env
 import gin
 import os
-import tensorflow as tf
+import tensorflow as tf # version 1.x
 import importlib
 
 def import_agents(expertdir, agent_config):
+    '''Import every agent present in expertdir, and return a dictionary 
+    mapping the name of the agent to the agent object. Takes a long time.'''
+    # FIXME: only import num_unique_agent number of agents
     available_agents = {}
     sys.path.insert(0, expertdir)
 
@@ -26,9 +29,19 @@ def import_agents(expertdir, agent_config):
     return available_agents
 
 def one_hot_vectorized_action(agent, num_moves, obs):
+    '''
+    Inputs:
+        agent: agent object we imported and initialized with agent_config
+        num_moves: length of the action vector
+        obs: observation object (has lots of good info, run print(obs.keys()) to see)
+
+    Returns:
+        one_hot_vector: one hot action vector
+        action: action in the form recognizable by the Hanabi environment
+                (idk something like {'discard': 5})
+    '''
     action = agent.act(obs)
-    act_vec_len = num_moves
-    one_hot_vector = [0]*act_vec_len
+    one_hot_vector = [0]*num_moves
     action_idx = obs['legal_moves_as_int'][obs['legal_moves'].index(action)]
     one_hot_vector[action_idx] = 1
 
@@ -56,8 +69,20 @@ class Dataset(object):
 
 
     def create_data(self):
+        '''Iterate over all available agents, and have each play self.num_games.
+        The games are self-play, so agent A plays A, B plays B, etc. Each game 
+        has the following structure:
+            [ [[obs_0], [obs_1], ..., [obs_n]], [[act_0], [act_1], ..., [act_n]] ]
+        where each obs_i and act_i are the observation and resultant action that
+        an agent took at game step i. Each game round consists of num_players game
+        steps. A game can have a variable amount of rounds; you can lose early.
+        
+        The output, raw_data, is a dictionary with (key, value) pairs:
+            key: agent name (string)
+            value: list of games played by this agent, self.num_games long; each
+                game has the format as shown above'''
         raw_data = defaultdict(list)
-
+        
         for playing_agent in self.available_agents.keys():
             for game_num in range(self.num_games):
                 raw_data[playing_agent].append([[],[]])
