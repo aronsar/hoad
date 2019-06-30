@@ -1,16 +1,16 @@
-# Copy code from earlier version.
-
 from utils import parse_args
 import importlib
 import load_data
+import gin
 
-@gin_configurable
-class Trainer:
-    def __init__(self, args
+@gin.configurable
+class Trainer(object):
+    @gin.configurable
+    def __init__(self, args,
                  optimizer=None,
                  loss=None,
-                 metrics=None
-                 batch_size=None
+                 metrics=None,
+                 batch_size=None,
                  epochs=None):
         self.optimizer = optimizer
         self.loss = loss
@@ -41,6 +41,7 @@ def main(data, args):
     return model
 
 if __name__ == "__main__":
-    args = parse_args.parse()
+    args = parse_args.parse_with_resolved_paths()
+    gin.parse_config_file(args.configpath)
     data = load_data.main(args)
     main(data, args)

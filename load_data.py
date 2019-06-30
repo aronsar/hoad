@@ -3,27 +3,40 @@
 
 from utils import parse_args
 from utils import dir_utils
+import gin
+from subprocess import call
+import pickle
+import random
+
 
 @gin.configurable
-class Dataset:
+class Dataset(object):
+    @gin.configurable
     def __init__(self, 
-                 args, 
-                 batch_size=1): 
+            game_type='Hanabi-Full',
+            num_players=2,
+            num_unique_agents=6,
+            num_games=150):
+
+        self.game_type = game_type
+        self.num_players = num_players
+        self.num_unique_agents = num_unique_agents
+        self.num_games = num_games
+
         self.train_data = {} # gameplay data given to model
         self.validation_data = {} # data not given to model, from same agents as train
         self.test_data = {} # data from agents totally unseen to model
-        self.batch_size = batch_size
         
-    def read(self, raw_data)
+    def read(self, raw_data):
         # split up raw_data into train, validation, and test
-        test_agent = random.choice(list(self.all_data.keys()))
+        test_agent = random.choice(list(raw_data.keys()))
 
         for agent in raw_data:
             if agent == test_agent:
                 continue
             split_idx = int(0.9 * len(raw_data[agent]))
-            self.train_data[agent] = self.raw_data[agent][:split_idx]
-            self.validation_data[agent] = self.raw_data[agent][split_idx:]
+            self.train_data[agent] = raw_data[agent][:split_idx]
+            self.validation_data[agent] = raw_data[agent][split_idx:]
         
         self.test_data[test_agent] = raw_data[test_agent]
 
@@ -61,7 +74,7 @@ class Dataset:
         np_adhoc_games = np.zeros(shape=(NUM_ADHOC_GAMES, MAX_GAME_LEN, OBS_ACT_VEC_LEN)) 
         game_lengths = np.array(game_lengths)
         for game_num, game_len in enumerate(game_lengths):
-            np_adhoc_games[game_num, :game_lengths[game_num], :] = 
+            np_adhoc_games[game_num, :game_lengths[game_num], :] = \
                     np.asarray(adhoc_games[game_num])
         
         agent_obs = np.array(agent_obs)
@@ -71,21 +84,27 @@ class Dataset:
         return ([np_adhoc_games, game_lengths, agent_obs], agent_act)
 
 def main(args):
-    data = Dataset(args) # gin configured
-    datapath = dir_utils.resolve_datapath(args.datadir)
-    
-    try:
-        raw_data = pickle.load(open(datapath, "rb"))
+    data = Dataset()
+    args = parse_args.resolve_datapath(args,
+        data.game_type,
+        data.num_players,
+        data.num_unique_agents,
+        data.num_games)
 
-    except: IOError
-        # call data creator script
-        raw_data = pickle.load(open(datapath, "rb"))
+    try:
+        raw_data = pickle.load(open(args.datapath, "rb"), encoding='latin1')
+
+    except IOError:
+        call("python create_data.py --datapath " + args.datapath, shell=True)
+        raw_data = pickle.load(open(args.datapath, "rb"), encoding='latin1')
     
     data.read(raw_data)
-
+    
+    import pdb; pdb.set_trace()
     return data
 
 
 if __name__ == "__main__":
     args = parse_args.parse()
+    args = parse_args.resolve_configpath(args)
     main(args)

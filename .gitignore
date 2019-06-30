@@ -6,3 +6,5 @@ CMakeFiles
 *.swp
 *.swo
 *.pyc
+data
+output

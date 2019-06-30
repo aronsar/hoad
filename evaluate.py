@@ -1,9 +1,8 @@
 # Copy code from earlier version.
 
-import
 
-@gin_configurable
-class Evaluator:
+@gin.configurable
+class Evaluator(object):
     def __init__(self):
 
     def eval():
