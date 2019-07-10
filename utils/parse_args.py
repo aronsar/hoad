@@ -17,8 +17,8 @@ def parse():
     parser.add_argument('--datadir',
                         default='./data/')
     
-    parser.add_argument('--datapath',
-                        help='set automatically; specify only if data in unusual loc')
+    parser.add_argument('--evaldatapath',
+                        help='specify only if evaluating, and data is in unexpected path')
 
     parser.add_argument('--expertdir',
                         default='./experts')
