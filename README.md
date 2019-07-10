@@ -20,7 +20,7 @@ python create_data.py
 
 **run_experiment.py**: this script is meant to run full end to data creation, training, and evaluation based on command line arguments and the gin config file. It will need to change a little to accommodate the structural changes in create_data and load_data. The config file of the mode and the current git hash
 
-**create_data.py and load_data.py**: some pretty major refactoring is necessary here. Because we will be making more agents available for use, and we will often want to include/exlude certain agents from training runs, it will make most sense to create data files such that each agent's games are contained in one file, instead of as values in a dictionary as was done previously. However the raw data returned by the new script create_load_data.py will still be in the exact same format as before. This format is shown below: 
+**create_data.py and load_data.py**: some pretty major refactoring is necessary here. Because we will be making more agents available for use, and we will often want to include/exlude certain agents from training runs, it will make most sense to create data files such that each agent's games are contained in one file, instead of as values in a dictionary as was done previously. However the raw data returned by the new script create_load_data.py will still be in the exact same format as before. This format is shown below (courtesy of Tim): 
 
 Since the new agents we'll make available are all written in different languages, we'll need python wrapper functions for each. Pseudocode for this script is included in create_load_data.py. One thing that is missing from this file is the generator function. This functionality has been moved to the DataGenerator class. More on that later.
 
