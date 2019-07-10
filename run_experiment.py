@@ -17,10 +17,10 @@ def main():
 
     import pdb; pdb.set_trace()
     #create/load data
-    data = load_data.main(args)
+    loader = load_data.main(args)
 
     #train model/load model
-    model = train.main(data, args)
+    model = train.main(loader, args)
 
     #evaluate model
     evaluate.main(data, model, args)
