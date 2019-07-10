@@ -1,5 +1,3 @@
-SAVE LOCALLY**********************************************************
-
 # ganabi
 
 Because DeepMind wrote their Rainbow agents in Py 2.7 and tf 1.x, the data creation script, which interfaces with that code, uses Py 2.7 and tf 1.x. However, once the data is produced, we only use Py 3.6 and tf 2.0 for building and training our models.
@@ -24,22 +22,7 @@ python create_data.py
 
 **create_data.py and load_data.py**: some pretty major refactoring is necessary here. Because we will be making more agents available for use, and we will often want to include/exlude certain agents from training runs, it will make most sense to create data files such that each agent's games are contained in one file, instead of as values in a dictionary as was done previously. However the raw data returned by the new script create_load_data.py will still be in the exact same format as before. This format is shown below: 
 
-
-
 Since the new agents we'll make available are all written in different languages, we'll need python wrapper functions for each. Pseudocode for this script is included in create_load_data.py. One thing that is missing from this file is the generator function. This functionality has been moved to the DataGenerator class. More on that later.
-
-```
-# create_load_data.py
-
-def main(agents_to_use):
-    for agent_name in agents_to_use:
-        if resolve_agentpath(agent_name, datadir) does not exist:
-            call function that creates data for that agent
-        agent_data = load_data(agent_name)
-        raw_data\[agent_name\] = agent_data     # placing agent_data into a dictionary
-    
-    return raw_data
- ```          
 
 **train.py**: this file is not changing structurally; only debugging type changes. The purpose of this file is to load in the model architecture, and to train the model based on the gin config file. Saves the model in checkpoint file when done. #TODO: implement regular checkpointing once the training process is taking a long time so if interrupted, the trainer knows where to pick back up. If the -evalonly flag is set, then train attempts to load the model instead of training it. Note: the checkpoint file is saved to outputs/runxxx/checkpoints. Any tensorboard info is saved to outputs/runxxx/results
 
