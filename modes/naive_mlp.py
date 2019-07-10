@@ -12,6 +12,7 @@ def build_model(cfg={}):
     #TODO define your model here
     return Model(inputs=, outputs=)
     
+# TODO: implement/merge below
 class DataGenerator(keras.utils.Sequence):
     def __init__(self, default_path, agentname):
         self.batch_size = 32

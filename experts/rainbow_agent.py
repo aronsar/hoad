@@ -20,13 +20,20 @@ from rainbow_models.run_experiment import format_legal_moves
 from rainbow_models.third_party.dopamine import checkpointer
 import os
 
-checkpoint_dir = 'rainbow_models/rainbow-model-2'
-base_dir = os.path.dirname(os.path.abspath(__file__))
-checkpoint_dir = os.path.join(base_dir, checkpoint_dir)
+def checkpoint_stuff(rainbow_num):
+  checkpoint_dir = 'rainbow_models/rainbow-model-' + str(rainbow_num)
+  base_dir = os.path.dirname(os.path.abspath(__file__))
+  checkpoint_dir = os.path.join(base_dir, checkpoint_dir)
+  self.exp_checkpointer = checkpointer.Checkpointer(checkpoint_dir, 'ckpt')
+  checkpoint_version = checkpointer.get_latest_checkpoint_number(checkpoint_dir)
+  
+  assert checkpoint_version >=0
+  dqn_dictionary = self.exp_checkpointer.load_checkpoint(checkpoint_version)
+  return checkpoint_dir, checkpoint_version, dqn_dictionary
 
 class Agent(_Agent):
   """Agent that loads and applies a pretrained rainbow model."""
-  def __init__(self, config, *args, **kwargs):
+  def __init__(self, config, rainbow_num, *args, **kwargs):
     """Initialize the agent."""
     self.config = config
     self.agent = _RainbowAgent(
@@ -35,11 +42,9 @@ class Agent(_Agent):
         num_players=self.config['players'])
     
     self.agent.eval_mode = True
-    self.exp_checkpointer = checkpointer.Checkpointer(checkpoint_dir, 'ckpt')
-    checkpoint_version = checkpointer.get_latest_checkpoint_number(checkpoint_dir)
     
-    assert checkpoint_version >=0
-    dqn_dictionary = self.exp_checkpointer.load_checkpoint(checkpoint_version)
+    checkpoint_dir, checkpoint_version, dqn_dictionary = checkpoint_stuff(rainbow_num)
+
     assert self.agent.unbundle(checkpoint_dir, checkpoint_version, dqn_dictionary),\
           'agent was unable to unbundle'
     assert 'logs' in dqn_dictionary # FIXME: necessary?
@@ -65,3 +70,5 @@ class Agent(_Agent):
     action = observation['legal_moves'][observation['legal_moves_as_int'].index(action)]
     
     return action
+
+    

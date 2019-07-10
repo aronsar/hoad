@@ -16,11 +16,9 @@ CREATE_DATA_FOR = {
 class DataLoader(object):
   @gin.configurable
   def __init__(self, 
-      game_type='Hanabi-Full',
       num_players=2,
       num_games=150):
 
-    self.game_type = game_type
     self.num_players = num_players
     self.num_games = num_games
 
@@ -29,8 +27,8 @@ class DataLoader(object):
     self.test_data = {} # data from agents totally unseen to model
     
   def load_data(datadir, agent_name)
-    agent_data_filename = agent_name + "_" + str(num_players + "_" \
-            + str(num_games) + ".pkl"
+    agent_data_filename = agent_name + "_" + str(self.num_players + "_" \
+            + str(self.num_games) + ".pkl"
     agent_datapath = os.path.join(datadir, agent_data_filename)
     return pickle.load(open(agent_datapath, "rb"), encoding='latin1')
     
