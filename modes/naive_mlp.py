@@ -11,8 +11,10 @@ import os, glob, re
 def build_model(cfg={}):
     #TODO define your model here
     return Model(inputs=, outputs=)
-    
+
 # TODO: implement/merge below
+# instead of current implementation, have each mode file subclass this class, and
+# move DataGenerator to its own .py file
 class DataGenerator(keras.utils.Sequence):
     def __init__(self, default_path, agentname):
         self.batch_size = 32
