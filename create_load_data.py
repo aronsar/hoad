@@ -53,7 +53,7 @@ def main(args):
     try:
       agent_data = loader.load_data(agent_name)
     except IOError:
-      CREATE_DATA_FOR[agent_name]
+      CREATE_DATA_FOR[agent_name]()
       agent_data = loader.load_data(agent_name)
     
     raw_data[agent_name] = agent_data   # placing agent_data into a dictionary
