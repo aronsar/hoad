@@ -1,37 +1,34 @@
 # this script creates data using python 2 and rainbow agents
 
+# here we do path voodoo so the imports below work
+from os.path import dirname, abspath, join
+ganabi_path = dirname(dirname(abspath(__file__)))
+hanabi_env_path = join(ganabi_path, "hanabi-env")
+import sys
+sys.path.insert(0, ganabi_path)
+sys.path.insert(0, hanabi_env_path)
+
 from utils import dir_utils
 from utils import parse_args
 from collections import defaultdict
 from rainbow_models import rainbow_agent_wrapper as rainbow
 import pickle
-import sys
-sys.path.insert(0, './hanabi-env') #FIXME
 import rl_env
 import gin
 import os
 import tensorflow as tf # version 1.x
 import importlib
+import argparse
 
-def import_agents(agents_to_use, expertdir, agent_config):
-    '''Import every rainbow agent specified agents_to_use, and return
-    a dictionary mapping the name of the agent to the agent object.'''
-    rainbow_agents = {}
-    sys.path.insert(0, expertdir)
+def import_agents(agent_name, rainbowdir, agent_config):
+    sys.path.insert(0, rainbowdir)
 
-    for agent_name in agents_to_use:
-      if 'rainbow' in agent_name:
-        rainbow_num = filter(str.isdigit, agent_name)
-        rainbow_agents[agent_name] = rainbow.Agent(agent_config, rainbow_num)
-    
-    # for agent_filename in os.listdir(expertdir):
-        # if 'agent' not in agent_filename:
-            # continue 
-        # agent_name = os.path.splitext(agent_filename)[0]
-        # agent_module = importlib.import_module(agent_name)
-        # available_agents[agent_name] = agent_module.Agent(agent_config)
-
-    return rainbow_agents
+    if 'rainbow' in agent_name:
+      rainbow_num = filter(str.isdigit, agent_name)
+      return rainbow.Agent(agent_config, rainbow_num)
+    else:
+      import pdb; pdb.set_trace()
+      print('rainbow must be in the name of the agent')
 
 def one_hot_vectorized_action(agent, num_moves, obs):
     '''
@@ -52,28 +49,20 @@ def one_hot_vectorized_action(agent, num_moves, obs):
 
     return one_hot_vector, action
 
-@gin.configurable
-class Dataset(object):
-    @gin.configurable
-    def __init__(self, args,
-            num_players=2,
-            num_unique_agents=6,
-            num_games=None):
-        
-        self.game_type = game_type
-        self.num_players = num_players
-        self.num_unique_agents = num_unique_agents
-        self.num_games = num_games
-        self.environment = rl_env.make(game_type, num_players=self.num_players)
+class DataCreator(object):
+    def __init__(self, args):
+        self.num_players = args.num_players
+        self.num_games = args.num_games
+        self.environment = rl_env.make('Hanabi-Full', num_players=self.num_players)
         self.agent_config = {
                 'players': self.num_players,
                 'num_moves': self.environment.num_moves(),
                 'observation_size': self.environment.vectorized_observation_shape()[0]}
-        self.available_agents = import_agents(args.expertdir, self.agent_config)
+        self.agent_object = import_agents(args.agent_name, args.rainbowdir, self.agent_config)
 
 
     def create_data(self):
-        '''Iterate over all available agents, and have each play self.num_games.
+        '''Iterate over all specified rainbw agents, and have each play self.num_games.
         The games are self-play, so agent A plays A, B plays B, etc. Each game 
         has the following structure:
             [ [[obs_0], [obs_1], ..., [obs_n]], [[act_0], [act_1], ..., [act_n]] ]
@@ -82,65 +71,67 @@ class Dataset(object):
         steps. A game can have a variable amount of rounds; you can lose early.
         
         The output, raw_data, is a dictionary with (key, value) pairs:
-            key: agent name (string)
+            key: rainbow agent name, in the form rainbow1, rainbow2, etc
             value: list of games played by this agent, self.num_games long; each
                 game has the format as shown above'''
-        raw_data = defaultdict(list)
+        raw_data = []
         
-        for playing_agent in self.available_agents.keys():
-            for game_num in range(self.num_games):
-                raw_data[playing_agent].append([[],[]])
-                observations = self.environment.reset()
-                game_done = False
+        for game_num in range(self.num_games):
+            raw_data.append([[],[]])
+            observations = self.environment.reset()
+            game_done = False
 
-                while not game_done:
-                    for agent_id in range(self.num_players):
-                        observation = observations['player_observations'][agent_id]
-                        action_vec, action = one_hot_vectorized_action(
-                                self.available_agents[playing_agent],
-                                self.environment.num_moves(),
-                                observation)
-                        raw_data[playing_agent][game_num][0].append(
-                                observation['vectorized'])
-                        raw_data[playing_agent][game_num][1].append(action_vec)
+            while not game_done:
+                for agent_id in range(self.num_players):
+                    observation = observations['player_observations'][agent_id]
+                    action_vec, action = one_hot_vectorized_action(
+                            self.agent_object,
+                            self.environment.num_moves(),
+                            observation)
+                    raw_data[game_num][0].append(
+                            observation['vectorized'])
+                    raw_data[game_num][1].append(action_vec)
 
-                        if observation['current_player'] == agent_id:
-                            assert action is not None
-                            current_player_action = action
-                        else:
-                            assert action is None
+                    if observation['current_player'] == agent_id:
+                        assert action is not None
+                        current_player_action = action
+                    else:
+                        assert action is None
 
-                        observations, _, game_done, _ = self.environment.step(
-                                current_player_action)
-                        if game_done:
-                            break
+                    observations, _, game_done, _ = self.environment.step(
+                            current_player_action)
+                    if game_done:
+                        break
 
         return raw_data
 
 def parse():
   parser = argparse.ArgumentParser()
-  
-  parser.add_argument('--agents_to_use',
+  parser.add_argument('--agent_name',
                       default='rainbow1')
+                      
+  parser.add_argument('--num_players',
+                      type=int)
+                      
+  parser.add_argument('--num_games',
+                      type=int)
+  
+  parser.add_argument('--datapath')
+  
+  parser.add_argument('--rainbowdir')
+  
+  args = parser.parse_args()
   return args
 
 
 def main(args):
-    data_creator = Dataset(args)
+    data_creator = DataCreator(args)
     # FIXME: all parse_args functions with "resolve" in the name should happen
     # in one function somewhere else
-    args = parse_args.resolve_datapath(args,
-            data_creator.game_type,
-            data_creator.num_players,
-            data_creator.num_unique_agents,
-            data_creator.num_games)
 
     raw_data = data_creator.create_data()
     pickle.dump(raw_data, open(args.datapath, "wb"))
 
 if __name__ == '__main__':
-    args = parse_args.parse()
-    args = parse_args.resolve_configpath(args)
-
-    gin.parse_config_file(args.configpath)
+    args = parse()
     main(args)

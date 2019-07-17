@@ -3,9 +3,13 @@ import os
 import pickle
 from subprocess import call
 
-def create_rainbow_data(datapath):
-    call("source /data1/shared/venvg2/bin/activate;" \
-             "python experts/create_rainbow_data.py --datapath " + datapath + ";", shell=True)
+def create_rainbow_data(datapath, num_players, num_games):
+    default_rainbow_agent_name = 'rainbow1'
+    rainbowdir = './experts/rainbow_models'
+    call("source /data1/shared/venvg2/bin/activate;"\
+         "python experts/create_rainbow_data.py --datapath %s --num_players %d "\
+         "--num_games %d --agent_name %s --rainbowdir %s" % (datapath, num_players,\
+         num_games, default_rainbow_agent_name, rainbowdir), shell=True)
 
 def create_example_data():
     # do any necessary stuff
@@ -58,7 +62,7 @@ def main(args):
         try:
             agent_data = pickle.load(open(datapath, "rb"), encoding='latin1')
         except IOError:
-            CREATE_DATA_FOR[agent_name](agent_datapath)
+            CREATE_DATA_FOR[agent_name](datapath, loader.num_players, loader.num_games)
             agent_data = pickle.load(open(datapath, "rb"), encoding='latin1')
         
         raw_data[agent_name] = agent_data     # placing agent_data into a dictionary

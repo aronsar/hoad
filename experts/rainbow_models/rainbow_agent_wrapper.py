@@ -24,11 +24,11 @@ def checkpoint_stuff(rainbow_num):
   checkpoint_dir = 'rainbow_models/rainbow-model-' + str(rainbow_num)
   base_dir = os.path.dirname(os.path.abspath(__file__))
   checkpoint_dir = os.path.join(base_dir, checkpoint_dir)
-  self.exp_checkpointer = checkpointer.Checkpointer(checkpoint_dir, 'ckpt')
+  exp_checkpointer = checkpointer.Checkpointer(checkpoint_dir, 'ckpt')
   checkpoint_version = checkpointer.get_latest_checkpoint_number(checkpoint_dir)
   
   assert checkpoint_version >=0
-  dqn_dictionary = self.exp_checkpointer.load_checkpoint(checkpoint_version)
+  dqn_dictionary = exp_checkpointer.load_checkpoint(checkpoint_version)
   return checkpoint_dir, checkpoint_version, dqn_dictionary
 
 class Agent(_Agent):
