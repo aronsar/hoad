@@ -14,8 +14,7 @@ sys.path.append('mode')
 
 def main():
     #parse arguments
-    #args = parse_args.parse_with_resolved_paths()   
-    import pdb; pdb.set_trace()
+    #args = parse_args.parse_with_resolved_paths()
     
     args = parse_args.parse()
     args = dir_utils.resolve_run_directory(args)

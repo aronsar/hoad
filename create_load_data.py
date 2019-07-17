@@ -6,7 +6,9 @@ from subprocess import call
 def create_rainbow_data(datapath, num_players, num_games):
     default_rainbow_agent_name = 'rainbow1'
     rainbowdir = './experts/rainbow_models'
-    call("source /data1/shared/venvg2/bin/activate;"\
+    import pdb; pdb.set_trace()
+    call("deactivate;"\
+         "source /data1/shared/venvg2/bin/activate;"\
          "python experts/create_rainbow_data.py --datapath %s --num_players %d "\
          "--num_games %d --agent_name %s --rainbowdir %s" % (datapath, num_players,\
          num_games, default_rainbow_agent_name, rainbowdir), shell=True)
