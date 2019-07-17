@@ -22,6 +22,14 @@ def parse():
 
     parser.add_argument('--expertdir',
                         default='./experts')
+                        
+    parser.add_argument('--agents_to_use',
+                        nargs='+',
+                        default='rainbow',
+                        help='Space deliniated list of agents to use. Options are:\n' \
+                             '    rainbow\n' \
+                             '    walton-rivers (not yet)\n' \
+                             '    etc...')
 
     parser.add_argument('--ckptdir')
 

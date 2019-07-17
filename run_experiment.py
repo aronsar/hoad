@@ -4,20 +4,25 @@
 
 #import statements
 from utils import parse_args, dir_utils
-import load_data
+import create_load_data
 import train
 #import evaluate
 import tensorflow as tf
 import keras
+import sys
+sys.path.append('mode')
 
 def main():
     #parse arguments
-    args = parse_args.parse_with_resolved_paths()    
+    #args = parse_args.parse_with_resolved_paths()   
+    import pdb; pdb.set_trace()
+    
+    args = parse_args.parse()
     args = dir_utils.resolve_run_directory(args)
 
-    import pdb; pdb.set_trace()
+    
     #create/load data
-    loader = load_data.main(args)
+    loader = create_load_data.main(args)
 
     #train model/load model
     model = train.main(loader, args)

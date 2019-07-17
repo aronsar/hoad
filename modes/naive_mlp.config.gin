@@ -1,6 +1,11 @@
 import train
 # Remember to sys.path.append('mode') in run_experiement.py
 import modes.naive_mlp
+import create_load_data
+
+# configure the data loader/creator
+create_load_data.DataLoader.num_players = 2
+create_load_data.DataLoader.num_games = 140
 
 # configure the trainer
 train.Trainer.optimizer = @keras.optimizers.Adam()
