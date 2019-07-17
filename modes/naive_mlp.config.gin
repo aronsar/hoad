@@ -1,0 +1,30 @@
+import train
+# Remember to sys.path.append('mode') in run_experiement.py
+import modes.naive_mlp
+
+# configure the trainer
+train.Trainer.optimizer = @keras.optimizers.Adam()
+keras.optimizers.Adam.lr = 0.0001
+keras.optimizers.Adam.beta_1 = 0.9
+keras.optimizers.Adam.beta_2 = 0.999
+keras.optimizers.Adam.epsilon = None
+keras.optimizers.Adam.decay = 0.0
+keras.optimizers.Adam.amsgrad = False
+
+# use categorical_crossentropy for one hot represented actions
+train.Trainer.loss = @keras.losses.categorical_crossentropy
+
+train.Trainer.metrics = ['accuracy']
+#train.Trainer.metrics = {'output_a': 'accuracy'} # for multi-output model
+
+train.Trainer.batch_size = 32
+train.Trainer.epochs = 10
+
+# Limitation of gin config => can only inject to constructor of a given class
+modes.naive_mlp.DataGenerator.cfg = {
+    "batch_size": 32,
+    "verbose": True, # Turn to True only when debugging for subclass datagenerator
+    "shuffle": True,
+    "obs_dim": 658,
+    "act_dim": 20,
+}
