@@ -2,9 +2,11 @@ use rand::{self, Rng, SeedableRng};
 use fnv::FnvHashMap;
 use std::fmt;
 use crossbeam;
+extern crate csv;
 
 use game::*;
 use strategy::*;
+use encoding_csv::*;
 
 fn new_deck(seed: u32) -> Cards {
     let mut deck: Cards = Cards::new();
@@ -49,6 +51,10 @@ pub fn simulate_once(
             let mut strategy = strategies.get_mut(&player).unwrap();
             strategy.decide(&game.get_view(player))
         };
+
+        //========================================================
+        ::encoding_csv::encoding_game(&game, player);
+        //========================================================
 
         let turn = game.process_choice(choice);
 
