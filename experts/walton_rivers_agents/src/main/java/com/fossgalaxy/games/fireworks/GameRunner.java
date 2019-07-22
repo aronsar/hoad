@@ -16,6 +16,8 @@ import org.slf4j.LoggerFactory;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import com.fossgalaxy.games.fireworks.utils.DataParserUtils;;
+
 /**
  * A basic runner for the game of Hanabi.
  */
@@ -219,6 +221,7 @@ public class GameRunner {
      */
     public GameStats playGame(Long seed) {
         int strikes = 0;
+        DataParserUtils parser = new DataParserUtils(players.length);
 
         try {
             assert nPlayers == players.length;
@@ -227,6 +230,7 @@ public class GameRunner {
             while (!state.isGameOver()) {
                 try {
                     writeState(state);
+                    parser.writeObservation(state);
                     nextMove();
                 } catch (RulesViolation rv) {
                     logger.warn("got rules violation when processing move", rv);
