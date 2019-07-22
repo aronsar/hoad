@@ -13,7 +13,6 @@
 # limitations under the License.
 """Rainbow Agent."""
 
-import pdb; pdb.set_trace()
 import numpy as np
 from hanabi_env.rl_env import Agent as _Agent
 from experts.rainbow_models.rainbow_agent import RainbowAgent as _RainbowAgent
@@ -22,7 +21,7 @@ from experts.rainbow_models.third_party.dopamine import checkpointer
 import os
 
 def checkpoint_stuff(rainbow_num):
-  checkpoint_dir = 'rainbow_models/rainbow-model-' + str(rainbow_num)
+  checkpoint_dir = 'rainbow-model-' + str(rainbow_num)
   base_dir = os.path.dirname(os.path.abspath(__file__))
   checkpoint_dir = os.path.join(base_dir, checkpoint_dir)
   exp_checkpointer = checkpointer.Checkpointer(checkpoint_dir, 'ckpt')

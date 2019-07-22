@@ -1,18 +1,9 @@
 # this script creates data using python 2 and rainbow agents
 
-# here we do path voodoo so the imports below work
-import pdb; pdb.set_trace()
-
+# here we add the repo's root directory to the path variable; everything
+# is imported relative to that to avoid problems
 import os, sys
-sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
-
-#delete
-# from os.path import dirname, abspath, join
-# ganabi_path = dirname(dirname(abspath(__file__)))
-# hanabi_env_path = join(ganabi_path, "hanabi-env")
-# import sys
-# sys.path.insert(0, ganabi_path)
-# sys.path.insert(0, hanabi_env_path)
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 
 from utils import dir_utils, parse_args
 from collections import defaultdict

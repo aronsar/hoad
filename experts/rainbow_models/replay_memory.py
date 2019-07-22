@@ -40,7 +40,12 @@ import gin.tf
 import numpy as np
 import tensorflow as tf
 
-from experts.rainbow_models.third_party.dopamine import sum_tree
+# FIXME: for some reason I still need the below 3 lines
+import sys, os
+rainbow_dir = os.path.join(sys.path[0], "experts/rainbow_models")
+sys.path.append(rainbow_dir)
+from third_party.dopamine import sum_tree
+#from experts.rainbow_models.third_party.dopamine import sum_tree
 
 # This constant determines how many iterations a checkpoint is kept for.
 CHECKPOINT_DURATION = 100
@@ -414,12 +419,14 @@ class OutOfGraphReplayMemory(object):
     for attr in self.__dict__:
       if attr.startswith('_'):
         continue
+      #import pdb; pdb.set_trace()
       filename = self._generate_filename(checkpoint_dir, attr, suffix)
       with tf.gfile.Open(filename) as f:
         with gzip.GzipFile(fileobj=f) as infile:
           if isinstance(self.__dict__[attr], np.ndarray):
             self.__dict__[attr] = np.load(infile, allow_pickle=False)
           else:
+            #import pdb; pdb.set_trace()
             self.__dict__[attr] = pickle.load(infile)
 
 
