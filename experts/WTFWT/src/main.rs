@@ -10,6 +10,7 @@ mod helpers;
 mod game;
 mod simulator;
 mod strategy;
+mod encoding_csv;
 mod strategies {
     pub mod examples;
     pub mod cheating;
