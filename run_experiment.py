@@ -9,8 +9,7 @@ import train
 #import evaluate
 import tensorflow as tf
 import keras
-import sys
-sys.path.append('mode')
+
 
 def main():
     #parse arguments

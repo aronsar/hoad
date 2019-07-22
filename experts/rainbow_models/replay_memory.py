@@ -40,10 +40,7 @@ import gin.tf
 import numpy as np
 import tensorflow as tf
 
-import sys
-print(os.path.join(os.getcwd()))
-sys.path.append(os.path.join(os.getcwd(),'experts/rainbow_models/'))
-import third_party.dopamine.sum_tree
+from experts.rainbow_models.third_party.dopamine import sum_tree
 
 # This constant determines how many iterations a checkpoint is kept for.
 CHECKPOINT_DURATION = 100

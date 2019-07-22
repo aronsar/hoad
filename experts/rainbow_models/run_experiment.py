@@ -28,13 +28,13 @@ from __future__ import print_function
 
 import time
 
-from third_party.dopamine import checkpointer
-from third_party.dopamine import iteration_statistics
-import dqn_agent
+from experts.rainbow_models.third_party.dopamine import checkpointer
+from experts.rainbow_models.third_party.dopamine import iteration_statistics
+from experts.rainbow_models import dqn_agent
+from experts.rainbow_models import rainbow_agent
+from hanabi_env import rl_env
 import gin.tf
-import rl_env
 import numpy as np
-import rainbow_agent
 import tensorflow as tf
 
 LENIENT_SCORE = False

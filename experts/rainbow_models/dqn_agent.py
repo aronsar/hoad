@@ -31,10 +31,7 @@ import random
 
 import gin.tf
 import numpy as np
-import sys
-sys.path.insert(0, "home/aronsar/ganabi/experts/rainbow_models")
-import pdb; pdb.set_trace()
-import replay_memory
+from experts.rainbow_models import replay_memory
 import tensorflow as tf
 
 

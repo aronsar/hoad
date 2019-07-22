@@ -13,11 +13,12 @@
 # limitations under the License.
 """Rainbow Agent."""
 
+import pdb; pdb.set_trace()
 import numpy as np
-from rl_env import Agent as _Agent
-from rainbow_models.rainbow_agent import RainbowAgent as _RainbowAgent
-from rainbow_models.run_experiment import format_legal_moves
-from rainbow_models.third_party.dopamine import checkpointer
+from hanabi_env.rl_env import Agent as _Agent
+from experts.rainbow_models.rainbow_agent import RainbowAgent as _RainbowAgent
+from experts.rainbow_models.run_experiment import format_legal_moves
+from experts.rainbow_models.third_party.dopamine import checkpointer
 import os
 
 def checkpoint_stuff(rainbow_num):

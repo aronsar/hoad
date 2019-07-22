@@ -1,27 +1,31 @@
 # this script creates data using python 2 and rainbow agents
 
 # here we do path voodoo so the imports below work
-from os.path import dirname, abspath, join
-ganabi_path = dirname(dirname(abspath(__file__)))
-hanabi_env_path = join(ganabi_path, "hanabi-env")
-import sys
-sys.path.insert(0, ganabi_path)
-sys.path.insert(0, hanabi_env_path)
+import pdb; pdb.set_trace()
 
-from utils import dir_utils
-from utils import parse_args
+import os, sys
+sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
+
+#delete
+# from os.path import dirname, abspath, join
+# ganabi_path = dirname(dirname(abspath(__file__)))
+# hanabi_env_path = join(ganabi_path, "hanabi-env")
+# import sys
+# sys.path.insert(0, ganabi_path)
+# sys.path.insert(0, hanabi_env_path)
+
+from utils import dir_utils, parse_args
 from collections import defaultdict
-from rainbow_models import rainbow_agent_wrapper as rainbow
+from experts.rainbow_models import rainbow_agent_wrapper as rainbow
 import pickle
-import rl_env
+from hanabi_env import rl_env
 import gin
-import os
 import tensorflow as tf # version 1.x
 import importlib
 import argparse
 
 def import_agents(agent_name, rainbowdir, agent_config):
-    sys.path.insert(0, rainbowdir)
+    #sys.path.insert(0, rainbowdir)
 
     if 'rainbow' in agent_name:
       rainbow_num = filter(str.isdigit, agent_name)
@@ -118,7 +122,7 @@ def parse():
   
   parser.add_argument('--datapath')
   
-  parser.add_argument('--rainbowdir')
+  parser.add_argument('--rainbowdir') #FIXME
   
   args = parser.parse_args()
   return args
