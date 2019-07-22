@@ -1,0 +1,12 @@
+[package]
+name = "rust_hanabi"
+version = "0.1.0"
+authors = ["Jeff Wu <wuthefwasthat@gmail.com>"]
+
+[dependencies]
+rand = "*"
+log = "*"
+getopts = "*"
+fnv = "*"
+float-ord = "*"
+crossbeam = "0.2.5"
