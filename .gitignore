@@ -8,3 +8,6 @@ CMakeFiles
 *.pyc
 data
 output
+
+# Add by James for walton agents
+*/walton_rivers_agents/results
