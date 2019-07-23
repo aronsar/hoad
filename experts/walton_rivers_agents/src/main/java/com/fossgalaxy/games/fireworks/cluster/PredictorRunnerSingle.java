@@ -27,7 +27,7 @@ public class PredictorRunnerSingle {
     }
 
     public static void main(String[] args) {
-        System.out.println("Start at PredictorRunningSingle");
+        // System.out.println("Start at PredictorRunningSingle");
         // int repeats = SetupUtils.getRepeatCount();
         int repeats = 5;
 

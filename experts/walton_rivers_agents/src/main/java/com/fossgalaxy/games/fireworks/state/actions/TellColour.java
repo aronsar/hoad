@@ -47,7 +47,7 @@ public class TellColour implements Action {
 
         GameEvent cardInformation = new CardInfoColour(playerID, player, colour, slots, turnNumber);
 
-        //handle history management for the state
+        // handle history management for the state
         List<GameEvent> effects = Collections.singletonList(cardInformation);
         game.addAction(playerID, this, effects);
         game.actionTick();
@@ -61,18 +61,68 @@ public class TellColour implements Action {
     }
 
     @Override
+    public ActionType getType() {
+        return ActionType.REVEAL_COLOR;
+    }
+
+    @Override
+    public int getCardIndex() {
+        return -1;
+    }
+
+    @Override
+    public int getTargetOffset() {
+        return this.player;
+    }
+
+    @Override
+    public int getColor() {
+        int res = -1;
+        switch (this.colour) {
+        case RED:
+            res = 0;
+            break;
+        case BLUE:
+            res = 4;
+            break;
+        case GREEN:
+            res = 2;
+            break;
+        case ORANGE:
+            res = 1;
+            break;
+        case WHITE:
+            res = 3;
+            break;
+        default:
+            break;
+        }
+
+        assert (res != -1);
+        return res;
+    }
+
+    @Override
+    public int getRank() {
+        return -1;
+    }
+
+    @Override
     public String toString() {
         return String.format("tell %d about their %ss", player, colour);
     }
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
 
         TellColour that = (TellColour) o;
 
-        if (player != that.player) return false;
+        if (player != that.player)
+            return false;
         return colour == that.colour;
 
     }

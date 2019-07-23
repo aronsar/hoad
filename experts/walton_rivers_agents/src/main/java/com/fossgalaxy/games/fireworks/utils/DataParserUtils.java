@@ -3,11 +3,14 @@ package com.fossgalaxy.games.fireworks.utils;
 import com.fossgalaxy.games.fireworks.state.Card;
 import com.fossgalaxy.games.fireworks.state.CardColour;
 import com.fossgalaxy.games.fireworks.state.GameState;
+import com.fossgalaxy.games.fireworks.state.actions.Action;
+import com.fossgalaxy.games.fireworks.state.actions.ActionType;
 import com.fossgalaxy.games.fireworks.state.Hand;
 import org.slf4j.Logger;
 
 import java.util.*;
 import java.util.stream.Collectors;
+import java.lang.Math.*;
 
 /**
  * Created by webpigeon on 11/10/16.
@@ -27,6 +30,7 @@ public class DataParserUtils {
     public final int kMoveTypeCounts;
     public int steps;
     public int current_player;
+    public Vector<int[]> data;
 
     // utility class - no instances required
     public DataParserUtils(int NumPlayer) {
@@ -41,6 +45,7 @@ public class DataParserUtils {
         this.kMoveTypeCounts = 4;
         this.steps = -1;
         this.current_player = 0;
+        this.data = new Vector<int[]>();
     }
 
     public int getHandSize() {
@@ -97,11 +102,13 @@ public class DataParserUtils {
                     CardColour card_color = card.colour;
 
                     obs[offset + CardIndex(card_color, card_rank, this.kRanks)] = 1;
-                    System.out.printf("Slot %d, Player %d, Card Color %s %d, Card Rank %d, Card Index %d\n", slot,
-                            player, card_color, ColorToIndex(card_color), card_rank,
-                            CardIndex(card_color, card_rank, this.kRanks));
-                    System.out.printf("Offset %d, Index: %d\n", offset,
-                            offset + CardIndex(card_color, card_rank, this.kRanks));
+                    // For Debug Purpose
+                    // System.out.printf("Slot %d, Player %d, Card Color %s %d, Card Rank %d, Card
+                    // Index %d\n", slot,
+                    // player, card_color, ColorToIndex(card_color), card_rank,
+                    // CardIndex(card_color, card_rank, this.kRanks));
+                    // System.out.printf("Offset %d, Index: %d\n", offset,
+                    // offset + CardIndex(card_color, card_rank, this.kRanks));
                 }
                 offset += this.kBitsPerCard;
             }
@@ -144,20 +151,117 @@ public class DataParserUtils {
         assert (this.current_player >= 0 && this.current_player <= 4);
     }
 
-    public void writeObservation(GameState state) {
+    public int[] writeObservation(GameState state, int[] obs_vec) {
         int offset = 0;
-        // Vector<Integer> obs = new Vector<Integer>(getObservationShape());
-        int[] obs = new int[getObservationShape()];
-        Arrays.fill(obs, 42);
+        encodeHandSection(state, offset, obs_vec);
+        encodeBoardSection(state, offset, obs_vec);
+        encodeDiscardSection(state, offset, obs_vec);
+        encodeLastActionSection(state, offset, obs_vec);
+        encodeCardKnowledgeSection(state, offset, obs_vec);
+
+        return obs_vec;
+    }
+
+    /**
+     * Handles Action
+     */
+    public int getMaxDiscardMoves() {
+        return this.kHandSize;
+    }
+
+    public int getMaxPlayMoves() {
+        return this.kHandSize;
+    }
+
+    public int getMaxRevealColorMoves() {
+        return (this.kPlayers - 1) * this.kColors;
+    }
+
+    public int getMaxRevealRankMoves() {
+        return (this.kPlayers - 1) * this.kRanks;
+    }
+
+    public int getMaxMoves() {
+        return getMaxDiscardMoves() + getMaxPlayMoves() + getMaxRevealColorMoves() + getMaxRevealRankMoves();
+    }
+
+    public int getMoveUID(Action action) {
+        ActionType type = action.getType();
+        int uid = -1;
+        switch (type) {
+        case DISCARD:
+            uid = action.getCardIndex();
+            break;
+        case PLAY:
+            uid = getMaxDiscardMoves() + action.getCardIndex();
+            break;
+        case REVEAL_COLOR:
+            assert (action.getTargetOffset() != -1);
+            assert (action.getColor() != -1);
+
+            uid = getMaxDiscardMoves() + getMaxPlayMoves() + Math.min(action.getTargetOffset() - 1, 0) * this.kColors
+                    + action.getColor();
+            break;
+        case REVEAL_RANK:
+            assert (action.getTargetOffset() != -1);
+            assert (action.getRank() != -1);
+
+            uid = getMaxDiscardMoves() + getMaxPlayMoves() + getMaxRevealColorMoves()
+                    + Math.min(action.getTargetOffset() - 1, 0) * this.kRanks + action.getRank() - 1;
+            break;
+        default:
+            break;
+        }
+
+        // Sanity Check
+        assert (uid != -1);
+        assert (0 <= uid && uid >= getMaxMoves());
+        return uid;
+    }
+
+    public int[] writeAction(Action action, int[] act_vec) {
+        int act_id = getMoveUID(action);
+        act_vec[act_id] = 1;
+
+        // For Debug Purpose
+        // System.out.printf("Step %d, Player ID %d\n", this.steps,
+        // this.current_player);
+        // System.out.printf("Action: %s, Id: %d, Target %d\n", action, act_id,
+        // action.getTargetOffset());
+
+        return act_vec;
+    }
+
+    public void writeData(GameState state, Action action) {
+        // Init observation vector
+        int[] obs_vec = new int[getObservationShape()];
+        Arrays.fill(obs_vec, 0);
+
+        // Init action vector
+        int[] act_vec = new int[getMaxMoves()];
+        Arrays.fill(act_vec, 0);
+
+        // Increase step counter
         initSteps();
 
-        System.out.printf("Step %d, Player ID %d\n", this.steps, this.current_player);
+        obs_vec = writeObservation(state, obs_vec);
+        act_vec = writeAction(action, act_vec);
+        this.data.add(act_vec);
+    }
 
-        encodeHandSection(state, offset, obs);
-        encodeBoardSection(state, offset, obs);
-        encodeDiscardSection(state, offset, obs);
-        encodeLastActionSection(state, offset, obs);
-        encodeCardKnowledgeSection(state, offset, obs);
+    public void writeToDisk() {
+        for (int i = 0; i < this.data.size(); i++) {
+            int[] act_vec = this.data.get(i);
+            for (int j = 0; j < getMaxMoves(); j++) {
+                if (j == getMaxMoves() - 1) {
+                    System.out.print(act_vec[j]);
+
+                } else {
+                    System.out.printf(act_vec[j] + ",");
+                }
+            }
+            System.out.printf("\n");
+        }
     }
 
     // Utilies starts here

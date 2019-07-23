@@ -43,11 +43,11 @@ public class DiscardCard implements Action {
         if (game.getDeck().hasCardsLeft()) {
             Card newCard = game.drawFromDeck();
             game.setCardAt(playerID, slot, newCard);
-            //game.getHand(playerID).setHasCard(slot, true);
+            // game.getHand(playerID).setHasCard(slot, true);
             events.add(new CardDrawn(playerID, slot, newCard.colour, newCard.value, nextTurn));
         } else {
             game.setCardAt(playerID, slot, null);
-            //game.getHand(playerID).setHasCard(slot, false);
+            // game.getHand(playerID).setHasCard(slot, false);
         }
 
         // update state history
@@ -68,14 +68,41 @@ public class DiscardCard implements Action {
     }
 
     @Override
+    public ActionType getType() {
+        return ActionType.DISCARD;
+    }
+
+    @Override
+    public int getCardIndex() {
+        return slot;
+    }
+
+    @Override
+    public int getTargetOffset() {
+        return -1;
+    }
+
+    @Override
+    public int getColor() {
+        return -1;
+    }
+
+    @Override
+    public int getRank() {
+        return -1;
+    }
+
+    @Override
     public String toString() {
         return String.format("Discard %d", slot);
     }
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
 
         DiscardCard that = (DiscardCard) o;
 

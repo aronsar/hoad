@@ -12,4 +12,13 @@ public interface Action extends Serializable {
 
     boolean isLegal(int playerID, GameState state);
 
+    ActionType getType();
+
+    int getCardIndex();
+
+    int getTargetOffset();
+
+    int getColor();
+
+    int getRank();
 }

@@ -53,7 +53,7 @@ public class TellValue implements Action {
 
         GameEvent cardInformation = new CardInfoValue(playerID, player, value, slots, turnNumber);
 
-        //update state history
+        // update state history
         List<GameEvent> effects = Collections.singletonList(cardInformation);
         game.addAction(playerID, this, effects);
         game.actionTick();
@@ -67,18 +67,46 @@ public class TellValue implements Action {
     }
 
     @Override
+    public ActionType getType() {
+        return ActionType.REVEAL_RANK;
+    }
+
+    @Override
+    public int getCardIndex() {
+        return -1;
+    }
+
+    @Override
+    public int getTargetOffset() {
+        return this.player;
+    }
+
+    @Override
+    public int getColor() {
+        return -1;
+    }
+
+    @Override
+    public int getRank() {
+        return this.value;
+    }
+
+    @Override
     public String toString() {
         return String.format("tell %d about their %ss", player, value);
     }
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
 
         TellValue tellValue = (TellValue) o;
 
-        if (player != tellValue.player) return false;
+        if (player != tellValue.player)
+            return false;
         return value == tellValue.value;
 
     }

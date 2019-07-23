@@ -180,7 +180,7 @@ public class GameRunner {
     /**
      * Ask the next player for their move.
      */
-    protected void nextMove() {
+    protected void nextMove(DataParserUtils parser) {
         Player player = players[nextPlayer];
         assert player != null : "that player is not valid";
 
@@ -198,6 +198,13 @@ public class GameRunner {
         // if the more was illegal, throw a rules violation
         if (!action.isLegal(nextPlayer, state)) {
             throw new RulesViolation(action);
+        }
+
+        // Ensure parser exist
+        if (parser != null) {
+            parser.writeData(state, action);
+            // parser.writeAction(action);
+            // parser.writeObservation(state);
         }
 
         // perform the action and get the effects
@@ -230,8 +237,7 @@ public class GameRunner {
             while (!state.isGameOver()) {
                 try {
                     writeState(state);
-                    parser.writeObservation(state);
-                    nextMove();
+                    nextMove(parser);
                 } catch (RulesViolation rv) {
                     logger.warn("got rules violation when processing move", rv);
                     strikes++;
@@ -243,6 +249,7 @@ public class GameRunner {
                     }
                 }
             }
+            parser.writeToDisk();
             return new GameStats(gameID, players.length, state.getScore(), state.getLives(), moves,
                     state.getInfomation(), strikes);
         } catch (Exception ex) {

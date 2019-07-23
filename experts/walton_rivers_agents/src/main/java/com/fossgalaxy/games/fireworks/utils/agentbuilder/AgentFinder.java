@@ -176,7 +176,7 @@ public class AgentFinder {
                 AgentFactory factory = buildFactory(method);
                 knownFactories.put(factory.name(), factory);
                 // FIXME
-                System.out.println("Name: " + factory.name());
+                // System.out.println("Name: " + factory.name());
             } catch (IllegalArgumentException ex) {
                 logger.error("Failed to parse static method: " + method.getDeclaringClass() + "->" + method.getName());
             }
