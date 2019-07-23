@@ -15,6 +15,11 @@ And assuming that bombing out is counted as 0 points on those same games:
 
 ## Getting started
 
+Scala Version: 2.11.8
+Java Version: 8???
+SBT Version: 0.13.17
+sbt-assembly Version: 0.14.1
+
 ### Setup
 1. Install [sbt](http://www.scala-sbt.org/download.html)
 2. Clone this github repo to any desired directory and navigate to that directory.
