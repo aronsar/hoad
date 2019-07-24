@@ -15,7 +15,7 @@ And assuming that bombing out is counted as 0 points on those same games:
 
 ## Getting started
 
-Scala Version: 2.11.8
+Scala Version: 2.13.0
 
 Java Version: 8
 
