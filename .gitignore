@@ -8,3 +8,5 @@ CMakeFiles
 *.pyc
 data
 output
+.DS_Store
+.java-version
