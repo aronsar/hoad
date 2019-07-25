@@ -4,8 +4,18 @@ use game::*;
 use std::io;
 
 //Header of csv
-// cur player idx, turn idx, p1 cards, p2 cards, ..., pN cards, discard pile,
-// fireworks, # of remaining life tokens, # of remaining info tokens, and size of remaining deck
+// [cur player idx,
+// turn idx
+// p1 cards
+// ...
+// pN cards
+// discard pile
+// action (hint(color,value), discard(index), play(index))
+// Fireworks
+// # of remaining life tokens
+// # of remaining info tokens,
+// size of remaining deck
+// remaining deck of cards
 pub fn encoding_game(game : &GameState, player : u32, choice: &TurnChoice){
 
     // let mut writer = csv::Writer::from_path("rust_agent.csv");
@@ -24,7 +34,6 @@ pub fn encoding_game(game : &GameState, player : u32, choice: &TurnChoice){
     let dk_sz = board.deck_size;
 
     // Header
-    // writer.write_record(&["cur player idx"," turn idx", "p1 cards", "p2 cards","p3 cards","p4 cards",  "discard pile", "action", "fireworks", "# of remaining life tokens", "# of remaining info tokens", "and size of remaining deck"]);
     let mut temp = vec![];
     temp.push(player.to_string());       //cur_player_id
     temp.push(turn.to_string());       //turn number
