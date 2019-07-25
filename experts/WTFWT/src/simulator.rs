@@ -53,7 +53,7 @@ pub fn simulate_once(
         };
 
         //========================================================
-        ::encoding_csv::encoding_game(&game, player);
+        ::encoding_csv::encoding_game(&game, player, &choice);
         //========================================================
 
         let turn = game.process_choice(choice);
