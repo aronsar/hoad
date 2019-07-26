@@ -94,18 +94,20 @@ public class PredictorRunnerSingle {
                     stats = GameUtils.runGame(gameID, seed, SetupUtils.toPlayers(agentStr, agents));
                 }
 
-                // ensure that agent names are escaped for the CSV file
-                String[] agentStrEscape = new String[agentStr.length];
-                for (int i = 0; i < agentStr.length; i++) {
-                    agentStrEscape[i] = String.format("\"%s\"", agentStr[i]);
-                }
+                // // ensure that agent names are escaped for the CSV file
+                // String[] agentStrEscape = new String[agentStr.length];
+                // for (int i = 0; i < agentStr.length; i++) {
+                // agentStrEscape[i] = String.format("\"%s\"", agentStr[i]);
+                // }
 
                 // generate the CSV file name
-                String agentList = String.join(",", Arrays.asList(agentStrEscape));
-                String csvLine = String.format("%s,\"%s\",\"%s\",%s,%s,%d,%d,%d,%d,%d,%d,%d,\"%s\"", gameID,
-                        agentUnderTest, agentPaired, gameType, agentList, seed, stats.nPlayers, stats.information,
-                        stats.lives, stats.moves, stats.score, stats.disqal, predictorType);
-                System.out.println(csvLine);
+                // String agentList = String.join(",", Arrays.asList(agentStrEscape));
+                // String csvLine =
+                // String.format("%s,\"%s\",\"%s\",%s,%s,%d,%d,%d,%d,%d,%d,%d,\"%s\"", gameID,
+                // agentUnderTest, agentPaired, gameType, agentList, seed, stats.nPlayers,
+                // stats.information,
+                // stats.lives, stats.moves, stats.score, stats.disqal, predictorType);
+                // System.out.println(csvLine);
 
                 log.println(SEPERATOR);
                 log.println("# end game " + gameID);

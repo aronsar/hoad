@@ -1,16 +1,14 @@
 package com.fossgalaxy.games.fireworks.utils;
 
+import java.util.Arrays;
+import java.util.Vector;
+
 import com.fossgalaxy.games.fireworks.state.Card;
 import com.fossgalaxy.games.fireworks.state.CardColour;
 import com.fossgalaxy.games.fireworks.state.GameState;
+import com.fossgalaxy.games.fireworks.state.Hand;
 import com.fossgalaxy.games.fireworks.state.actions.Action;
 import com.fossgalaxy.games.fireworks.state.actions.ActionType;
-import com.fossgalaxy.games.fireworks.state.Hand;
-import org.slf4j.Logger;
-
-import java.util.*;
-import java.util.stream.Collectors;
-import java.lang.Math.*;
 
 /**
  * Created by webpigeon on 11/10/16.
@@ -30,7 +28,9 @@ public class DataParserUtils {
     public final int kMoveTypeCounts;
     public int steps;
     public int current_player;
-    public Vector<int[]> data;
+    public Vector<int[]> all_obs;
+    public Vector<int[]> all_act;
+    public static int game_num = -1;
 
     // utility class - no instances required
     public DataParserUtils(int NumPlayer) {
@@ -45,7 +45,8 @@ public class DataParserUtils {
         this.kMoveTypeCounts = 4;
         this.steps = -1;
         this.current_player = 0;
-        this.data = new Vector<int[]>();
+        this.all_obs = new Vector<int[]>();
+        this.all_act = new Vector<int[]>();
     }
 
     public int getHandSize() {
@@ -245,22 +246,27 @@ public class DataParserUtils {
         initSteps();
 
         obs_vec = writeObservation(state, obs_vec);
+        this.all_obs.add(obs_vec);
+
         act_vec = writeAction(action, act_vec);
-        this.data.add(act_vec);
+        this.all_act.add(act_vec);
     }
 
     public void writeToDisk() {
-        for (int i = 0; i < this.data.size(); i++) {
-            int[] act_vec = this.data.get(i);
-            for (int j = 0; j < getMaxMoves(); j++) {
-                if (j == getMaxMoves() - 1) {
-                    System.out.print(act_vec[j]);
-
-                } else {
-                    System.out.printf(act_vec[j] + ",");
-                }
+        game_num += 1;
+        for (int i = 0; i < this.all_obs.size(); i++) {
+            // Write observation vector
+            int[] obs_vec = this.all_obs.get(i);
+            for (int j = 0; j < getObservationShape(); j++) {
+                System.out.printf(obs_vec[j] + ",");
             }
-            System.out.printf("\n");
+
+            // Write action vector
+            int[] act_vec = this.all_act.get(i);
+            for (int k = 0; k < getMaxMoves(); k++) {
+                System.out.printf(act_vec[k] + ",");
+            }
+            System.out.printf(getObservationShape() + "," + getMaxMoves() + "," + this.steps + "," + game_num + "\n");
         }
     }
 
