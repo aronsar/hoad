@@ -1,6 +1,7 @@
 extern crate csv;
 use game::*;
 // use strategy::*;
+use std::fs::OpenOptions;
 use std::io;
 
 //Header of csv
@@ -19,7 +20,10 @@ use std::io;
 pub fn encoding_game(game : &GameState, player : u32, choice: &TurnChoice){
 
     // let mut writer = csv::Writer::from_path("rust_agent.csv");
-    let mut writer = csv::Writer::from_writer(io::stdout());
+    let mut file = OpenOptions::new().write(true).append(true).open("rust_agent.csv").unwrap();
+    let mut writer = csv::Writer::from_writer(file);
+    // let mut writer = csv::Writer::from_path("rust_agent.csv").unwrap();
+    // let mut writer = csv::Writer::from_writer(io::stdout());
     let borrowedgameview = game.get_view(player);
     let players_hands = &game.hands; // FnvHashMap<Player, &'a Cards>
     let cur_player = borrowedgameview.player;
@@ -34,6 +38,9 @@ pub fn encoding_game(game : &GameState, player : u32, choice: &TurnChoice){
     let dk_sz = board.deck_size;
 
     // Header
+    // let mut header = vec![];
+    // writer.write_record(&["cur_player_id","p1_cards","p2_cards","p3_cards","p4_cards","p5_cards"]);
+
     let mut temp = vec![];
     temp.push(player.to_string());       //cur_player_id
     temp.push(turn.to_string());       //turn number
@@ -124,12 +131,17 @@ pub fn encoding_game(game : &GameState, player : u32, choice: &TurnChoice){
     temp.push(liv_rmn.to_string());
     temp.push(info_rmn.to_string());
     temp.push(dk_sz.to_string());
+    writer.write_record(&temp);
+
+
     temp_cards = vec![];
+    let mut temp_dk_cards = vec![];
     for card in dk {
         temp_cards.push(card.color.to_string()+ &card.value.to_string());
     }
     let joined = temp_cards.join("-");
-    temp.push(joined);
-
-    writer.write_record(&temp);
+    temp_dk_cards.push(&joined);
+    let mut dk_card_file = OpenOptions::new().write(true).append(true).open("dk_cards.csv").unwrap();
+    let mut card_writer = csv::Writer::from_writer(dk_card_file);
+    card_writer.write_record(&temp_dk_cards);
 }
