@@ -8,12 +8,20 @@ import importlib
 import argparse
 import pandas
 
+
 # TODO: include datapath argument for csv file
 def convert_to_pickle():
-    path = os.path.join(os.path.dirname(__file__), '/fireflower')
+    path = os.path.dirname(__file__)
     os.chdir(path)
     raw_data = pandas.read_csv('data.csv')
     return raw_data
+
+
+# for testing
+def print_pickle_data():
+    data = pickle.load(open('data.p', 'rb'))
+    print(data)
+
 
 def parse():
     parser = argparse.ArgumentParser()
@@ -27,7 +35,9 @@ def parse():
 
 def main(args):
     fireflower_data = convert_to_pickle()
-    pickle.dump(fireflower_data, open('save.p', "wb"))
+    pickle.dump(fireflower_data, open('data.p', "wb"))
+    print_pickle_data()
+
 
 if __name__ == '__main__':
     args = parse()
