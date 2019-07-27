@@ -1,5 +1,10 @@
 package fireflower
 
+import scala.collection.JavaConverters._
+import java.io.{BufferedWriter, FileWriter}
+import scala.collection.mutable.ListBuffer
+import au.com.bytecode.opencsv.CSVWriter
+
 object Sim {
   def runSingle(
     rules: Rules,
@@ -129,5 +134,18 @@ object Sim {
       doPrintDetails = doPrintDetails,
       useAnsiColors = useAnsiColors
     )
+  }
+
+  def writeToCsvFile () = {
+    val outputFile = new BufferedWriter(new FileWriter("/Users/phamthanhhuyen/Documents/ganabi/experts/fireflower/data.csv")) //replace the path with the desired path and filename with the desired filename
+    val csvWriter = new CSVWriter(outputFile)
+    val csvFields = Array("id", "name", "age", "city")
+    val listOfRecords = new ListBuffer[Array[String]]()
+    listOfRecords += csvFields
+
+    csvWriter.writeAll(listOfRecords.toList) //<-- that listOfRecords right there
+    //Here is the suggestion on how to fix the error but still -.-
+    //https://stackoverflow.com/questions/39217542/type-mismatch-found-java-util-liststringrequired-liststring
+    outputFile.close()
   }
 }

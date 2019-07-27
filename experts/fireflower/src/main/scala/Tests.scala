@@ -7,7 +7,7 @@ object PlayerTests {
       if(args.length >= 1)
         args(0).toInt
       else
-        1000
+        1
     }
     val numPlayers = {
       if(args.length >= 2)
