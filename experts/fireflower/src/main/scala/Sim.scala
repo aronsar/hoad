@@ -1,8 +1,11 @@
 package fireflower
 
-import scala.collection.JavaConverters._
 import java.io.{BufferedWriter, FileWriter}
+
+import scala.collection.JavaConversions._
 import scala.collection.mutable.ListBuffer
+import scala.util.Random
+
 import au.com.bytecode.opencsv.CSVWriter
 
 object Sim {
@@ -52,6 +55,8 @@ object Sim {
           players(pid).handleSeenAction(sa, preGame.hiddenFor(pid), game.hiddenFor(pid))
         }
       }
+
+      writeToCsvFile()
     }
 
     if(doPrint) {
@@ -137,15 +142,34 @@ object Sim {
   }
 
   def writeToCsvFile () = {
-    val outputFile = new BufferedWriter(new FileWriter("/Users/phamthanhhuyen/Documents/ganabi/experts/fireflower/data.csv")) //replace the path with the desired path and filename with the desired filename
+//    val outputFile = new BufferedWriter(new FileWriter("/Users/phamthanhhuyen/Documents/ganabi/experts/fireflower/data.csv")) //replace the path with the desired path and filename with the desired filename
+//    val csvWriter = new CSVWriter(outputFile)
+//    val csvFields = Array("name", "age", "major")
+//    val employee1 = Array("piyush","23","computerscience")
+//    val employee2= Array("neel","24","computerscience")
+//    val employee3= Array("aayush","27","computerscience")
+//    //val listOfRecords = new ListBuffer[Array[String]]()
+//    val listOfRecords = List(csvFields, employee1, employee2, employee3)
+//
+//    csvWriter.writeAll(listOfRecords) //<-- that listOfRecords right there
+//    //Here is the suggestion on how to fix the error but still -.-
+//    //https://stackoverflow.com/questions/39217542/type-mismatch-found-java-util-liststringrequired-liststring
+//    outputFile.close()
+
+    val outputFile = new BufferedWriter(new FileWriter("/Users/phamthanhhuyen/Documents/ganabi/experts/fireflower/data.csv"))
     val csvWriter = new CSVWriter(outputFile)
     val csvFields = Array("id", "name", "age", "city")
-    val listOfRecords = new ListBuffer[Array[String]]()
+    val nameList = List("Deepak", "Sangeeta", "Geetika", "Anubhav", "Sahil", "Akshay")
+    val ageList = (24 to 26).toList
+    val cityList = List("Delhi", "Kolkata", "Chennai", "Mumbai")
+    val random = new Random()
+    var listOfRecords = new ListBuffer[Array[String]]()
     listOfRecords += csvFields
-
-    csvWriter.writeAll(listOfRecords.toList) //<-- that listOfRecords right there
-    //Here is the suggestion on how to fix the error but still -.-
-    //https://stackoverflow.com/questions/39217542/type-mismatch-found-java-util-liststringrequired-liststring
+    for (i <- 0 until 10) {
+      listOfRecords += Array(i.toString, nameList(random.nextInt(nameList.length))
+        , ageList(random.nextInt(ageList.length)).toString, cityList(random.nextInt(cityList.length)))
+    }
+    csvWriter.writeAll(listOfRecords.toList)
     outputFile.close()
   }
 }

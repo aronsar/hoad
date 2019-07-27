@@ -8,3 +8,4 @@ target/
 bin/
 .ensime_cache
 src/main/scala/*.class
+.DS_Store
