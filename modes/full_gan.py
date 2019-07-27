@@ -4,8 +4,7 @@ import gin
 import tensorflow as tf
 from keras.layers import Input
 from keras.models import Model
-from modes import network_elements as ne
-import datagenerator as dg
+from modes import network_elements as ne, datagenerator as dg
 
 @gin.configurable
 def build_model(cfg={}):
