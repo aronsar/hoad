@@ -1,7 +1,9 @@
 import gin
 import os
 import pickle
+import random
 from subprocess import call
+from utils import parse_args
 
 def create_rainbow_data(datapath, num_players, num_games):
     default_rainbow_agent_name = 'rainbow1'
@@ -13,13 +15,21 @@ def create_rainbow_data(datapath, num_players, num_games):
          "--num_games %d --agent_name %s --rainbowdir %s" % (datapath, num_players,\
          num_games, default_rainbow_agent_name, rainbowdir), shell=True)
 
+def create_iggi_data(datapath, num_players, num_games):
+    print(datapath)
+    call("python experts/create_walton_data.py --datapath %s --num_players %d "\
+         "--num_games %d --agent_name %s --rainbowdir %s" % (datapath, num_players,\
+         num_games, "iggi", None), shell=True)
+
 def create_example_data():
     # do any necessary stuff
     # call the creation script for this agent
     pass
 
+
 CREATE_DATA_FOR = {
     'rainbow': create_rainbow_data,
+    'iggi': create_iggi_data,
     'example': create_example_data}
 
 @gin.configurable
@@ -75,5 +85,5 @@ def main(args):
 if __name__ == "__main__":
     args = parse_args.parse()
     args = parse_args.resolve_configpath(args)
-    args = parse_args.resolve_agents_to_use(args)
+    # args = parse_args.resolve_agents_to_use(args)
     main(args)
