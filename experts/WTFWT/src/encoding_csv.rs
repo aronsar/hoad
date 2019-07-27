@@ -18,10 +18,8 @@ use std::io;
 // size of remaining deck
 // remaining deck of cards
 pub fn encoding_game(game : &GameState, player : u32, choice: &TurnChoice){
-
     // let mut writer = csv::Writer::from_path("rust_agent.csv");
-    let mut file = OpenOptions::new().write(true).append(true).open("rust_agent.csv").unwrap();
-    let mut writer = csv::Writer::from_writer(file);
+
     // let mut writer = csv::Writer::from_path("rust_agent.csv").unwrap();
     // let mut writer = csv::Writer::from_writer(io::stdout());
     let borrowedgameview = game.get_view(player);
@@ -37,8 +35,18 @@ pub fn encoding_game(game : &GameState, player : u32, choice: &TurnChoice){
     let dk = &game.deck;
     let dk_sz = board.deck_size;
 
+
+    let mut file = OpenOptions::new().write(true).append(true).open("rust_agent.csv").unwrap();
+    // let mut file = OpenOptions::new().write(true).open("rust_agent.csv").unwrap();
+    let mut writer = csv::Writer::from_writer(file);
     // Header
     // let mut header = vec![];
+    // // header.push("cur_player_id");
+    // for plyr in 0..num_player{
+    //     let mut temp_str = format!("p{}_cards",plyr);
+    //     header.push(temp_str);
+    // }
+    // header.push("cur_player_id".to_string());
     // writer.write_record(&["cur_player_id","p1_cards","p2_cards","p3_cards","p4_cards","p5_cards"]);
 
     let mut temp = vec![];
@@ -56,23 +64,6 @@ pub fn encoding_game(game : &GameState, player : u32, choice: &TurnChoice){
         temp.push(joined);
     }
 
-
-    // for player in 0..num_player {
-    //     // println!("{}",player);
-    //     if player == cur_player {
-    //         temp.push("".to_string());
-    //     }
-    //     else{
-    //         let mut temp_cards = vec![];
-    //         for &card in other_players_hands.get(&player){
-    //             for c in card {
-    //                 temp_cards.push(c.color.to_string()+ &c.value.to_string());
-    //             }
-    //         }
-    //         let joined = temp_cards.join("-");
-    //         temp.push(joined);
-    //     }
-    // }
 
     let mut temp_cards = vec![];
     for c in discard_pile{
@@ -133,15 +124,18 @@ pub fn encoding_game(game : &GameState, player : u32, choice: &TurnChoice){
     temp.push(dk_sz.to_string());
     writer.write_record(&temp);
 
-
-    temp_cards = vec![];
-    let mut temp_dk_cards = vec![];
-    for card in dk {
-        temp_cards.push(card.color.to_string()+ &card.value.to_string());
+    if turn == 11{
+        temp_cards = vec![];
+        let mut temp_dk_cards = vec![];
+        for card in dk {
+            temp_cards.push(card.color.to_string()+ &card.value.to_string());
+        }
+        let joined = temp_cards.join("-");
+        temp_dk_cards.push(&joined);
+        let mut dk_card_file = OpenOptions::new().write(true).open("dk_cards.csv").unwrap();
+        let mut card_writer = csv::Writer::from_writer(dk_card_file);
+        card_writer.write_record(&temp_dk_cards);
     }
-    let joined = temp_cards.join("-");
-    temp_dk_cards.push(&joined);
-    let mut dk_card_file = OpenOptions::new().write(true).append(true).open("dk_cards.csv").unwrap();
-    let mut card_writer = csv::Writer::from_writer(dk_card_file);
-    card_writer.write_record(&temp_dk_cards);
+
+
 }
