@@ -47,6 +47,6 @@ touch $RESEARCH_LOG
 # the actual runner
 mvn clean package > $RESULT_DIR/$GIT_COMMIT.build.log
 cd $RESULT_DIR
-java -jar $JAR_PATH $1 $2 $3 1>$RESULT_FILE 2>$RESULT_LOG
+java -jar $JAR_PATH $1 $2 $3 $4 $5 1>$RESULT_FILE 2>$RESULT_LOG
 echo $(date --iso-8601) $(hostname) $GIT_COMMIT $GIT_MESSAGE >> $RESEARCH_LOG
 echo run finished.

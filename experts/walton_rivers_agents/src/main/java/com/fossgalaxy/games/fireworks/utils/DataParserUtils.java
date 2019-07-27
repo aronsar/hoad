@@ -255,18 +255,21 @@ public class DataParserUtils {
     public void writeToDisk() {
         game_num += 1;
         for (int i = 0; i < this.all_obs.size(); i++) {
+            // Write meta data: game_num, obs_size, and act_size
+            System.out.printf(game_num + "," + getObservationShape() + "," + getMaxMoves());
+
             // Write observation vector
             int[] obs_vec = this.all_obs.get(i);
             for (int j = 0; j < getObservationShape(); j++) {
-                System.out.printf(obs_vec[j] + ",");
+                System.out.printf("," + obs_vec[j]);
             }
 
             // Write action vector
             int[] act_vec = this.all_act.get(i);
             for (int k = 0; k < getMaxMoves(); k++) {
-                System.out.printf(act_vec[k] + ",");
+                System.out.printf("," + act_vec[k]);
             }
-            System.out.printf(getObservationShape() + "," + getMaxMoves() + "," + this.steps + "," + game_num + "\n");
+            System.out.printf("\n");
         }
     }
 

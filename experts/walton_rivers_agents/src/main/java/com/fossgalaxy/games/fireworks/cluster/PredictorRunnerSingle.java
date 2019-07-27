@@ -36,9 +36,11 @@ public class PredictorRunnerSingle {
          */
         String agentUnderTest = args[0];
         String agentPaired = args[1];
-        long seed = Long.parseLong(args[2]);
-        String gameType = args.length > 3 ? args[3] : GAME_NORMAL;
-        String predictorType = args.length > 4 ? args[4] : agentPaired;
+        int player_count = Integer.parseInt(args[2]);
+        int game_count = Integer.parseInt(args[3]);
+        long seed = Long.parseLong(args[4]);
+        String gameType = args.length > 5 ? args[5] : GAME_NORMAL; // Not Used
+        String predictorType = args.length > 6 ? args[6] : agentPaired; // Not Used
 
         Random random = new Random(seed);
 
@@ -48,8 +50,8 @@ public class PredictorRunnerSingle {
         // perform a warmup game because jvms... mumble mumble...
         // doWarmup(5, 1, agentUnderTest, predictorType, agentPaired);
 
-        for (int run = 0; run < repeats; run++) {
-            for (int nPlayers = 2; nPlayers <= 2; nPlayers++) {
+        for (int run = 0; run < game_count; run++) {
+            for (int nPlayers = player_count; nPlayers <= player_count; nPlayers++) {
                 int agentUnderTestIndex = random.nextInt(nPlayers);
 
                 // figure out if we need to generate a taskID or if one was provided by the
