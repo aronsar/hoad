@@ -9,6 +9,18 @@ import com.fossgalaxy.games.fireworks.state.GameState;
 import com.fossgalaxy.games.fireworks.state.Hand;
 import com.fossgalaxy.games.fireworks.state.actions.Action;
 import com.fossgalaxy.games.fireworks.state.actions.ActionType;
+import com.fossgalaxy.games.fireworks.state.HistoryEntry;
+import com.fossgalaxy.games.fireworks.state.events.GameEvent;
+import com.fossgalaxy.games.fireworks.state.events.CardDiscarded;
+import com.fossgalaxy.games.fireworks.state.events.CardDrawn;
+import com.fossgalaxy.games.fireworks.state.events.CardInfo;
+import com.fossgalaxy.games.fireworks.state.events.CardInfoValue;
+import com.fossgalaxy.games.fireworks.state.events.CardInfoColour;
+import com.fossgalaxy.games.fireworks.state.events.CardPlayed;
+
+import java.util.*;
+import java.util.stream.Collectors;
+import java.lang.Math.*;
 
 /**
  * Created by webpigeon on 11/10/16.
@@ -127,22 +139,173 @@ public class DataParserUtils {
 
     // TODO
     public void encodeBoardSection(GameState state, int offset, int[] obs) {
-
+        int start_offset = offset;
+        for (int i = 0; i < state.getDeck().getCardsLeft(); i++) {
+            obs[offset + i] = 1;
+        }
+        start_offset += (kMaxDeckSize - kHandSize * kPlayers);
+        for (CardColour color : CardColour.values()) {
+            if (state.getTableValue(color) == 1) {
+                obs[offset + state.getTableValue(color) - 1] = 1;
+            }
+            offset += kRanks;
+        }
+        // information tokens
+        for (int i = 0; i < state.getInformation(); i++) {
+            obs[offset + i] = 1;
+        }
+        offset += state.getStartingInfomation();
+        // life tokens
+        for (int i = 0; i < state.getLives(); i++) {
+            obs[offset + i] = 1;
+        }
+        offset += state.getStartingLives();
+        assert (offset - start_offset == getBoardSectionLength());
     }
 
     // TODO
     public void encodeDiscardSection(GameState state, int offset, int[] obs) {
-
+        int start_offset = offset;
+        int discard_counts[] = new int[(kColors * kRanks) + 1];
+        Collection<Card> cards = state.getDiscards();
+        for (Card card : cards) {
+            discard_counts[CardIndex(card.colour, card.value, this.kRanks)] += 1;
+        }
+        for (int c = 0; c < kColors; ++c) {
+            for (int r = 0; r < kRanks; ++r) {
+                int num_discarded = discard_counts[c * kRanks + r];
+                for (int i = 0; i < num_discarded; i++) {
+                    obs[offset + i] = 1;
+                }
+                if (r == 0) {
+                    offset += 3;
+                } else if (r == kRanks - 1) {
+                    offset += 1;
+                } else {
+                    offset += 2;
+                }
+            }
+        }
+        assert (offset - start_offset == getDiscardSectionLength());
     }
 
     // TODO
     public void encodeLastActionSection(GameState state, int offset, int[] obs) {
-
+        int start_offset = offset;
+        List<HistoryEntry> moves = state.getActionHistory();
+        Iterator movesit = moves.iterator();
+        HistoryEntry hist = null;
+        List<GameEvent> last_moves = null;
+        GameEvent last_move = null;
+        if (movesit.hasNext()) {
+            hist = (HistoryEntry) movesit.next();
+        }
+        if (hist != null) {
+            last_moves = hist.history;
+        }
+        if (last_moves != null) {
+            for (Iterator i = last_moves.iterator(); i.hasNext();) {
+                GameEvent move = (GameEvent) i.next();
+                if (!(move instanceof CardDrawn)) {
+                    last_move = move;
+                    break;
+                }
+            }
+        }
+        if (last_move == null) {
+            offset += getLastActionSectionLength();
+        } else {
+            obs[offset + hist.playerID] = 1;
+            offset += kPlayers;
+            if (last_move instanceof CardPlayed) {
+                obs[offset] = 1;
+            } else if (last_move instanceof CardDiscarded) {
+                obs[offset + 1] = 1;
+            } else if (last_move instanceof CardInfoColour) {
+                obs[offset + 2] = 1;
+            } else if (last_move instanceof CardInfoValue) {
+                obs[offset + 3] = 1;
+            }
+            offset += 4;
+            if (last_move instanceof CardInfoColour || last_move instanceof CardInfoValue) {
+                obs[offset + ((CardInfo) last_move).getPlayerTold()] = 1;
+            }
+            offset += kPlayers;
+            if (last_move instanceof CardInfoColour) {
+                obs[offset + ((CardInfoColour) last_move).getColour().ordinal()] = 1;
+            }
+            offset += kColors;
+            if (last_move instanceof CardInfoValue) {
+                obs[offset + ((CardInfoValue) last_move).getValue()] = 1;
+            }
+            offset += kRanks;
+            if (last_move instanceof CardInfoColour || last_move instanceof CardInfoValue) {
+                for (Integer i : ((CardInfo) last_move).getSlots()) {
+                    obs[offset + i] = 1;
+                }
+            }
+            offset += kHandSize;
+            if (last_move instanceof CardDiscarded) {
+                obs[offset + ((CardDiscarded) last_move).getSlotId()] = 1;
+            } else if (last_move instanceof CardPlayed) {
+                obs[offset + ((CardPlayed) last_move).getSlotId()] = 1;
+            }
+            offset += kHandSize;
+            if (last_move instanceof CardDiscarded) {
+                obs[offset + CardIndex(((CardDiscarded) last_move).getColour(), ((CardDiscarded) last_move).getValue(),
+                        kRanks)] = 1;
+            } else if (last_move instanceof CardPlayed) {
+                obs[offset + CardIndex(((CardPlayed) last_move).getColour(), ((CardPlayed) last_move).getValue(),
+                        kRanks)] = 1;
+            }
+            offset += kBitsPerCard;
+            if (last_move instanceof CardPlayed) {
+                if (((CardPlayed) last_move).scored) {
+                    obs[offset] = 1;
+                }
+                if (((CardPlayed) last_move).information) {
+                    obs[offset + 1] = 1;
+                }
+            }
+            offset += 2;
+        }
+        assert (offset - start_offset == getLastActionSectionLength());
     }
 
     // TODO
     public void encodeCardKnowledgeSection(GameState state, int offset, int[] obs) {
-
+        int start_offset = offset;
+        for (int player = 0; player < this.kPlayers; player++) {
+            Hand hand = state.getHand(player);
+            Card cards[] = new Card[hand.getSize()];
+            for (int i = 0; i < hand.getSize(); i++) {
+                cards[i] = hand.getCard(i);
+            }
+            int num_cards = 0;
+            for (int i = 0; i < hand.getSize(); i++) {
+                if (hand.isPossible(i, cards[i])) {
+                    obs[offset + CardIndex(cards[i].colour, cards[i].value, this.kRanks)] = 1;
+                }
+                offset += kBitsPerCard;
+                // Add bits for explicitly revealed colors and ranks.
+                if (hand.getKnownColour(i) != null) {
+                    obs[offset + ColorToIndex(cards[i].colour)] = 1;
+                }
+                offset += kColors;
+                if (hand.getKnownValue(i) != null) {
+                    obs[offset + cards[i].value] = 1;
+                }
+                offset += kRanks;
+                ++num_cards;
+            }
+            // A player's hand can have fewer cards than the initial hand size.
+            // Leave the bits for the absent cards empty (adjust the offset to skip
+            // bits for the missing cards).
+            if (num_cards < kHandSize) {
+                offset += (kHandSize - num_cards) * (kBitsPerCard + kColors + kRanks);
+            }
+        }
+        assert (offset - start_offset == getCardKnowledgeSectionLength());
     }
 
     public void initSteps() {

@@ -12,12 +12,20 @@ public class CardPlayed extends GameEvent {
     private final int value;
     private final CardColour colour;
 
+    // New
+    public boolean scored;
+    public boolean information;
+
     public CardPlayed(int playerId, int slotId, CardColour colour, int value, int turnNumber) {
         super(MessageType.CARD_PLAYED, turnNumber);
         this.playerId = playerId;
         this.slotId = slotId;
         this.colour = colour;
         this.value = value;
+
+        // New
+        this.scored = false;
+        this.information = false;
     }
 
     @Override
@@ -32,6 +40,7 @@ public class CardPlayed extends GameEvent {
             state.setLives(state.getLives() - 1);
             state.addToDiscard(oldCard);
         } else {
+            this.scored = true; // New
             state.setTableValue(oldCard.colour, nextValue);
 
             // next value is 5, get free infomations
@@ -40,12 +49,13 @@ public class CardPlayed extends GameEvent {
                 int maxInfo = state.getStartingInfomation();
 
                 if (maxInfo != currInfo) {
+                    this.information = true; // New
                     state.setInformation(currInfo + 1);
                 }
             }
         }
 
-        //if this was us, we think it could still be in the deck.
+        // if this was us, we think it could still be in the deck.
         if (myPlayerID == playerId) {
             state.getDeck().remove(oldCard);
         }
@@ -54,7 +64,7 @@ public class CardPlayed extends GameEvent {
 
     }
 
-    public int getPlayerId(){
+    public int getPlayerId() {
         return playerId;
     }
 
@@ -62,7 +72,7 @@ public class CardPlayed extends GameEvent {
         return slotId;
     }
 
-    public int getValue(){
+    public int getValue() {
         return value;
     }
 

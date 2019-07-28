@@ -28,14 +28,13 @@ public class CardDiscarded extends GameEvent {
         state.setCardAt(playerId, slotId, null);
         state.setInformation(state.getInfomation() + 1);
 
-        //if this was my card, I think it is still in the deck, time to delete it
+        // if this was my card, I think it is still in the deck, time to delete it
         if (myPlayerId == playerId) {
             state.getDeck().remove(card);
         }
     }
 
-
-    public int getPlayerId(){
+    public int getPlayerId() {
         return playerId;
     }
 
@@ -43,10 +42,14 @@ public class CardDiscarded extends GameEvent {
         return slotId;
     }
 
-    public int getValue(){
+    public int getValue() {
         return value;
     }
 
+    // New
+    public CardColour getColour() {
+        return colour;
+    }
 
     @Override
     public String toString() {
