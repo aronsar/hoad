@@ -87,8 +87,16 @@ public class TellValue implements Action {
     }
 
     @Override
+    public String getColorName() {
+        String res = "X";
+        return res;
+    }
+
+    @Override
     public int getRank() {
-        return this.value;
+        int res = this.value - 1;
+        assert (res >= 0 && res <= 4);
+        return res;
     }
 
     @Override

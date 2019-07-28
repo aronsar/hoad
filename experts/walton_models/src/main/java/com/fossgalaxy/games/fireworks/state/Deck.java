@@ -1,6 +1,5 @@
 package com.fossgalaxy.games.fireworks.state;
 
-
 import java.io.Serializable;
 import java.util.*;
 
@@ -8,7 +7,7 @@ import java.util.*;
  * Represents a deck of Hanabi cards.
  */
 public class Deck implements Serializable {
-    private final LinkedList<Card> cards;
+    public final LinkedList<Card> cards;
 
     public Deck() {
         this.cards = new LinkedList<>();
@@ -112,8 +111,10 @@ public class Deck implements Serializable {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof Deck)) return false;
+        if (this == o)
+            return true;
+        if (!(o instanceof Deck))
+            return false;
 
         Deck deck = (Deck) o;
 
@@ -125,15 +126,15 @@ public class Deck implements Serializable {
         return cards.hashCode();
     }
 
-    public static Deck toNormalisedDeck(Deck input){
+    public static Deck toNormalisedDeck(Deck input) {
         Map<CardColour, CardColour> transformation = new EnumMap<>(CardColour.class);
         int colour = 0;
         Deck normalised = new Deck();
-        for(Card card : input.cards){
-            if(!transformation.containsKey(card.colour)){
+        for (Card card : input.cards) {
+            if (!transformation.containsKey(card.colour)) {
                 transformation.put(card.colour, CardColour.values()[colour++]);
             }
-            normalised.cards.add(new Card( card.value, transformation.get(card.colour)));
+            normalised.cards.add(new Card(card.value, transformation.get(card.colour)));
         }
         return normalised;
     }

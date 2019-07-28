@@ -137,6 +137,11 @@ public class GameRunner {
 
         state.init(seed);
 
+        // New
+        Deck mydeck = new Deck(state.getDeck());
+        LinkedList<Card> mycards = mydeck.cards;
+        DataParserUtils.RecordStartDeck(mycards);
+
         // keep track of the messages that should be sent as part of the game setup
         List<GameEvent> initEvents = new ArrayList<>();
 
@@ -145,6 +150,15 @@ public class GameRunner {
                 state.getLives());
         initEvents.add(gameInfo);
 
+        // System.out.print(mycards.size());
+        // Card curr_card;
+
+        // while (!mycards.isEmpty()) {
+        // curr_card = mycards.pop();
+        // System.out.printf("Card: %s %d,", curr_card.colour, curr_card.value);
+        // }
+
+        LinkedList<Card> start_hands = new LinkedList<Card>();
         // tell players about the initial state
         for (int player = 0; player < players.length; player++) {
             Hand hand = state.getHand(player);
@@ -156,8 +170,10 @@ public class GameRunner {
                 GameEvent cardRecv = new CardReceived(player, slot, state.getDeck().hasCardsLeft(), 0);
                 initEvents.add(cardDrawn);
                 initEvents.add(cardRecv);
+                start_hands.add(cardInSlot);
             }
         }
+        DataParserUtils.RecordStartHands(start_hands);
 
         // dispatch the events to the players
         notifyAction(-2, null, initEvents);
@@ -200,18 +216,17 @@ public class GameRunner {
             throw new RulesViolation(action);
         }
 
+        // perform the action and get the effects
+        // logger.info("player {} made move {} as turn {}", nextPlayer, action, moves);
+        moves++;
+
+        Collection<GameEvent> events = action.apply(nextPlayer, state);
         // Ensure parser exist
         if (parser != null) {
             parser.writeData(state, action);
             // parser.writeAction(action);
             // parser.writeObservation(state);
         }
-
-        // perform the action and get the effects
-        // logger.info("player {} made move {} as turn {}", nextPlayer, action, moves);
-        moves++;
-
-        Collection<GameEvent> events = action.apply(nextPlayer, state);
         notifyAction(nextPlayer, action, events);
 
         // make sure it's the next player's turn

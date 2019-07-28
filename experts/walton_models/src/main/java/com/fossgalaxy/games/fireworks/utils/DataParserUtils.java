@@ -1,26 +1,26 @@
 package com.fossgalaxy.games.fireworks.utils;
 
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Vector;
 
 import com.fossgalaxy.games.fireworks.state.Card;
 import com.fossgalaxy.games.fireworks.state.CardColour;
 import com.fossgalaxy.games.fireworks.state.GameState;
 import com.fossgalaxy.games.fireworks.state.Hand;
+import com.fossgalaxy.games.fireworks.state.HistoryEntry;
 import com.fossgalaxy.games.fireworks.state.actions.Action;
 import com.fossgalaxy.games.fireworks.state.actions.ActionType;
-import com.fossgalaxy.games.fireworks.state.HistoryEntry;
-import com.fossgalaxy.games.fireworks.state.events.GameEvent;
 import com.fossgalaxy.games.fireworks.state.events.CardDiscarded;
 import com.fossgalaxy.games.fireworks.state.events.CardDrawn;
 import com.fossgalaxy.games.fireworks.state.events.CardInfo;
-import com.fossgalaxy.games.fireworks.state.events.CardInfoValue;
 import com.fossgalaxy.games.fireworks.state.events.CardInfoColour;
+import com.fossgalaxy.games.fireworks.state.events.CardInfoValue;
 import com.fossgalaxy.games.fireworks.state.events.CardPlayed;
-
-import java.util.*;
-import java.util.stream.Collectors;
-import java.lang.Math.*;
+import com.fossgalaxy.games.fireworks.state.events.GameEvent;
 
 /**
  * Created by webpigeon on 11/10/16.
@@ -42,6 +42,10 @@ public class DataParserUtils {
     public int current_player;
     public Vector<int[]> all_obs;
     public Vector<int[]> all_act;
+    public Vector<Integer> all_act_id;
+    public Vector<String[]> all_act_info;
+    public static Vector<String> start_deck;
+    public static Vector<String> start_hands;
     public static int game_num = -1;
 
     // utility class - no instances required
@@ -59,6 +63,8 @@ public class DataParserUtils {
         this.current_player = 0;
         this.all_obs = new Vector<int[]>();
         this.all_act = new Vector<int[]>();
+        this.all_act_id = new Vector<Integer>();
+        this.all_act_info = new Vector<String[]>();
     }
 
     public int getHandSize() {
@@ -351,27 +357,41 @@ public class DataParserUtils {
 
     public int getMoveUID(Action action) {
         ActionType type = action.getType();
+        // System.out.printf("Acion: %s %s %s\n", action.getType(),
+        // action.getColorName(), action.getRank());
+
+        String[] act_info = new String[3];
+        act_info[0] = String.format("%s", action.getType());
+        act_info[1] = action.getColorName();
+        act_info[2] = String.format("%s", action.getRank());
+        this.all_act_info.add(act_info);
+
         int uid = -1;
         switch (type) {
         case DISCARD:
             uid = action.getCardIndex();
+            // System.out.printf("DISCARD %d\n", uid);
             break;
         case PLAY:
             uid = getMaxDiscardMoves() + action.getCardIndex();
+            // System.out.printf("PLAY %d\n", uid);
+
             break;
         case REVEAL_COLOR:
             assert (action.getTargetOffset() != -1);
             assert (action.getColor() != -1);
 
-            uid = getMaxDiscardMoves() + getMaxPlayMoves() + Math.min(action.getTargetOffset() - 1, 0) * this.kColors
+            uid = getMaxDiscardMoves() + getMaxPlayMoves() + Math.max(action.getTargetOffset() - 1, 0) * this.kColors
                     + action.getColor();
+            // System.out.printf("REVEAL_COLOR %d\n", uid);
             break;
         case REVEAL_RANK:
             assert (action.getTargetOffset() != -1);
             assert (action.getRank() != -1);
 
             uid = getMaxDiscardMoves() + getMaxPlayMoves() + getMaxRevealColorMoves()
-                    + Math.min(action.getTargetOffset() - 1, 0) * this.kRanks + action.getRank() - 1;
+                    + Math.max(action.getTargetOffset() - 1, 0) * this.kRanks + action.getRank() - 1;
+            // System.out.printf("REVEAL_RANK %d\n", uid);
             break;
         default:
             break;
@@ -385,13 +405,8 @@ public class DataParserUtils {
 
     public int[] writeAction(Action action, int[] act_vec) {
         int act_id = getMoveUID(action);
+        this.all_act_id.add(act_id);
         act_vec[act_id] = 1;
-
-        // For Debug Purpose
-        // System.out.printf("Step %d, Player ID %d\n", this.steps,
-        // this.current_player);
-        // System.out.printf("Action: %s, Id: %d, Target %d\n", action, act_id,
-        // action.getTargetOffset());
 
         return act_vec;
     }
@@ -417,6 +432,45 @@ public class DataParserUtils {
 
     public void writeToDisk() {
         game_num += 1;
+        writeOnlyActId();
+        // writeObsAndActVec();
+    }
+
+    public void writeOnlyActId() {
+        for (int i = 0; i < this.all_act_id.size(); i++) {
+            // Write meta data: game_num, obs_size, and act_size
+            System.out.printf(game_num + "," + (start_deck.size() + start_hands.size()));
+
+            // Write action vector
+            // int act_id = this.all_act_id.get(i);
+            // System.out.printf("," + act_id);
+
+            String[] act_info = this.all_act_info.get(i);
+            for (int k = 0; k < 3; k++) {
+                System.out.printf("," + act_info[k]);
+            }
+
+            // Write Start Hands
+            for (int k = 0; k < start_hands.size(); k++) {
+                System.out.printf("," + start_hands.get(k));
+            }
+
+            // Write Deck
+            for (int k = 0; k < start_deck.size(); k++) {
+                System.out.printf("," + start_deck.get(k));
+            }
+
+            // // Write observation vector
+            // int[] obs_vec = this.all_obs.get(i);
+            // for (int j = 0; j < getObservationShape(); j++) {
+            // System.out.printf("," + obs_vec[j]);
+            // }
+
+            System.out.printf("\n");
+        }
+    }
+
+    public void writeObsAndActVec() {
         for (int i = 0; i < this.all_obs.size(); i++) {
             // Write meta data: game_num, obs_size, and act_size
             System.out.printf(game_num + "," + getObservationShape() + "," + getMaxMoves());
@@ -441,6 +495,54 @@ public class DataParserUtils {
     // public static int CardIndex(int color, int rank, int num_ranks) {
     // return color * num_ranks + rank;
     // }
+    public static void RecordStartDeck(LinkedList<Card> cards) {
+        start_deck = new Vector<String>();
+        Card curr_card;
+
+        while (!cards.isEmpty()) {
+            curr_card = cards.pop();
+            String card_name = CardString(curr_card.colour, curr_card.value - 1); // Need -1 since c++ range from 0~4
+            start_deck.add(card_name);
+        }
+    }
+
+    public static void RecordStartHands(LinkedList<Card> cards) {
+        start_hands = new Vector<String>();
+        Card curr_card;
+
+        while (!cards.isEmpty()) {
+            curr_card = cards.pop();
+            String card_name = CardString(curr_card.colour, curr_card.value - 1); // Need -1 since c++ range from 0~4
+            start_hands.add(card_name);
+        }
+    }
+
+    public static String CardString(CardColour color, int rank) {
+        String name = "";
+
+        switch (color) {
+        case RED:
+            name = "R" + String.valueOf(rank);
+            break;
+        case BLUE:
+            name = "B" + String.valueOf(rank);
+            break;
+        case GREEN:
+            name = "G" + String.valueOf(rank);
+            break;
+        case ORANGE:
+            name = "Y" + String.valueOf(rank);
+            break;
+        case WHITE:
+            name = "W" + String.valueOf(rank);
+            break;
+        default:
+            break;
+        }
+
+        assert (name != "");
+        return name;
+    }
 
     public static int CardIndex(CardColour color, int rank, int num_ranks) {
         return ColorToIndex(color) * num_ranks + rank;

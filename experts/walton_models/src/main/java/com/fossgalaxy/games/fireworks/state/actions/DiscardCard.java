@@ -1,20 +1,23 @@
 package com.fossgalaxy.games.fireworks.state.actions;
 
 import com.fossgalaxy.games.fireworks.state.Card;
+import com.fossgalaxy.games.fireworks.state.CardColour;
 import com.fossgalaxy.games.fireworks.state.GameState;
 import com.fossgalaxy.games.fireworks.state.RulesViolation;
+import com.fossgalaxy.games.fireworks.state.events.CardDiscarded;
 import com.fossgalaxy.games.fireworks.state.events.CardDrawn;
-import com.fossgalaxy.games.fireworks.state.events.CardPlayed;
 import com.fossgalaxy.games.fireworks.state.events.CardReceived;
 import com.fossgalaxy.games.fireworks.state.events.GameEvent;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class PlayCard implements Action {
+public class DiscardCard implements Action {
     public final int slot;
+    public CardColour colour;
+    public int rank;
 
-    public PlayCard(int slot) {
+    public DiscardCard(int slot) {
         this.slot = slot;
     }
 
@@ -24,35 +27,20 @@ public class PlayCard implements Action {
             throw new RulesViolation("this is a violation of the game rules!", this);
         }
 
-        // deal with the old card first
-        Card oldCard = game.getCardAt(playerID, slot);
-        assert oldCard != null : "old card was unknown or did not exist";
-
-        // figure out the next value
-        int nextValue = game.getTableValue(oldCard.colour) + 1;
+        int currentInfo = game.getInfomation();
         int nextTurn = game.getTurnNumber() + 1;
 
-        // check if the card was valid
-        if (nextValue == oldCard.value) {
-            game.setTableValue(oldCard.colour, nextValue);
+        // deal with the old card first
+        Card oldCard = game.getCardAt(playerID, slot);
+        game.addToDiscard(oldCard);
 
-            // if you complete a firework, you get an information back
-            if (nextValue == 5) {
-                int currentInfo = game.getInfomation();
-                int maxInfo = game.getStartingInfomation();
-                if (currentInfo < maxInfo) {
-                    game.setInformation(currentInfo + 1);
-                }
-            }
+        // the players gain one information back
+        game.setInformation(currentInfo + 1);
 
-        } else {
-            // if this card wasn't valid, discard it and lose a life.
-            game.addToDiscard(oldCard);
-            game.setLives(game.getLives() - 1);
-        }
-
+        this.colour = oldCard.colour;
+        this.rank = oldCard.value;
         ArrayList<GameEvent> events = new ArrayList<>();
-        events.add(new CardPlayed(playerID, slot, oldCard.colour, oldCard.value, nextTurn));
+        events.add(new CardDiscarded(playerID, slot, oldCard.colour, oldCard.value, nextTurn));
         events.add(new CardReceived(playerID, slot, game.getDeck().hasCardsLeft(), nextTurn));
 
         // deal with the new card
@@ -77,12 +65,16 @@ public class PlayCard implements Action {
     @Override
     public boolean isLegal(int playerID, GameState state) {
         Card card = state.getHand(playerID).getCard(slot);
-        return card != null;
+        if (card == null) {
+            return false;
+        }
+
+        return state.getInfomation() != state.getStartingInfomation();
     }
 
     @Override
     public ActionType getType() {
-        return ActionType.PLAY;
+        return ActionType.DISCARD;
     }
 
     @Override
@@ -101,13 +93,42 @@ public class PlayCard implements Action {
     }
 
     @Override
+    public String getColorName() {
+        String res = "X";
+        switch (this.colour) {
+        case RED:
+            res = "R";
+            break;
+        case BLUE:
+            res = "B";
+            break;
+        case GREEN:
+            res = "G";
+            break;
+        case ORANGE:
+            res = "Y";
+            break;
+        case WHITE:
+            res = "W";
+            break;
+        default:
+            break;
+        }
+
+        assert (res != "X");
+        return res;
+    }
+
+    @Override
     public int getRank() {
-        return -1;
+        int res = this.rank - 1;
+        assert (res >= 0 && res <= 4);
+        return res;
     }
 
     @Override
     public String toString() {
-        return String.format("play %d", slot);
+        return String.format("Discard %d", slot);
     }
 
     @Override
@@ -117,9 +138,9 @@ public class PlayCard implements Action {
         if (o == null || getClass() != o.getClass())
             return false;
 
-        PlayCard playCard = (PlayCard) o;
+        DiscardCard that = (DiscardCard) o;
 
-        return slot == playCard.slot;
+        return slot == that.slot;
 
     }
 

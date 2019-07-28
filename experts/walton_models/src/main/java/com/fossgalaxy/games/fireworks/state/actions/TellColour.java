@@ -103,8 +103,35 @@ public class TellColour implements Action {
     }
 
     @Override
+    public String getColorName() {
+        String res = "X";
+        switch (this.colour) {
+        case RED:
+            res = "R";
+            break;
+        case BLUE:
+            res = "B";
+            break;
+        case GREEN:
+            res = "G";
+            break;
+        case ORANGE:
+            res = "Y";
+            break;
+        case WHITE:
+            res = "W";
+            break;
+        default:
+            break;
+        }
+
+        assert (res != "X");
+        return res;
+    }
+
+    @Override
     public int getRank() {
-        return -1;
+        return -1; // Only tell color does not need rank
     }
 
     @Override

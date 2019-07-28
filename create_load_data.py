@@ -2,7 +2,7 @@ import gin
 import os
 import pickle
 import random
-from subprocess import call
+import subprocess
 from utils import parse_args
 
 def create_rainbow_data(datapath, num_players, num_games):
@@ -28,10 +28,20 @@ def create_rainbow_data(datapath, num_players, num_games):
 
 
 def create_iggi_data(datapath, num_players, num_games):
-    print(datapath)
-    call("python experts/create_walton_data.py --datapath %s --num_players %d "\
+    subprocess.call("python experts/create_walton_data.py --datapath %s --num_players %d "\
          "--num_games %d --agent_name %s --rainbowdir %s" % (datapath, num_players,\
          num_games, "iggi", None), shell=True)
+    
+    # default_rainbow_agent_name = 'iggi'
+    # rainbowdir = './experts/walton_models'
+    
+    # subprocess.Popen(["./experts/create_walton_data.py",
+    #                   "--datapath", datapath,
+    #                   "--num_players", str(num_players),
+    #                   "--num_games", str(num_games),
+    #                   "--agent_name", default_rainbow_agent_name,
+    #                   "--rainbowdir", rainbowdir])
+    # subprocess.Popen.communicate() # solves issue where Popen hangs
 
 def create_example_data():
     # TODO: insert your Popen for your script here
@@ -52,7 +62,7 @@ class DataLoader(object):
     @gin.configurable
     def __init__(self, 
             num_players=2,
-            num_games=140):
+            num_games=10):
 
         self.num_players = num_players
         self.num_games = num_games
@@ -111,12 +121,12 @@ def main(args):
             agent_data = pickle.load(open(datapath, "rb"), encoding='latin1')
         except IOError:
             CREATE_DATA_FOR[agent_name](datapath, loader.num_players, loader.num_games)
-            agent_data = pickle.load(open(datapath, "rb"), encoding='latin1')
+    #         agent_data = pickle.load(open(datapath, "rb"), encoding='latin1')
         
-        raw_data[agent_name] = agent_data     # placing agent_data into a dictionary
+    #     raw_data[agent_name] = agent_data     # placing agent_data into a dictionary
     
-    loader.train_val_test_split(raw_data)
-    return loader
+    # loader.train_val_test_split(raw_data)
+    # return loader
     
     
 if __name__ == "__main__":

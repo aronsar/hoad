@@ -20,5 +20,7 @@ public interface Action extends Serializable {
 
     int getColor();
 
+    String getColorName();
+
     int getRank();
 }
