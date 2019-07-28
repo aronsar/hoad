@@ -33,16 +33,16 @@ def one_hot_vectorized_action(agent, num_moves, obs):
         obs: observation object (has lots of good info, run print(obs.keys()) to see)
 
     Returns:
-        one_hot_vector: one hot action vector
+        one_hot_action_vector: one hot action vector
         action: action in the form recognizable by the Hanabi environment
                 (idk something like {'discard': 5})
     '''
     action = agent.act(obs)
-    one_hot_vector = [0]*num_moves
+    one_hot_action_vector = [0]*num_moves
     action_idx = obs['legal_moves_as_int'][obs['legal_moves'].index(action)]
-    one_hot_vector[action_idx] = 1
+    one_hot_action_vector[action_idx] = 1
 
-    return one_hot_vector, action
+    return one_hot_action_vector, action
 
 class DataCreator(object):
     def __init__(self, args):
@@ -57,18 +57,12 @@ class DataCreator(object):
 
 
     def create_data(self):
-        '''Iterate over all specified rainbw agents, and have each play self.num_games.
-        The games are self-play, so agent A plays A, B plays B, etc. Each game 
-        has the following structure:
+        '''Create and return a list of games. Each game has the following structure:
             [ [[obs_0], [obs_1], ..., [obs_n]], [[act_0], [act_1], ..., [act_n]] ]
         where each obs_i and act_i are the observation and resultant action that
         an agent took at game step i. Each game round consists of num_players game
-        steps. A game can have a variable amount of rounds; you can lose early.
-        
-        The output, raw_data, is a dictionary with (key, value) pairs:
-            key: rainbow agent name, in the form rainbow1, rainbow2, etc
-            value: list of games played by this agent, self.num_games long; each
-                game has the format as shown above'''
+        steps. A game can have a variable amount of rounds--you can lose early.
+        '''
         raw_data = []
         
         for game_num in range(self.num_games):
@@ -79,13 +73,13 @@ class DataCreator(object):
             while not game_done:
                 for agent_id in range(self.num_players):
                     observation = observations['player_observations'][agent_id]
-                    action_vec, action = one_hot_vectorized_action(
+                    one_hot_action_vector, action = one_hot_vectorized_action(
                             self.agent_object,
                             self.environment.num_moves(),
                             observation)
                     raw_data[game_num][0].append(
                             observation['vectorized'])
-                    raw_data[game_num][1].append(action_vec)
+                    raw_data[game_num][1].append(one_hot_action_vector)
 
                     if observation['current_player'] == agent_id:
                         assert action is not None
@@ -99,6 +93,7 @@ class DataCreator(object):
                         break
 
         return raw_data
+
 
 def parse():
   parser = argparse.ArgumentParser()
@@ -121,11 +116,8 @@ def parse():
 
 def main(args):
     data_creator = DataCreator(args)
-    # FIXME: all parse_args functions with "resolve" in the name should happen
-    # in one function somewhere else
-
-    raw_data = data_creator.create_data()
-    pickle.dump(raw_data, open(args.datapath, "wb"))
+    rainbow_data = data_creator.create_data()
+    pickle.dump(rainbow_data, open(args.datapath, "wb"))
 
 if __name__ == '__main__':
     args = parse()

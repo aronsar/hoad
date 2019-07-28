@@ -107,8 +107,14 @@ class HanabiEnv(Environment):
         self.game, pyhanabi.ObservationEncoderType.CANONICAL)
     self.players = self.game.num_players()
 
-  def reset(self):
+  def reset(self, deck=None):
     r"""Resets the environment for a new game.
+
+    Arguments:
+      - deck: list, default None
+          Deck of the cards to be loaded in. If None, a random card will be
+          dealt. Colors use uppercase initials; ranks indexed from 0.
+          Ex.: ['Y4', 'Y3', 'Y2', 'Y1', 'Y0', ...]
 
     Returns:
       observation: dict, containing the full observation about the game at the
@@ -208,9 +214,10 @@ class HanabiEnv(Environment):
                                   'vectorized': [ 0, 0, 1, ... ]}]}
     """
     self.state = self.game.new_initial_state()
+    self.deck = self._build_deck_gen(deck) # Preset deck
 
     while self.state.cur_player() == pyhanabi.CHANCE_PLAYER_ID:
-      self.state.deal_random_card()
+      self._deal_card()
 
     obs = self._make_observation_all_players()
     obs["current_player"] = self.state.cur_player()
@@ -355,7 +362,7 @@ class HanabiEnv(Environment):
     self.state.apply_move(action)
 
     while self.state.cur_player() == pyhanabi.CHANCE_PLAYER_ID:
-      self.state.deal_random_card()
+      self._deal_card()
 
     observation = self._make_observation_all_players()
     done = self.state.is_terminal()
@@ -364,6 +371,35 @@ class HanabiEnv(Environment):
     info = {}
 
     return (observation, reward, done, info)
+
+  def _deal_card(self):
+    """Deals a card from the preset deck if exists; deals a random card
+       otherwise.
+    """
+    if self.deck:
+      card = next(self.deck, None)
+      if card:
+        self.state.deal_this_card(card)
+      # No more card to deal; let state.deal_random_card() DEAL with it.
+      else:
+        self.state.deal_random_card()
+    else:
+      self.state.deal_random_card()
+
+  def _build_deck_gen(self, deck):
+    """Build a deck generator
+       Args:
+         - deck: list
+             Deck of cards to be used.
+       Rets:
+         - The next possible card; None is returned if @deck == None,
+    """
+    if deck is None:
+      return None
+    i = 0
+    while i < len(deck):
+      yield deck[i]
+      i += 1
 
   def _make_observation_all_players(self):
     """Make observation for all players.

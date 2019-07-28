@@ -338,6 +338,14 @@ int StateCurPlayer(pyhanabi_state_t* state) {
       ->CurPlayer();
 }
 
+void StateDealThisCard(pyhanabi_state_t* state, int color, int rank) {
+  REQUIRE(state != nullptr);
+  REQUIRE(state->state != nullptr);
+  auto hanabi_state =
+      reinterpret_cast<hanabi_learning_env::HanabiState*>(state->state);
+  hanabi_state->ApplyPresetDeal(color, rank);
+}
+
 void StateDealRandomCard(pyhanabi_state_t* state) {
   REQUIRE(state != nullptr);
   REQUIRE(state->state != nullptr);

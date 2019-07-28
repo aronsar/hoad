@@ -564,6 +564,17 @@ class HanabiState(object):
       firework_list.append(lib.StateFireworks(self._state, c))
     return firework_list
 
+  def deal_this_card(self, card):
+    """ Deal the given card to the current player.
+    Args:
+      - card: str
+          Card to be dealt in the following format:
+          "{color uppercase initial}{rank indexed from 0}"
+          Ex: "R0"
+    """
+    color, rank = COLOR_CHAR.index(card[0]), int(card[1])
+    lib.StateDealThisCard(self._state, color, rank)
+
   def deal_random_card(self):
     """If cur_player == CHANCE_PLAYER_ID, make a random card-deal move."""
     lib.StateDealRandomCard(self._state)

@@ -21,7 +21,7 @@ def gen_agent_fc(input_tensor, weights, biases, act=tf.nn.relu):
     activated = act(added)
     return activated
 
-def LSTM_strategy_embedder(adhoc_games, cfg)
+def LSTM_strategy_embedder(adhoc_games, cfg):
     # LSTM part of generator
     LSTM_cell = tf.nn.rnn_cell.LSTMCell(num_units=64)
     last_states = [None]*cfg['num_adhoc_games']
@@ -39,7 +39,7 @@ def LSTM_strategy_embedder(adhoc_games, cfg)
     strat_vec = tf.concat(last_states, axis=1)
     return strat_vec
 
-def generated_agent_action_taker(input_obs, strat_vec, cfg)
+def generated_agent_action_taker(input_obs, strat_vec, cfg):
     hidden1 = Dense(cfg['hidden1_dim'], activation=tf.nn.relu)(strat_vec)
     top_head1 = Dense(cfg['top_head1_dim'], activation=tf.nn.relu)(hidden1)
     bot_head1 = Dense(cfg['bot_head1_dim'], activation=tf.nn.relu)(hidden1)
@@ -78,7 +78,7 @@ def generated_agent_action_taker(input_obs, strat_vec, cfg)
     onehot_action = tf.one_hot(tf.argmax(agent_logit), tf.shape(agent_logit))
     return onehot_action
 
-def discriminator(agent_act, input_act, cfg)
+def discriminator(agent_act, input_act, cfg):
     top_hidden1 = Dense(cfg['top_hidden1_dim'], activation=tf.nn.relu)(top_input)
     bot_hidden1 = Dense(cfg['bot_hidden1_dim'], activation=tf.nn.relu)(bot_input)
     concat_hidden1 = tf.concat([top_hidden1, bot_hidden1], axis=1)

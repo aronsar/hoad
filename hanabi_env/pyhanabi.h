@@ -114,6 +114,7 @@ void DeleteState(pyhanabi_state_t* state);
 const void* StateParentGame(pyhanabi_state_t* state);
 void StateApplyMove(pyhanabi_state_t* state, pyhanabi_move_t* move);
 int StateCurPlayer(pyhanabi_state_t* state);
+void StateDealThisCard(pyhanabi_state_t* state, int color, int rank);
 void StateDealRandomCard(pyhanabi_state_t* state);
 int StateDeckSize(pyhanabi_state_t* state);
 int StateFireworks(pyhanabi_state_t* state, int color);

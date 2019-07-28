@@ -12,13 +12,9 @@ import keras
 
 
 def main():
-    #parse arguments
-    #args = parse_args.parse_with_resolved_paths()
-    
     args = parse_args.parse()
     args = dir_utils.resolve_run_directory(args)
 
-    
     #create/load data
     loader = create_load_data.main(args)
 
