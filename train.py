@@ -18,31 +18,31 @@ class Trainer(object):
     self.batch_size = batch_size
     self.epochs = epochs
 
-def main(data, args):
-  trainer = Trainer(args) # gin configured
+# def main(data, args):
+  # trainer = Trainer(args) # gin configured
 
-  #FIXME: combine into one line once stuff works
-  mode_module = importlib.import_module(args.mode)              
-  model = mode_module.build_model(args)
+  # #FIXME: combine into one line once stuff works
+  # mode_module = importlib.import_module(args.mode)              
+  # model = mode_module.build_model(args)
 
-  model.compile(
-      optimizer = trainer.optimizer,
-      loss = trainer.loss,
-      metrics = trainer.metrics)
+  # model.compile(
+      # optimizer = trainer.optimizer,
+      # loss = trainer.loss,
+      # metrics = trainer.metrics)
 
-  tr_history = model.fit_generator(
-      generator = data.generator('train'),
-      verbose = 2, # one line per epoch
-      batch_size = trainer.batch_size, 
-      epochs = trainer.epochs, # = total data / batch_size
-      validation_split = 0.1, # fraction of data used for val
-      shuffle = True)
+  # tr_history = model.fit_generator(
+      # generator = data.generator('train'),
+      # verbose = 2, # one line per epoch
+      # batch_size = trainer.batch_size, 
+      # epochs = trainer.epochs, # = total data / batch_size
+      # validation_split = 0.1, # fraction of data used for val
+      # shuffle = True)
         
-  return model
+  # return model
   
 def main(loader, args):
-  trainer = Trainer(args) # gin configured     
-  mode_module = importlib.import_module(args.mode)
+  trainer = Trainer(args) # gin configured
+  mode_module = importlib.import_module("modes." + args.mode)
   
   # intent: by locating DataGeneratr inside the mode module, we are allowing
   # different modes to easily handle their data differently

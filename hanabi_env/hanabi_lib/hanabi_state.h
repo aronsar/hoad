@@ -84,6 +84,7 @@ class HanabiState {
   bool ChanceOutcomeIsLegal(HanabiMove move) const { return MoveIsLegal(move); }
   double ChanceOutcomeProb(HanabiMove move) const;
   void ApplyChanceOutcome(HanabiMove move) { ApplyMove(move); }
+  void ApplyPresetDeal(int8_t color, int8_t rank);
   void ApplyRandomChance();
   // Get the valid chance moves, and associated probabilities.
   // Guaranteed that moves.size() == probabilities.size().

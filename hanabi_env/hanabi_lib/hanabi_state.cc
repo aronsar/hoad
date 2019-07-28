@@ -279,6 +279,10 @@ double HanabiState::ChanceOutcomeProb(HanabiMove move) const {
          static_cast<double>(deck_.Size());
 }
 
+void HanabiState::ApplyPresetDeal(int8_t color, int8_t rank) {
+  ApplyMove(HanabiMove(HanabiMove::kDeal, -1, -1, color, rank));
+}
+
 void HanabiState::ApplyRandomChance() {
   auto chance_outcomes = ChanceOutcomes();
   REQUIRE(!chance_outcomes.second.empty());
