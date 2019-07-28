@@ -1,4 +1,8 @@
 package fireflower
+import java.io.{BufferedWriter, FileWriter}
+import scala.collection.JavaConversions._
+import scala.collection.mutable.ListBuffer
+import au.com.bytecode.opencsv.CSVWriter
 
 object PlayerTests {
 
@@ -7,44 +11,86 @@ object PlayerTests {
       if(args.length >= 1)
         args(0).toInt
       else
-        1
+        10
     }
     val numPlayers = {
       if(args.length >= 2)
-        Some(args(1).toInt)
+        args(1).toInt
       else
-        None
+        2
     }
     println("NumGames=" + numGames)
 
     runTests(prefix="",salt="g",numGames=numGames, numPlayers=numPlayers)
   }
 
-  def runTests(prefix: String, salt: String, numGames: Int, numPlayers: Option[Int]): Unit = {
-    val start = System.nanoTime()
-    val rules2p = Rules.Standard(numPlayers=2,stopEarlyLoss=false)
-    val rules3p = Rules.Standard(numPlayers=3,stopEarlyLoss=false)
-    val rules4p = Rules.Standard(numPlayers=4,stopEarlyLoss=false)
+  def makeRunSeed(name:String, salt:String): Long = {
+    RandUtils.sha256Long(RandUtils.sha256Long(name) + salt)
+  }
 
-    def makeRunSeed(name:String): Long = {
-      RandUtils.sha256Long(RandUtils.sha256Long(name) + salt)
+  def runTests(prefix: String, salt: String, numGames: Int, numPlayers: Int): Unit = {
+    val start = System.nanoTime()
+    var games: List[fireflower.Game] = List[fireflower.Game]()
+
+    if (numPlayers==3) {
+      games = play_game3p(prefix, numGames, salt)
+    } else if (numPlayers == 4) {
+      games = play_game4p(prefix, numGames, salt)
+    } else {
+      games = play_game2p(prefix, numGames, salt)
     }
 
+    val gameStepArray: ListBuffer[Int] = getGameStepsForEachGame(games)
+    writeToCsvFile(base_dir = "/Users/phamthanhhuyen/Documents", gameStepArray)
+
+    val end = System.nanoTime()
+
+    println("Done!")
+    println("")
+    println("Time: " + (end-start).toDouble / 1.0e9)
+  }
+
+  def getGameStepsForEachGame(games: List[fireflower.Game]): ListBuffer[Int]={
+    var gameStepArray = new ListBuffer[Int]()
+
+    for (i <- 0 to games.length-1) {
+      gameStepArray += games(i).turnNumber
+    }
+    return gameStepArray
+  }
+
+  def play_game2p(prefix: String, numGames: Int, salt: String): List[fireflower.Game]={
+    val rules2p = Rules.Standard(numPlayers=2,stopEarlyLoss=false)
     val name2p = prefix + "HeuristicStandard2P"
     val games2p = {
       Sim.runMulti(
         name = name2p,
         rules = rules2p,
         numGames,
-        runSeed = makeRunSeed(name2p),
+        runSeed = makeRunSeed(name2p, salt),
         playerGen = HeuristicPlayer,
         doPrint = true,
         doPrintDetails = false,
         useAnsiColors = true
       )
     }
+
+    //val allGamesSteps: ListBuffer[Int] = getGameStepsForEachGame(games2p)
+
     println(name2p + ":")
     printScoreSummary(rules2p,games2p)
+
+    println("")
+    println(name2p + ":")
+    printScoreSummary(rules2p,games2p)
+    printScoreSummaryBombZero(rules2p,games2p)
+
+    //a list of numGames of 2p games
+    return games2p
+  }
+
+  def play_game3p(prefix: String, numGames: Int, salt: String): List[fireflower.Game]={
+    val rules3p = Rules.Standard(numPlayers=3,stopEarlyLoss=false)
 
     val name3p = prefix + "HeuristicStandard3P"
     val games3p = {
@@ -52,15 +98,19 @@ object PlayerTests {
         name = name3p,
         rules = rules3p,
         numGames,
-        runSeed = makeRunSeed(name3p),
+        runSeed = makeRunSeed(name3p, salt),
         playerGen = HeuristicPlayer,
         doPrint = true,
         doPrintDetails = false,
         useAnsiColors = true
       )
     }
-    println(name3p + ":")
-    printScoreSummary(rules3p,games3p)
+
+    return games3p
+  }
+
+  def play_game4p(prefix: String, numGames: Int, salt: String): List[fireflower.Game]={
+    val rules4p = Rules.Standard(numPlayers=4,stopEarlyLoss=false)
 
     val name4p = prefix + "HeuristicStandard4P"
     val games4p = {
@@ -68,33 +118,15 @@ object PlayerTests {
         name = name4p,
         rules = rules4p,
         numGames,
-        runSeed = makeRunSeed(name4p),
+        runSeed = makeRunSeed(name4p, salt),
         playerGen = HeuristicPlayer,
         doPrint = true,
         doPrintDetails = false,
         useAnsiColors = true
       )
     }
-    println(name4p + ":")
-    printScoreSummary(rules4p,games4p)
 
-    val end = System.nanoTime()
-
-    println("Done!")
-    println("")
-    println(name2p + ":")
-    printScoreSummary(rules2p,games2p)
-    printScoreSummaryBombZero(rules2p,games2p)
-    println("")
-    println(name3p + ":")
-    printScoreSummary(rules3p,games3p)
-    printScoreSummaryBombZero(rules3p,games3p)
-    println("")
-    println(name4p + ":")
-    printScoreSummary(rules4p,games4p)
-    printScoreSummaryBombZero(rules4p,games4p)
-    println("")
-    println("Time: " + (end-start).toDouble / 1.0e9)
+    return games4p
   }
 
   def printScoreSummary(rules: Rules, games: List[Game]) = {
@@ -140,6 +172,39 @@ object PlayerTests {
     println("Average Score: " + avgScore)
     println("Average Utility: " + avgUtility)
   }
+
+  def writeToCsvFile (base_dir: String, gameStepArray: ListBuffer[Int]) = {
+    val outputFile = new BufferedWriter(new FileWriter(base_dir + "/ganabi/experts/fireflower/data.csv"))
+    val csvWriter = new CSVWriter(outputFile)
+    val csvFields = Array("Game Number", "Game Step", "Initial Deck", "Actions")
+    var listOfRecords = new ListBuffer[Array[String]]()
+
+    //All fields: Num game, Num steps, Initial Deck and Actions
+    listOfRecords += csvFields
+
+    for (gameNum <- 0 to gameStepArray.length-1) {
+      for (gameStep <- 0 to gameStepArray(gameNum)-1) {
+        listOfRecords += Array((gameNum+1).toString, (gameStep+1).toString)
+      }
+    }
+
+//    val nameList = List("Deepak", "Sangeeta", "Geetika", "Anubhav", "Sahil", "Akshay")
+//    val ageList = (21 to 26).toList
+//    val cityList = List("Delhi", "Kolkata", "Chennai", "Mumbai", "Hanoi", "Saigon")
+//    var listOfRecords = new ListBuffer[Array[String]]()
+//    listOfRecords += csvFields
+//    for (i <- 0 until 6) {
+//      listOfRecords += Array(i.toString, nameList(i)
+//        , ageList(i).toString, cityList(i))
+//    }
+
+
+    csvWriter.writeAll(listOfRecords.toList)
+    outputFile.close()
+  }
+
+
+
 
   /*
    Results:
