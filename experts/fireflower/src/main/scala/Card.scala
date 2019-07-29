@@ -49,8 +49,10 @@ case class Card(
       else "??"
     }
     else {
-      if(useAnsiColors) color.toAnsiColorCode() + (number+1).toString() + Color.ansiResetColor
-      else color.toString() + (number+1).toString()
+//      if(useAnsiColors) color.toAnsiColorCode() + (number+1).toString() + Color.ansiResetColor
+//      else color.toString() + (number+1).toString()
+      if(useAnsiColors) color.toAnsiColorCode() + (number).toString() + Color.ansiResetColor
+      else color.toString() + (number).toString()
     }
   }
 }

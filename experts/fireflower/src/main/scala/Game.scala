@@ -14,6 +14,8 @@ package fireflower
 
 import RichImplicits._
 
+import scala.collection.mutable.ListBuffer
+
 object Game {
 
   //Construct a Game from the given rules and a seed for shuffling the deck.
@@ -58,7 +60,8 @@ object Game {
       nextPlayable = nextPlayable,
       numCardRemaining = numCardRemaining,
       revHistory = List(),
-      debugPath = None
+      debugPath = None,
+      actions = ListBuffer[String]()
     )
   }
 
@@ -82,6 +85,7 @@ object Game {
       nextPlayable = that.nextPlayable.clone(),
       numCardRemaining = that.numCardRemaining.clone(),
       revHistory = that.revHistory,
+      actions = that.actions,
       debugPath = that.debugPath
     )
   }
@@ -115,7 +119,7 @@ class Game private (
   //Number of this card remaining in deck or hand, indexed by card.arrayIdx
   val numCardRemaining: Array[Int],
   val revHistory: List[SeenAction],
-
+  var actions: ListBuffer[String],
   //Used by the HeuristicPlayer, to only print debug information tracing down a particular line of the search.
   //The mechanism is that while this is Some, every GiveAction done pops the head of the list if it exactly
   //matches the head of the list, else it sets this to None if it doesn't. When this is Some, debugging is on.
@@ -331,7 +335,7 @@ class Game private (
         ""
     }
 
-    "T%3d HL %d NB %d ND %2d Played %s %s danger %s %s".format(
+    "TurnNum%3d HintLeft %d NumBomb %d NumDiscard %2d Played %s %s danger %s %s".format(
       turnNumber,
       numHints,
       numBombs,
@@ -348,18 +352,19 @@ class Game private (
       case SeenDiscard(hid,cid) =>
         "Discard #%d %s".format(hid+1,seenMap(cid).toString(useAnsiColors))
       case SeenPlay(hid,cid) =>
-        "Play #%d %s".format(hid+1,seenMap(cid).toString(useAnsiColors))
+        "Play %d %s".format(hid+1,seenMap(cid).toString(useAnsiColors))
       case SeenBomb(hid,cid) =>
-        "Bomb #%d %s".format(hid+1,seenMap(cid).toString(useAnsiColors))
+        "Bomb %d %s".format(hid+1,seenMap(cid).toString(useAnsiColors))
       case SeenHint(pid,hint,appliedTo) =>
         val hintString = hint match {
           case HintColor(color) =>
             if(useAnsiColors)
               color.toAnsiColorCode() + color.toString() + Color.ansiResetColor
             else
-              color.toString()
+              "Color " + color.toString()
           case HintNumber(number) =>
-            (number+1).toString()
+            //(number+1).toString()
+            "Rank " + (number).toString()
           case HintSameColor =>
             "color"
           case HintSameNumber =>
@@ -375,7 +380,8 @@ class Game private (
           else None
         }.mkString("")
 
-        "Hint P%d %s %s".format(pid,hintString,appliedString)
+        //"Hint P%d %s %s".format(pid,hintString,appliedString)
+        "Hint%s %s".format(hintString,appliedString)
     }
   }
 
