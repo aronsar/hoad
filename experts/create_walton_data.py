@@ -10,16 +10,13 @@ sys.path.insert(0, ganabi_path)
 sys.path.insert(0, hanabi_env_path)
 import rl_env
 
-from subprocess import call
+import subprocess
+# from subprocess import call
 import argparse
 import os
 import pandas as pd
 import numpy as np
 import pickle
-
-# import sys
-# sys.path.insert(0, os.path.dirname(
-#     os.path.dirname(os.path.realpath(__file__))))
 
 def parse():
     parser = argparse.ArgumentParser()
@@ -34,19 +31,26 @@ def parse():
 
     parser.add_argument('--datapath')
 
-    parser.add_argument('--rainbowdir')  # FIXME
-
     args = parser.parse_args()
     return args
 
 # TODO: For future work, we can have the target agent and other agents to be different types
 def create_csv_from_java(jar_filename, csv_filename, agent_name, player_count, game_count, seed):
-    call("java -jar %s %s %s %s %s %s 1>%s" % (jar_filename, agent_name, agent_name, player_count, game_count, seed, csv_filename), shell=True)
+    with open(csv_filename, "w") as csv_file:
+        # Args to be used to create data using walton.jar
+        args = ["java", "-jar"
+                , jar_filename
+                , agent_name
+                , agent_name 
+                , str(player_count) 
+                , str(game_count) 
+                , str(seed)]
+        
+        process = subprocess.Popen(args, universal_newlines=True, stdout=csv_file)
+        process.communicate() # solves issue where Popen hangs
 
-def create_data_filenames(args):
-    '''
-    '''
-    
+
+def create_data_filenames(args):    
     # Config csv & pkl file path
     agent_data_filename = args.agent_name + "_" + str(args.num_players) + "_" + str(args.num_games)
     datapath = os.path.dirname(args.datapath)
@@ -107,18 +111,6 @@ def create_pkl_data(args, csv_data):
             'observation_type': 1, # FIXME: NEEDS CONFIRMATION
             'random_start_player': False}
 
-    # Predetermined deck of cards to be used for the game from top to bottom.
-    # Random cards will be dealt if @deck is None or @deck runs out before the game
-    #   ends. Note: Ranks are indexed from 0 for all vairables; however, ranks are
-    #   indexed from 1 when it is displayed by HanabiEnv functions. For instance,
-    #   ranks in @deck are all indexed from 0, but ranks are indexed from 1 when
-    #   you invoke `print(env.state)`.
-    # deck = ['Y4', 'Y3', 'Y2', 'Y1', 'Y0',    'Y3', 'Y2', 'Y1', 'Y0', 'Y0',
-    #         'W4', 'W3', 'W2', 'W1', 'W0',    'W3', 'W2', 'W1', 'W0', 'W0',
-    #         'R4', 'R3', 'R2', 'R1', 'R0',    'R3', 'R2', 'R1', 'R0', 'R0',
-    #         'G4', 'G3', 'G2', 'G1', 'G0',    'G3', 'G2', 'G1', 'G0', 'G0',
-    #         'B4', 'B3', 'B2', 'B1', 'B0',    'B3', 'B2', 'B1', 'B0', 'B0']
-
     # Create the Hanabi Environment with the defined configuration.
     env = rl_env.HanabiEnv(config)
     raw_data = []
@@ -133,7 +125,6 @@ def create_pkl_data(args, csv_data):
         action_card_color = np.array(game_data.iloc[:, 3]).tolist()
         action_card_rank = np.array(game_data.iloc[:, 4]).tolist()
         deck = np.array(game_data.iloc[0, 5:]).tolist()
-        print(deck)
         
         # Initialize the game with @deck. The arg is None by default.
         obs = env.reset(deck)
@@ -155,13 +146,11 @@ def create_pkl_data(args, csv_data):
 
                 # Construct one-hot action vector
                 action_idx = obs['player_observations'][agent_id]['legal_moves_as_int'][obs['player_observations'][agent_id]['legal_moves'].index(action)]
-                print(action_idx)
                 one_hot_action_vector = [0]*20 # FIXME: hard coded action length
                 one_hot_action_vector[action_idx] = 1
 
                 raw_data[game_num][0].append(obs['player_observations'][agent_id]['vectorized'])
-                raw_data[game_num][0].append(one_hot_action_vector)
-
+                raw_data[game_num][1].append(one_hot_action_vector)
 
                 # Step Through
                 obs, reward, game_done, info = env.step(action)
@@ -183,6 +172,7 @@ def act_based_pipeline(args):
     # Read csv
     csv_data = pd.read_csv(csv_filename, header=None)
 
+    # Convert csv to pkl
     pkl_data = create_pkl_data(args, csv_data)
 
     # Save pkl on Disk
@@ -195,9 +185,7 @@ def act_based_pipeline(args):
 
 def main(args):
     act_based_pipeline(args)
-    
-
-
+        
 if __name__ == '__main__':
     print("Create walton data")
     args = parse()

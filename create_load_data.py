@@ -17,7 +17,6 @@ def create_rainbow_data(datapath, num_players, num_games):
     # way of specifying which one to use; in the future there will be only one rainbow agent
     default_rainbow_agent_name = 'rainbow1'
     rainbowdir = './experts/rainbow_models'
-    
     subprocess.Popen(["/data1/shared/venvg2/bin/python", "experts/create_rainbow_data.py",
                       "--datapath", datapath,
                       "--num_players", str(num_players),
@@ -26,22 +25,46 @@ def create_rainbow_data(datapath, num_players, num_games):
                       "--rainbowdir", rainbowdir])
     subprocess.Popen.communicate() # solves issue where Popen hangs
 
+# Walton Agent Caller
+def create_walton_data(datapath, num_players, num_games, agent_name):
+    args = ["python", "experts/create_walton_data.py",
+            "--datapath", datapath,
+            "--num_players", str(num_players),
+            "--num_games", str(num_games),
+            "--agent_name", agent_name]
+        
+    process = subprocess.Popen(args)
+    process.communicate() # solves issue where Popen hangs
 
-def create_iggi_data(datapath, num_players, num_games):
-    subprocess.call("python experts/create_walton_data.py --datapath %s --num_players %d "\
-         "--num_games %d --agent_name %s --rainbowdir %s" % (datapath, num_players,\
-         num_games, "iggi", None), shell=True)
-    
-    # default_rainbow_agent_name = 'iggi'
-    # rainbowdir = './experts/walton_models'
-    
-    # subprocess.Popen(["./experts/create_walton_data.py",
-    #                   "--datapath", datapath,
-    #                   "--num_players", str(num_players),
-    #                   "--num_games", str(num_games),
-    #                   "--agent_name", default_rainbow_agent_name,
-    #                   "--rainbowdir", rainbowdir])
-    # subprocess.Popen.communicate() # solves issue where Popen hangs
+# Walton Agent: IGGI Agent
+def create_iggi_data(datapath, num_players, num_games):    
+    default_walton_agent_name = 'iggi'
+    create_walton_data(datapath, num_players, num_games,default_walton_agent_name)
+
+# Walton Agent: Outer Agent
+def create_outer_data(datapath, num_players, num_games):    
+    default_walton_agent_name = 'outer'
+    create_walton_data(datapath, num_players, num_games,default_walton_agent_name)
+
+# Walton Agent: Legal Random Agent
+def create_legal_random_data(datapath, num_players, num_games):    
+    default_walton_agent_name = 'legal_random'
+    create_walton_data(datapath, num_players, num_games,default_walton_agent_name)
+
+# Walton Agent: Van den Bergh Rule Agent
+def create_van_den_bergh_data(datapath, num_players, num_games):    
+    default_walton_agent_name = 'vdb-paper'
+    create_walton_data(datapath, num_players, num_games,default_walton_agent_name)
+
+# Walton Agent: Flawed Agent
+def create_flawed_data(datapath, num_players, num_games):    
+    default_walton_agent_name = 'flawed'
+    create_walton_data(datapath, num_players, num_games,default_walton_agent_name)
+
+# Walton Agent: Piers Agent
+def create_piers_data(datapath, num_players, num_games):    
+    default_walton_agent_name = 'piers'
+    create_walton_data(datapath, num_players, num_games,default_walton_agent_name)
 
 def create_example_data():
     # TODO: insert your Popen for your script here
@@ -55,6 +78,11 @@ def create_example_data():
 CREATE_DATA_FOR = {
     'rainbow': create_rainbow_data,
     'iggi': create_iggi_data,
+    'outer': create_outer_data,
+    'legal_random': create_legal_random_data,
+    'vdb-paper': create_van_den_bergh_data,
+    'flawed': create_flawed_data,
+    'piers': create_piers_data,
     'example': create_example_data}
 
 @gin.configurable
@@ -114,6 +142,7 @@ def main(args):
     loader = DataLoader() #gin configured
     raw_data = {}
     
+    print(args)
     # composing a dictionary mapping agent names to a list of their games
     for agent_name in args.agents_to_use:
         datapath = loader.resolve_datapath(args.datadir, agent_name)
@@ -121,12 +150,12 @@ def main(args):
             agent_data = pickle.load(open(datapath, "rb"), encoding='latin1')
         except IOError:
             CREATE_DATA_FOR[agent_name](datapath, loader.num_players, loader.num_games)
-    #         agent_data = pickle.load(open(datapath, "rb"), encoding='latin1')
+            agent_data = pickle.load(open(datapath, "rb"), encoding='latin1')
         
-    #     raw_data[agent_name] = agent_data     # placing agent_data into a dictionary
+        raw_data[agent_name] = agent_data     # placing agent_data into a dictionary
     
-    # loader.train_val_test_split(raw_data)
-    # return loader
+    loader.train_val_test_split(raw_data)
+    return loader
     
     
 if __name__ == "__main__":

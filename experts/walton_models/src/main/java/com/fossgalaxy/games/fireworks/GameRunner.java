@@ -243,7 +243,7 @@ public class GameRunner {
      */
     public GameStats playGame(Long seed) {
         int strikes = 0;
-        DataParserUtils parser = new DataParserUtils(players.length);
+        DataParserUtils parser = new DataParserUtils();
 
         try {
             assert nPlayers == players.length;
