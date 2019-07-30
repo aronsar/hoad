@@ -11,13 +11,13 @@ object PlayerTests {
       if(args.length >= 1)
         args(0).toInt
       else
-        1
+        100
     }
     val numPlayers = {
       if(args.length >= 2)
         args(1).toInt
       else
-        2
+        3
     }
     println("NumGames=" + numGames)
 
@@ -41,7 +41,7 @@ object PlayerTests {
     }
 
     val gameStepArray: ListBuffer[Int] = getGameStepsForEachGame(games)
-    writeToCsvFile(base_dir = "/Users/phamthanhhuyen/Documents", games)
+    writeToCsvFile(base_dir = "/Users/phamthanhhuyen/Documents", games, numPlayers)
 
     val end = System.nanoTime()
 
@@ -71,14 +71,13 @@ object PlayerTests {
         runSeed = makeRunSeed(name2p, salt),
         playerGen = HeuristicPlayer,
         doPrint = true,
-        doPrintDetails = true,
+        doPrintDetails = false,
         useAnsiColors = false
       )
     }
 
     //val allGamesSteps: ListBuffer[Int] = getGameStepsForEachGame(games2p)
 
-    println(name2p + ":")
     //    printScoreSummary(rules2p,games2p)
     //
     //    println("")
@@ -102,11 +101,10 @@ object PlayerTests {
         runSeed = makeRunSeed(name3p, salt),
         playerGen = HeuristicPlayer,
         doPrint = true,
-        doPrintDetails = false,
-        useAnsiColors = true
+        doPrintDetails = true,
+        useAnsiColors = false
       )
     }
-
     return games3p
   }
 
@@ -123,7 +121,7 @@ object PlayerTests {
         playerGen = HeuristicPlayer,
         doPrint = true,
         doPrintDetails = false,
-        useAnsiColors = true
+        useAnsiColors = false
       )
     }
 
@@ -174,10 +172,19 @@ object PlayerTests {
     println("Average Utility: " + avgUtility)
   }
 
-  def writeToCsvFile (base_dir: String, games: List[fireflower.Game]) = {
+  def getCsvFields (numPlayer: Int): Array[String] = {
+    val csvFields = ListBuffer("Game Number", "Game Step", "Observations", "Move Type", "Card Color/Rank/Position", "Cards Involving")
+    for (i <- 0 to numPlayer-1) {
+      csvFields += "Player " + (i+1).toString
+    }
+
+    return csvFields.toArray
+  }
+
+  def writeToCsvFile (base_dir: String, games: List[fireflower.Game], numPlayer: Int) = {
     val outputFile = new BufferedWriter(new FileWriter(base_dir + "/ganabi/experts/fireflower/data.csv"))
     val csvWriter = new CSVWriter(outputFile)
-    val csvFields = Array("Game Number", "Game Step", "Observations", "Move Type", "Card Color/Rank/Position", "Cards Involving")
+    val csvFields = getCsvFields(numPlayer)
     var listOfRecords = new ListBuffer[Array[String]]()
 
     //Card Rank is marked on based 0 (card Red 1-5 will be R0-4 etc
@@ -194,9 +201,19 @@ object PlayerTests {
 
     for (gameNum <- 0 to games.length-1) {
       var actionsArray = games(gameNum).actions
+      var cardsArray = games(gameNum).playersCard
       for (gameStep <- 0 to actionsArray.length-1) {
+        //split actions
         var component = actionsArray(gameStep).split(" ")
-        listOfRecords += Array((gameNum+1).toString, (gameStep+1).toString, " ", component(0), component(1), component(2))
+        //listOfRecords += Array((gameNum+1).toString, (gameStep+1).toString, " ", component(0), component(1), component(2))
+        //get each players card
+        var filledInLine = ListBuffer((gameNum+1).toString, (gameStep+1).toString, " ", component(0), component(1), component(2))
+        var playerCard = cardsArray(gameStep).split('|')
+        for (player <- 0 to playerCard.length-1) {
+          filledInLine += playerCard(player)
+        }
+
+        listOfRecords += filledInLine.toArray
       }
     }
 
@@ -208,37 +225,7 @@ object PlayerTests {
 
 
   /*
-   Results:
 
-   [info] HeuristicStandard2P:
-   [info] Score  0  Games:  0  Percent:  0.0%  Cum: 100.0%
-   [info] Score  1  Games:  0  Percent:  0.0%  Cum: 100.0%
-   [info] Score  2  Games:  1  Percent:  0.1%  Cum: 100.0%
-   [info] Score  3  Games:  0  Percent:  0.0%  Cum: 99.9%
-   [info] Score  4  Games:  0  Percent:  0.0%  Cum: 99.9%
-   [info] Score  5  Games:  0  Percent:  0.0%  Cum: 99.9%
-   [info] Score  6  Games:  1  Percent:  0.1%  Cum: 99.9%
-   [info] Score  7  Games:  0  Percent:  0.0%  Cum: 99.8%
-   [info] Score  8  Games:  1  Percent:  0.1%  Cum: 99.8%
-   [info] Score  9  Games:  2  Percent:  0.2%  Cum: 99.7%
-   [info] Score 10  Games:  2  Percent:  0.2%  Cum: 99.5%
-   [info] Score 11  Games:  3  Percent:  0.3%  Cum: 99.3%
-   [info] Score 12  Games:  1  Percent:  0.1%  Cum: 99.0%
-   [info] Score 13  Games:  1  Percent:  0.1%  Cum: 98.9%
-   [info] Score 14  Games:  4  Percent:  0.4%  Cum: 98.8%
-   [info] Score 15  Games:  3  Percent:  0.3%  Cum: 98.4%
-   [info] Score 16  Games:  7  Percent:  0.7%  Cum: 98.1%
-   [info] Score 17  Games:  9  Percent:  0.9%  Cum: 97.4%
-   [info] Score 18  Games: 15  Percent:  1.5%  Cum: 96.5%
-   [info] Score 19  Games: 28  Percent:  2.8%  Cum: 95.0%
-   [info] Score 20  Games: 23  Percent:  2.3%  Cum: 92.2%
-   [info] Score 21  Games: 38  Percent:  3.8%  Cum: 89.9%
-   [info] Score 22  Games: 58  Percent:  5.8%  Cum: 86.1%
-   [info] Score 23  Games: 114  Percent: 11.4%  Cum: 80.3%
-   [info] Score 24  Games: 124  Percent: 12.4%  Cum: 68.9%
-   [info] Score 25  Games: 565  Percent: 56.5%  Cum: 56.5%
-   [info] Average Score: 23.537
-   [info] Average Utility: 75.324
 */
 
 }
