@@ -1,0 +1,19 @@
+#$ -cwd
+#$ -V
+#$ -l h_vmem=4G
+#$ -l h_rt=10:00:00
+#$ -q iggi-cluster
+#$ -o ./results/
+#$ -e ./results/
+
+##
+# Hanabi cluster 
+# Accountable, repeatable runs version
+#
+# This is designed to be used with the build and execute script.
+##
+
+export MALLOC_ARENA_MAX=4
+export FIREWORKS_RUN_COUNT=1
+vmArgs="-Xmx1024m -XX:ParallelGCThreads=1"
+java $vmArgs -cp fireworks-0.2.2-SNAPSHOT-jar-with-dependencies.jar com.fossgalaxy.games.fireworks.App

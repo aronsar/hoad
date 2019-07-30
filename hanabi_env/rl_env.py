@@ -353,6 +353,7 @@ class HanabiEnv(Environment):
     elif isinstance(action, int):
       # Convert int action into a Hanabi move.
       action = self.game.get_move(action)
+      print(action)
     else:
       raise ValueError("Expected action as dict or int, got: {}".format(
           action))
