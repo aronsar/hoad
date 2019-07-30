@@ -173,7 +173,7 @@ object PlayerTests {
   }
 
   def getCsvFields (numPlayer: Int): Array[String] = {
-    val csvFields = ListBuffer("Game Number", "Game Step", "Observations", "Move Type", "Card Color/Rank/Position", "Cards Involving")
+    val csvFields = ListBuffer("Game Number", "Game Step", "Observations", "Move Type", "Card Color/Rank/Position", "Cards Involving", "Current Player ID")
     for (i <- 0 to numPlayer-1) {
       csvFields += "Player " + (i+1).toString
     }
@@ -202,12 +202,14 @@ object PlayerTests {
     for (gameNum <- 0 to games.length-1) {
       var actionsArray = games(gameNum).actions
       var cardsArray = games(gameNum).playersCard
+      var currPlayerArray = games(gameNum).currPlayerArray
+
       for (gameStep <- 0 to actionsArray.length-1) {
         //split actions
         var component = actionsArray(gameStep).split(" ")
-        //listOfRecords += Array((gameNum+1).toString, (gameStep+1).toString, " ", component(0), component(1), component(2))
+
         //get each players card
-        var filledInLine = ListBuffer((gameNum+1).toString, (gameStep+1).toString, " ", component(0), component(1), component(2))
+        var filledInLine = ListBuffer((gameNum+1).toString, (gameStep+1).toString, " ", component(0), component(1), component(2), currPlayerArray(gameStep).toString)
         var playerCard = cardsArray(gameStep).split('|')
         for (player <- 0 to playerCard.length-1) {
           filledInLine += playerCard(player)
