@@ -194,7 +194,7 @@ int main(int argc, char **argv)
         std::srand(std::time(NULL));
         seed = std::rand();
     }
-    printf("--seed %d\n", seed);
+    //printf("--seed %d\n", seed);
 
     if (stackTheDeck) {
         run_one_stacked_deck_game(numberOfPlayers);
@@ -208,7 +208,7 @@ int main(int argc, char **argv)
         server.setLog(&std::cerr);
         server.srand(seed);
         int score = server.runGame(botFactory, numberOfPlayers,0);
-        std::cout << stringify(BOTNAME) " scored " << score << " points in that first game.\n";
+        //std::cout << stringify(BOTNAME) " scored " << score << " points in that first game.\n";
     }
 
     /* Run a million games, in parallel if possible. */
@@ -217,7 +217,7 @@ int main(int argc, char **argv)
     #pragma omp parallel
     if (omp_get_thread_num() == 0)
     {
-        std::cout << "Running with " << omp_get_num_threads() << " threads...\n";
+        //std::cout << "Running with " << omp_get_num_threads() << " threads...\n";
     }
 #endif /* _OPENMP */
 
@@ -229,12 +229,12 @@ int main(int argc, char **argv)
     for (int i=0; i < loops; ++i) {
         run_iterations(seed + i, numberOfPlayers, every, stats);
         assert(stats.games % every == 0);
-        dump_stats(stats, produceHistogram);
+        //dump_stats(stats, produceHistogram);
     }
 
     if ((numberOfGames % every) != 0) {
         run_iterations(seed + loops, numberOfPlayers, (numberOfGames % every), stats);
-        dump_stats(stats, produceHistogram);
+        //dump_stats(stats, produceHistogram);
     }
 
     return 0;
