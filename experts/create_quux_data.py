@@ -54,12 +54,13 @@ def create_csv_from_cpp(quux_bot_script_path, csv_filename, player_count, game_c
     with open(csv_filename, "w") as csv_file:
         args = [
             quux_bot_script_path,
-            str("--players " + player_count),
-            str("--seed " + seed),
-            str("--games " + game_count),
+            str("--players " + str(player_count)),
+            str("--seed " + str(seed)),
+            str("--games " + str(game_count)),
         ]
+        shell_command = " ".join(args)
 
-        process = subprocess.Popen(args, universal_newlines=True, stdout=csv_file)
+        process = subprocess.Popen(shell_command, universal_newlines=True, stdout=csv_file, shell=True)
         process.communicate()  # solves issue where Popen hangs
 
 
