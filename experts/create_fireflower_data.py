@@ -23,14 +23,14 @@ import subprocess
 def set_data_path():
 
     # Set default data path local var for easy reference
-    default_data_path = (os.getcwd() + "/data")
+    default_data_path = (os.getcwd() + "/fireflower")
 
     # If we are using the default data path and it doesn't exist, create it
     # If we are using the argument data path and it doesn't exist, create it
     # This way every reference to the data path will be valid
     # This should be a redundant check as the data creator in fire flower
     # should already have created a data path
-    if not args.datapath and not (os.path.isdir(os.getcwd() + "/data")):
+    if not args.datapath and not (os.path.isdir(default_data_path)):
         create_data_path(default_data_path)
     elif args.datapath and not (os.path.exists(args.datapath)):
         create_data_path(args.datapath)
@@ -55,7 +55,7 @@ def create_data_path(data_path):
 # Read in raw data and return it
 def read_data():
     # Set file name to provided
-    file_name = args.agent_name + "_" + str(args.num_players) + "_" + str(args.num_games) + ".csv"
+    file_name = "data.csv"
 
     # Read in data in csv format using Pandas lib
     raw_data = pandas.read_csv(file_name)
@@ -64,7 +64,7 @@ def read_data():
 
 # Print pickle data to console to test format and file issues
 def print_pickle_data():
-    file_name = args.agent_name + "_" + str(args.num_players) + "_" + str(args.num_games) + ".p"
+    file_name = "data.p"
     data = pickle.load(open(file_name, 'rb'))
     print(data)
 
@@ -90,7 +90,7 @@ def parse():
 def dump_pickle_data(fireflower_data, args):
 
     # Set dump filename
-    file_name = args.agent_name + "_" + str(args.num_players) + "_" + str(args.num_games) + ".p"
+    file_name = "data.p"
 
     # Dump data to appropriate directory
     pickle.dump(fireflower_data, open(file_name, "wb"))
