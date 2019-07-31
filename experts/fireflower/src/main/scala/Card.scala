@@ -39,7 +39,7 @@ case class Card(
   }
 
   override def toString(): String = {
-    toString(useAnsiColors = true)
+    toString(useAnsiColors = false)
   }
 
   def toString(useAnsiColors: Boolean): String = {

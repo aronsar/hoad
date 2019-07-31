@@ -20,6 +20,13 @@ object Sim {
     val game = Game(rules, gameSeed)
     game.drawInitialCards()
 
+    //get the initial deck
+    for (i <- 0 to game.seenMap.cards.length-1) {
+      game.initialDeck += game.seenMap.cards(i)
+    }
+
+    print(game.initialDeck)
+
     for (pid <- 0 to (players.length - 1)) {
       players(pid).handleGameStart(game.hiddenFor(pid))
     }
