@@ -20,6 +20,17 @@ import pandas as pd
 import numpy as np
 import pickle
 
+RUN_SCRIPT_MAP = {
+    'quux_blindbot': "InfoBot",
+    'quux_simplebot': "SimpleBot",
+    'quux_valuebot': "ValueBot",
+    'quux_holmesbot': "HolmesBot",
+    'quux_smartbot': "SmartBot",
+    'quux_infobot': "InfoBot",
+    'quux_cheatbot': "CheatBot",
+    'quux_newcheatbot': "NewCheatBot"
+}
+
 
 def parse():
     parser = argparse.ArgumentParser()
@@ -39,16 +50,14 @@ def parse():
 
 
 # TODO: For future work, we can have the target agent and other agents to be different types
-def create_csv_from_java(jar_filename, csv_filename, agent_name, player_count, game_count, seed):
+def create_csv_from_cpp(quux_bot_script_path, csv_filename, player_count, game_count, seed):
     with open(csv_filename, "w") as csv_file:
-        # Args to be used to create data using walton.jar
-        args = ["java", "-jar"
-            , jar_filename
-            , agent_name
-            , agent_name
-            , str(player_count)
-            , str(game_count)
-            , str(seed)]
+        args = [
+            quux_bot_script_path,
+            str("--players " + player_count),
+            str("--seed " + seed),
+            str("--games " + game_count),
+        ]
 
         process = subprocess.Popen(args, universal_newlines=True, stdout=csv_file)
         process.communicate()  # solves issue where Popen hangs
@@ -62,10 +71,19 @@ def create_data_filenames(args):
     pkl_filename = os.path.join(datapath, agent_data_filename + ".pkl")
 
     # Config quux file path
-    jar_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "quux_models")
-    jar_filename = os.path.join(jar_path, "run_SmartBot")
+    quux_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "quux_models")
+    for file in os.listdir(quux_path):
+        if file != "run_all.sh" and file.startswith("run_" + RUN_SCRIPT_MAP[args.agent_name]):
+            quux_bot_script_path = os.path.join(quux_path, file)
+            return csv_filename, pkl_filename, quux_bot_script_path
 
-    return csv_filename, pkl_filename, jar_filename
+    subprocess.Popen(["make"], stdout=subprocess.PIPE, cwd="./quux_models/")
+
+    for file in os.listdir(quux_path):
+        if file != "run_all.sh" and file.startswith("run_" + RUN_SCRIPT_MAP[args.agent_name]):
+            quux_bot_script_path = os.path.join(quux_path, file)
+            return csv_filename, pkl_filename, quux_bot_script_path
+    return
 
 
 def get_action(action_type, color, rank, obs):
@@ -172,10 +190,10 @@ def create_pkl_data(args, csv_data):
 def act_based_pipeline(args):
     # Sort Params
     seed = 1
-    csv_filename, pkl_filename, jar_filename = create_data_filenames(args)
+    csv_filename, pkl_filename, quux_bot_script_path = create_data_filenames(args)
 
     # Create csv on Disk by using Java code
-    create_csv_from_java(jar_filename, csv_filename, args.agent_name, args.num_players, args.num_games, seed)
+    create_csv_from_cpp(quux_bot_script_path, csv_filename, args.num_players, args.num_games, seed)
 
     # Read csv
     csv_data = pd.read_csv(csv_filename, header=None)
@@ -197,6 +215,6 @@ def main(args):
 
 
 if __name__ == '__main__':
-    print("Create walton data")
+    print("Create quux data")
     args = parse()
     main(args)

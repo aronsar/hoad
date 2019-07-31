@@ -88,8 +88,43 @@ def create_quux_data(datapath, num_players, num_games, agent_name):
 
 
 # Quuxplusone Agent: Smart Agent
+def create_blindbot_data(datapath, num_players, num_games):
+    create_quux_data(datapath, num_players, num_games, "quux_blindbot")
+
+
+# Quuxplusone Agent: Smart Agent
+def create_simplebot_data(datapath, num_players, num_games):
+    create_quux_data(datapath, num_players, num_games, "quux_simplebot")
+
+
+# Quuxplusone Agent: Smart Agent
+def create_valuebot_data(datapath, num_players, num_games):
+    create_quux_data(datapath, num_players, num_games, "quux_valuebot")
+
+
+# Quuxplusone Agent: Smart Agent
+def create_holmesbot_data(datapath, num_players, num_games):
+    create_quux_data(datapath, num_players, num_games, "quux_holmesbot")
+
+
+# Quuxplusone Agent: Smart Agent
 def create_smartbot_data(datapath, num_players, num_games):
     create_quux_data(datapath, num_players, num_games, "quux_smartbot")
+
+
+# Quuxplusone Agent: Smart Agent
+def create_infobot_data(datapath, num_players, num_games):
+    create_quux_data(datapath, num_players, num_games, "quux_infobot")
+
+
+# Quuxplusone Agent: Smart Agent
+def create_cheatbot_data(datapath, num_players, num_games):
+    create_quux_data(datapath, num_players, num_games, "quux_cheatbot")
+
+
+# Quuxplusone Agent: Smart Agent
+def create_newcheatbot_data(datapath, num_players, num_games):
+    create_quux_data(datapath, num_players, num_games, "quux_newcheatbot")
 
 
 def create_example_data():
@@ -110,7 +145,14 @@ CREATE_DATA_FOR = {
     'flawed': create_flawed_data,
     'piers': create_piers_data,
     'example': create_example_data,
-    'quux_smartbot': create_smartbot_data
+    'quux_blindbot': create_smartbot_data,
+    'quux_simplebot': create_smartbot_data,
+    'quux_valuebot': create_smartbot_data,
+    'quux_holmesbot': create_smartbot_data,
+    'quux_smartbot': create_smartbot_data,
+    'quux_infobot': create_smartbot_data,
+    'quux_cheatbot': create_smartbot_data,
+    'quux_newcheatbot': create_smartbot_data,
 }
 
 
