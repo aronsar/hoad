@@ -2,19 +2,15 @@
 #include <algorithm>
 #include <cassert>
 #include <ostream>
-#include <random>
+#include <iostream>
 #include <fstream>
+#include <random>
 #include <stdexcept>
 #include <sstream>
 #include <string>
 #include <vector>
 #include "Hanabi.h"
-#include "json.hpp"
-#include <iostream>
-#include <iomanip>
-
-using json = nlohmann::json;
-extern json j_data;
+//#include <nlohmann/json.hpp>
 
 
 #ifdef HANABI_SERVER_NDEBUG
@@ -22,6 +18,10 @@ extern json j_data;
 #else
 #define HANABI_SERVER_ASSERT(x, msg) do { if (!(x)) throw std::runtime_error(msg); } while (0)
 #endif
+
+// for convenience
+//using json = nlohmann::json;
+std::ofstream myfile;
 
 static std::string nth(int n, int total)
 {
@@ -165,13 +165,20 @@ static void portable_shuffle(It first, It last, Gen& g)
     }
 }
 
-int Server::runGame(const BotFactory &botFactory, int numPlayers)
+int Server::runGame(const BotFactory &botFactory, int numPlayers, int numGames)
 {
-    return this->runGame(botFactory, numPlayers, std::vector<Card>());
+    return this->runGame(botFactory, numPlayers, numGames, std::vector<Card>());
 }
 
-int Server::runGame(const BotFactory &botFactory, int numPlayers, const std::vector<Card>& stackedDeck)
+int Server::runGame(const BotFactory &botFactory, int numPlayers, int numGames, const std::vector<Card>& stackedDeck)
 {
+    /*making the csv file for storing raw_data*/
+    //std::ofstream myfile;
+    if (!myfile.is_open()) {
+    	myfile.open("example.csv", std::fstream::app);
+    }
+
+
     const int initialHandSize = (numPlayers <= 3) ? 5 : 4;
 
     /* Create and initialize the bots. */
@@ -206,6 +213,8 @@ int Server::runGame(const BotFactory &botFactory, int numPlayers, const std::vec
         portable_shuffle(deck_.begin(), deck_.end(), rand_);
     }
     discards_.clear();
+    //save the original deck
+    std::vector<Card> savedDeck = deck_;
 
     /* Secretly draw the starting hands. */
     hands_.resize(numPlayers);
@@ -221,27 +230,8 @@ int Server::runGame(const BotFactory &botFactory, int numPlayers, const std::vec
     activePlayer_ = 0;
     movesFromActivePlayer_ = -1;
     while (!this->gameOver()) {
-        json j_curr_game;
+    	myfile<<numGames<<","<<savedDeck.size()<<",";
         if (activePlayer_ == 0) this->logHands_();
-
-        j_curr_game["current_player"] = activePlayer_;
-//        j_curr_game["current_player_offset"] =
-        j_curr_game["deck_size"] = cardsRemainingInDeck();
-
-
-        //j_curr_game["discard_pile"] =  // make string
-        j_curr_game["fireworks"] = pilesAsString(); // transform to object
-        j_curr_game["information_tokens"] = hintStonesRemaining();
-        j_curr_game["life_tokens"] = mulligansRemaining();
-
-        for (int i=0; i < numPlayers_; ++i) {
-            std::string playerHand;
-            for (int j=0; j < (int)hands_[i].size(); ++j) {
-                std::string keyStr = std::to_string(i) + std::to_string(j);
-                playerHand += (j ? "," : " ") + hands_[i][j].toString();
-            }
-            j_curr_game["observed_hands"] = playerHand;
-        }
 
         for (int i=0; i < numPlayers; ++i) {
             observingPlayer_ = i;
@@ -259,20 +249,31 @@ int Server::runGame(const BotFactory &botFactory, int numPlayers, const std::vec
         }
         activePlayer_ = (activePlayer_ + 1) % numPlayers;
         assert(0 <= finalCountdown_ && finalCountdown_ <= numPlayers);
+        //print initialdeck
+        std::string tempcolor;
+        for(int i=savedDeck.size()-1; i>-1; i--){
+        	if(savedDeck[i].toString()[1]=='y'){
+        		tempcolor="Y";
+        	}else if(savedDeck[i].toString()[1]=='r'){
+        		tempcolor="R";
+        	}else if(savedDeck[i].toString()[1]=='g'){
+        		tempcolor="G";
+        	}else if(savedDeck[i].toString()[1]=='b'){
+        		tempcolor="B";
+        	}else{
+        		tempcolor="W";
+        	}
+        	myfile<<tempcolor<<savedDeck[i].toString()[0]-49<<",";
+        }
+        myfile<<std::endl;
         if (deck_.empty()) finalCountdown_ += 1;
-
-        j_data["observations"].push_back(j_curr_game);
     }
 
     for (int i=0; i < numPlayers; ++i) {
         botFactory.destroy(players_[i]);
     }
 
-    std::cout << j_data << std::endl;
-
-    std::ofstream o("pretty.json");
-    o << std::setw(4) << j_data << std::endl;
-
+    myfile.close();
 
     return this->currentScore();
 }
@@ -397,6 +398,20 @@ void Server::pleaseDiscard(int index)
                 << " discarded his " << nth(index, hands_[activePlayer_].size())
                 << " card (" << discardedCard.toString() << ").\n";
     }
+    std::string tempcolor;
+    if(discardedCard.toString()[1]=='y'){
+    	tempcolor = "Y";
+    }else if(discardedCard.toString()[1]=='g'){
+		tempcolor = "G";
+    }else if(discardedCard.toString()[1]=='b'){
+    	tempcolor = "B";
+    }else if(discardedCard.toString()[1]=='r'){
+    	tempcolor = "R";
+    }else{
+    	tempcolor = "W";
+    }
+
+    myfile<<"DISCARD,"<<tempcolor<<","<<discardedCard.toString()[0]-49<<",";
 
     /* Shift the old cards down, and draw a replacement if possible. */
     hands_[activePlayer_].erase(hands_[activePlayer_].begin() + index);
@@ -461,6 +476,19 @@ void Server::pleasePlay(int index)
         discards_.push_back(selectedCard);
         loseMulligan_();
     }
+    std::string tempcolor;
+    if(selectedCard.toString()[1]=='y'){
+    	tempcolor = "Y";
+    }else if(selectedCard.toString()[1]=='g'){
+		tempcolor = "G";
+    }else if(selectedCard.toString()[1]=='b'){
+    	tempcolor = "B";
+    }else if(selectedCard.toString()[1]=='r'){
+    	tempcolor = "R";
+    }else{
+    	tempcolor = "W";
+    }
+    myfile<<"PLAY,"<<tempcolor<<","<<selectedCard.toString()[0]-49<<",";
 
     /* Shift the old cards down, and draw a replacement if possible. */
     hands_[activePlayer_].erase(hands_[activePlayer_].begin() + index);
@@ -515,6 +543,19 @@ void Server::pleaseGiveColorHint(int to, Color color)
         }
         (*log_) << colorname(color) << ".\n";
     }
+    std::string tempColor;
+    if(colorname(color)=="orange"){
+    	tempColor="W";
+    }else if(colorname(color)=="yellow"){
+		tempColor="Y";
+    }else if(colorname(color)=="red"){
+		tempColor="R";
+    }else if(colorname(color)=="green"){
+		tempColor="G";
+    }else if(colorname(color)=="blue"){
+		tempColor="B";
+    }
+    myfile<<"REVEAL_COLOR,"<<tempColor<<","<<-1<<",";
 
     /* Notify all the players of the given hint. */
     movesFromActivePlayer_ = -1;
@@ -566,6 +607,7 @@ void Server::pleaseGiveValueHint(int to, Value value)
         (*log_) << value
                 << (singular ? ".\n" : "s.\n");
     }
+    myfile<<"REVEAL_RANK,"<<"X,"<<value-1 <<",";
 
     /* Notify all the players of the given hint. */
     movesFromActivePlayer_ = -1;
@@ -654,7 +696,6 @@ void Server::logHands_() const
                 (*log_) << (j ? "," : " ") << hands_[i][j].toString();
             }
         }
-
         (*log_) << "\n";
     }
 }

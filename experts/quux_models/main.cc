@@ -16,10 +16,6 @@
 #include "Hanabi.h"
 #include stringify(BOTNAME.h)  /* This isn't really Standard-conforming. */
 #include "BotFactory.h"
-#include "json.hpp"
-using json = nlohmann::json;
-
-json j_data;
 
 #ifdef _OPENMP
 #include <omp.h>
@@ -36,7 +32,6 @@ struct Statistics {
     int mulligansUsed[4];
 };
 
-
 static void run_iterations(int seed, int numberOfPlayers, int iterations, Statistics &global_stats)
 {
     Hanabi::Server server;
@@ -48,7 +43,7 @@ static void run_iterations(int seed, int numberOfPlayers, int iterations, Statis
     for (int i=0; i < iterations; ++i) {
         int score;
         try {
-            score = server.runGame(botFactory, numberOfPlayers);
+            score = server.runGame(botFactory, numberOfPlayers,i);
         } catch (const std::runtime_error& e) {
             std::cout << "Caught fatal exception \"" << e.what() << "\" from Hanabi server" << std::endl;
             std::exit(EXIT_FAILURE);
@@ -145,7 +140,7 @@ static void run_one_stacked_deck_game(int numberOfPlayers)
     Hanabi::Server server;
     BotFactory<BOTNAME> botFactory;
     server.setLog(&std::cerr);
-    int score = server.runGame(botFactory, numberOfPlayers, stackedDeck);
+    int score = server.runGame(botFactory, numberOfPlayers, 0, stackedDeck);
     std::cout << stringify(BOTNAME) " scored " << score << " points in that game.\n";
     std::cout << "Mulligans used: " << server.mulligansUsed() << std::endl;
 }
@@ -153,8 +148,8 @@ static void run_one_stacked_deck_game(int numberOfPlayers)
 int main(int argc, char **argv)
 {
     int numberOfPlayers = 3;
-    int numberOfGames = 1000*1000;
-    int every = 20000;
+    int numberOfGames = 4;//1000*1000;
+    int every = 4;//20000;
     int seed = -1;
     bool quiet = false;
     bool stackTheDeck = false;
@@ -193,6 +188,8 @@ int main(int argc, char **argv)
         }
     }
 
+    every = numberOfGames;
+
     if (seed <= 0) {
         std::srand(std::time(NULL));
         seed = std::rand();
@@ -205,12 +202,12 @@ int main(int argc, char **argv)
     }
 
     if (!quiet) {
-        /* Run one game with logging to stderr. */
+        //Run one game with logging to stderr. 
         Hanabi::Server server;
         BotFactory<BOTNAME> botFactory;
         server.setLog(&std::cerr);
         server.srand(seed);
-        int score = server.runGame(botFactory, numberOfPlayers);
+        int score = server.runGame(botFactory, numberOfPlayers,0);
         std::cout << stringify(BOTNAME) " scored " << score << " points in that first game.\n";
     }
 
@@ -225,7 +222,9 @@ int main(int argc, char **argv)
 #endif /* _OPENMP */
 
     Statistics stats = {};
-    const int loops = numberOfGames / every;
+    const int loops = numberOfGames/ every ;
+
+    
     #pragma omp parallel for
     for (int i=0; i < loops; ++i) {
         run_iterations(seed + i, numberOfPlayers, every, stats);
