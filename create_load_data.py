@@ -145,14 +145,14 @@ CREATE_DATA_FOR = {
     'flawed': create_flawed_data,
     'piers': create_piers_data,
     'example': create_example_data,
-    'quux_blindbot': create_smartbot_data,
-    'quux_simplebot': create_smartbot_data,
-    'quux_valuebot': create_smartbot_data,
-    'quux_holmesbot': create_smartbot_data,
+    'quux_blindbot': create_blindbot_data,
+    'quux_simplebot': create_simplebot_data,
+    'quux_valuebot': create_valuebot_data,
+    'quux_holmesbot': create_holmesbot_data,
     'quux_smartbot': create_smartbot_data,
-    'quux_infobot': create_smartbot_data,
-    'quux_cheatbot': create_smartbot_data,
-    'quux_newcheatbot': create_smartbot_data,
+    'quux_infobot': create_infobot_data,
+    'quux_cheatbot': create_cheatbot_data,
+    'quux_newcheatbot': create_newcheatbot_data,
 }
 
 
