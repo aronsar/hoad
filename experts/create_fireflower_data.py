@@ -25,9 +25,8 @@ import rl_env
 # Check if data path given exists, if not create it
 # Then, set working directory to given data path
 def set_data_path():
-
-    # Set default data path local var for easy reference
-    default_data_path = (os.getcwd() + "/fireflower")
+    
+    default_data_path = os.path.join((os.path.dirname(os.path.abspath(__file__))), "fireflower")
 
     # If we are using the default data path and it doesn't exist, create it
     # If we are using the argument data path and it doesn't exist, create it
@@ -49,6 +48,7 @@ def set_data_path():
 
     # Set working directory to data_path
     os.chdir(data_path)
+    print(os.getcwd())
 
 
 # Create data path directory
@@ -57,12 +57,10 @@ def create_data_path(data_path):
 
 
 # Read in raw data and return it
-def read_data():
-    # Set file name to provided
-    file_name = "data.csv"
+def read_data(file_name):
 
     # Read in data in csv format using Pandas lib
-    raw_data = pandas.read_csv(file_name)
+    raw_data = pandas.read_csv(file_name + ".csv")
     return raw_data
 
 
@@ -91,13 +89,10 @@ def parse():
 
 
 # Dump raw csv data into pickle format in datapath
-def dump_pickle_data(fireflower_data, args):
-
-    # Set dump filename
-    file_name = "data.p"
+def dump_pickle_data(fireflower_data, file_name):
 
     # Dump data to appropriate directory
-    pickle.dump(fireflower_data, open(file_name, "wb"))
+    pickle.dump(fireflower_data, open(file_name + ".p", "wb"))
 
 # currently fixed to 3p config
 # FIXME: get config from reading file
@@ -160,14 +155,24 @@ def convert_data(data):
     converted_data = data
     return converted_data
 
+def get_file_name(num_players, num_games):
+    return "fireflower_" + str(num_players) + "p_" + str(num_games)
 
-def read_convert_data():
-    set_data_path()
-    data = read_data()
+def read_convert_data(num_players, num_games):
+    file_name = get_file_name(num_players, num_games)
+    data = read_data(file_name)
     data = convert_data(data)
-    dump_pickle_data(data, args)
+    dump_pickle_data(data, file_name)
     print_pickle_data()
 
+
+# FIXME: don't hardcode numgames, get from file
+def convert_all_data_files():
+    set_data_path()
+    for num_players in range(2,6,1):
+        num_games = 100
+        read_convert_data(num_players,num_games)
+    
 
 def jar_wrapper(*jar_args):
     process = subprocess.Popen(['java', '-jar']+list(jar_args),
@@ -211,7 +216,7 @@ def create_data(args):
 def main(args):
     # FIXME: compile fireflower agent into jar
     # create_data(args)
-    read_convert_data()
+    convert_all_data_files()
 
 
 if __name__ == '__main__':
