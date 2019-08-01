@@ -15,9 +15,9 @@ object PlayerTests {
     }
     val numPlayers = {
       if(args.length >= 2)
-        args(1).toInt
+        Some(args(1).toInt)
       else
-        3
+        None
     }
     println("NumGames=" + numGames)
 
@@ -28,21 +28,18 @@ object PlayerTests {
     RandUtils.sha256Long(RandUtils.sha256Long(name) + salt)
   }
 
-  def runTests(prefix: String, salt: String, numGames: Int, numPlayers: Int): Unit = {
+  def runTests(prefix: String, salt: String, numGames: Int, numPlayers: Option[Int]): Unit = {
     val start = System.nanoTime()
     var games: List[fireflower.Game] = List[fireflower.Game]()
 
-    if (numPlayers==3) {
-      games = play_game3p(prefix, numGames, salt)
-    } else if (numPlayers == 4) {
-      games = play_game4p(prefix, numGames, salt)
-    } else {
-      games = play_game2p(prefix, numGames, salt)
-    }
+    games = play_game2p(prefix, numGames, salt)
+    writeToCsvFile(base_dir = "/Users/phamthanhhuyen/Documents", games, 2)
 
-    val gameStepArray: ListBuffer[Int] = getGameStepsForEachGame(games)
-    writeToCsvFile(base_dir = "/Users/phamthanhhuyen/Documents", games, numPlayers)
+    games = play_game3p(prefix, numGames, salt)
+    writeToCsvFile(base_dir = "/Users/phamthanhhuyen/Documents", games, 3)
 
+    games = play_game4p(prefix, numGames, salt)
+    writeToCsvFile(base_dir = "/Users/phamthanhhuyen/Documents", games, 4)
     val end = System.nanoTime()
 
     println("Done!")
@@ -76,16 +73,6 @@ object PlayerTests {
       )
     }
 
-    //val allGamesSteps: ListBuffer[Int] = getGameStepsForEachGame(games2p)
-
-    //    printScoreSummary(rules2p,games2p)
-    //
-    //    println("")
-    //    println(name2p + ":")
-    //    printScoreSummary(rules2p,games2p)
-    //    printScoreSummaryBombZero(rules2p,games2p)
-
-    //a list of numGames of 2p games
     return games2p
   }
 
@@ -101,7 +88,7 @@ object PlayerTests {
         runSeed = makeRunSeed(name3p, salt),
         playerGen = HeuristicPlayer,
         doPrint = true,
-        doPrintDetails = true,
+        doPrintDetails = false,
         useAnsiColors = false
       )
     }
@@ -182,7 +169,8 @@ object PlayerTests {
   }
 
   def writeToCsvFile (base_dir: String, games: List[fireflower.Game], numPlayer: Int) = {
-    val outputFile = new BufferedWriter(new FileWriter(base_dir + "/ganabi/experts/fireflower/data.csv"))
+    var fileName = "fireflower_" + numPlayer.toString + "p_" + games.length.toString + ".csv"
+    val outputFile = new BufferedWriter(new FileWriter(base_dir + "/ganabi/experts/fireflower/" + fileName))
     val csvWriter = new CSVWriter(outputFile)
     val csvFields = getCsvFields(numPlayer)
     var listOfRecords = new ListBuffer[Array[String]]()

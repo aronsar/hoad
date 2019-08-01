@@ -25,8 +25,6 @@ object Sim {
       game.initialDeck += game.seenMap.cards(i)
     }
 
-    print(game.initialDeck)
-
     for (pid <- 0 to (players.length - 1)) {
       players(pid).handleGameStart(game.hiddenFor(pid))
     }
@@ -48,8 +46,9 @@ object Sim {
       else {
         val preGame = Game(game)
         val sa = game.seenAction(ga)
-        if (doPrint)
-          println(game.toString(useAnsiColors) + "  " + game.seenActionToString(sa, useAnsiColors))
+        //if (doPrint)
+          //println(game.toString(useAnsiColors) + "  " + game.seenActionToString(sa, useAnsiColors))
+        game.toString(useAnsiColors) + "  " + game.seenActionToString(sa, useAnsiColors)
         //adding the action of each step to the array
         game.actions += game.seenActionToString(sa, useAnsiColors)
         game.doAction(ga)
