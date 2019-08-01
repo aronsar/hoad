@@ -5,7 +5,10 @@
 # add repo root to path variable for easy importing of modules
 import os
 import sys
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
+ganabi_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+hanabi_env_path = os.path.join(ganabi_path, "hanabi-env")
+sys.path.insert(0, ganabi_path)
+sys.path.insert(0, hanabi_env_path)
 
 from utils import dir_utils, parse_args
 from collections import defaultdict
@@ -16,6 +19,7 @@ import argparse
 import pandas
 import pathlib
 import subprocess
+import rl_env
 
 
 # Check if data path given exists, if not create it
@@ -96,9 +100,16 @@ def dump_pickle_data(fireflower_data, args):
     pickle.dump(fireflower_data, open(file_name, "wb"))
 
 
-def convert_data():
+# currently fixed to 3p
+# FIXME: allow functionality for all numplayers
+def convert_data(data):
+    return data
+
+
+def read_convert_data():
     set_data_path()
     data = read_data()
+    data = convert_data(data)
     dump_pickle_data(data, args)
     print_pickle_data()
 
@@ -145,7 +156,7 @@ def create_data(args):
 def main(args):
     # FIXME: compile fireflower agent into jar
     # create_data(args)
-    convert_data()
+    read_convert_data()
 
 
 if __name__ == '__main__':
