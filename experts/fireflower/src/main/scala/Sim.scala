@@ -46,6 +46,7 @@ object Sim {
       else {
         val preGame = Game(game)
         val sa = game.seenAction(ga)
+
         //if (doPrint)
           //println(game.toString(useAnsiColors) + "  " + game.seenActionToString(sa, useAnsiColors))
         game.toString(useAnsiColors) + "  " + game.seenActionToString(sa, useAnsiColors)

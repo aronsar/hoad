@@ -40,6 +40,10 @@ object PlayerTests {
 
     games = play_game4p(prefix, numGames, salt)
     writeToCsvFile(base_dir = "/Users/phamthanhhuyen/Documents", games, 4)
+
+    games = play_game5p(prefix, numGames, salt)
+    writeToCsvFile(base_dir = "/Users/phamthanhhuyen/Documents", games, 5)
+
     val end = System.nanoTime()
 
     println("Done!")
@@ -113,6 +117,26 @@ object PlayerTests {
     }
 
     return games4p
+  }
+
+  def play_game5p(prefix: String, numGames: Int, salt: String): List[fireflower.Game]={
+    val rules5p = Rules.Standard(numPlayers=5,stopEarlyLoss=false)
+
+    val name5p = prefix + "HeuristicStandard5P"
+    val games5p = {
+      Sim.runMulti(
+        name = name5p,
+        rules = rules5p,
+        numGames,
+        runSeed = makeRunSeed(name5p, salt),
+        playerGen = HeuristicPlayer,
+        doPrint = true,
+        doPrintDetails = false,
+        useAnsiColors = false
+      )
+    }
+
+    return games5p
   }
 
   def printScoreSummary(rules: Rules, games: List[Game]) = {
