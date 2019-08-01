@@ -3,7 +3,7 @@ use game::*;
 // use strategy::*;
 use std::fs::OpenOptions;
 use std::io;
-use std::fs;
+
 //Header of csv
 // [cur player idx,
 // turn idx
@@ -35,12 +35,6 @@ pub fn encoding_game(game : &GameState, player : u32, choice: &TurnChoice){
     let dk = &game.deck;
     let dk_sz = board.deck_size;
 
-    if turn == 1 {
-        fs::remove_file("rust_agent.csv");
-        fs::remove_file("dk_cards.csv");
-        let file = OpenOptions::new().write(true).create_new(true).open("rust_agent.csv");
-        let file = OpenOptions::new().write(true).create_new(true).open("dk_cards.csv");
-    }
     let mut file = OpenOptions::new().write(true).append(true).open("rust_agent.csv").unwrap();
     // let mut file = OpenOptions::new().write(true).open("rust_agent.csv").unwrap();
     let mut writer = csv::Writer::from_writer(file);
@@ -128,19 +122,5 @@ pub fn encoding_game(game : &GameState, player : u32, choice: &TurnChoice){
     temp.push(info_rmn.to_string());
     temp.push(dk_sz.to_string());
     writer.write_record(&temp);
-
-    if turn == 1{
-        temp_cards = vec![];
-        let mut temp_dk_cards = vec![];
-        for card in dk {
-            temp_cards.push(card.color.to_string()+ &card.value.to_string());
-        }
-        let joined = temp_cards.join("-");
-        temp_dk_cards.push(&joined);
-        let mut dk_card_file = OpenOptions::new().write(true).open("dk_cards.csv").unwrap();
-        let mut card_writer = csv::Writer::from_writer(dk_card_file);
-        card_writer.write_record(&temp_dk_cards);
-    }
-
 
 }
