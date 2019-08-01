@@ -6,7 +6,7 @@
 import os
 import sys
 ganabi_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-hanabi_env_path = os.path.join(ganabi_path, "hanabi-env")
+hanabi_env_path = os.path.join(ganabi_path, "hanabi_env")
 sys.path.insert(0, ganabi_path)
 sys.path.insert(0, hanabi_env_path)
 
@@ -149,12 +149,16 @@ def retrieve_decks_deepmind_format(data):
 def convert_data(data):
     config = get_config(data)
     decks = retrieve_decks_deepmind_format(data)
+    num_games = data["Game Number"][len(data["Game Number"]) - 1]
 
     env = rl_env.HanabiEnv(config)
-    obs = env.reset()
+
+    for game_num in range(num_games):
+        deck = decks[game_num]
+        obs = env.reset(deck)
 
     converted_data = data
-    return coverted_data
+    return converted_data
 
 
 def read_convert_data():
