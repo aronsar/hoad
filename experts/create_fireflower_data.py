@@ -99,11 +99,62 @@ def dump_pickle_data(fireflower_data, args):
     # Dump data to appropriate directory
     pickle.dump(fireflower_data, open(file_name, "wb"))
 
+# currently fixed to 3p config
+# FIXME: get config from reading file
+def get_config(data):
+    config = {'colors': 5, 'ranks': 5, 'players': 3, 'hand_size': 5,
+            'max_information_tokens': 8, 'max_life_tokens': 3,
+            'observation_type': 1, 'seed': 1234, 'random_start_player': False}
+    return config
 
-# currently fixed to 3p
-# FIXME: allow functionality for all numplayers
+
+# retrieve deck from data file in format given
+def get_decks(data):
+    decks = []
+
+    index = 0
+    for step in data["Game Step"]:
+        if step == 1:
+            decks.append(data["Initial Deck"][index])
+        index += 1
+
+    return decks
+
+
+# convert to hanabi env format
+def convert_decks(decks):
+    converted_decks = []
+
+    for deck in decks:
+        converted_deck = [None for i in range(int(len(deck) / 2))]
+
+        index = 0
+        for card in converted_deck:
+            card = deck[index] + deck[index + 1]
+            converted_deck[int(index / 2)] = card
+            index += 2
+
+        converted_decks.append(converted_deck)
+
+    return converted_decks
+
+
+def retrieve_decks_deepmind_format(data):
+    decks = get_decks(data)
+    decks = convert_decks(decks)
+    return decks
+
+
+# FIXME: run hanabi env
 def convert_data(data):
-    return data
+    config = get_config(data)
+    decks = retrieve_decks_deepmind_format(data)
+
+    env = rl_env.HanabiEnv(config)
+    obs = env.reset()
+
+    converted_data = data
+    return coverted_data
 
 
 def read_convert_data():
