@@ -141,10 +141,6 @@ def retrieve_decks_deepmind_format(data):
 #FIXME: make return one hot data from raw data
 def one_hot_vectorized_action(data, num_moves, game_num, game_step):
     '''
-    Inputs:
-        agent: agent object we imported and initialized with agent_config
-        num_moves: length of the action vector
-        obs: observation object (has lots of good info, run print(obs.keys()) to see)
     Returns:
         one_hot_action_vector: one hot action vector
         action: action in the form recognizable by the Hanabi environment
@@ -154,7 +150,6 @@ def one_hot_vectorized_action(data, num_moves, game_num, game_step):
         if data['Game Number'][index] == game_num and data['Game Step'][index] == game_step:
             action_index = index
             break
-    print(data['Move Type'][index])
 
     one_hot_action_vector = [0]*num_moves
     action = {'action_type': 'PLAY', 'card_index': 0}
