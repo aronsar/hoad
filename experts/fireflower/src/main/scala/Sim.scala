@@ -2,65 +2,76 @@ package fireflower
 
 object Sim {
   def runSingle(
-    rules: Rules,
-    gameSeed: Long,
-    playerSeed: Long,
-    playerGen: PlayerGen,
-    doPrint: Boolean,
-    useAnsiColors: Boolean,
-    debugTurnAndPath: Option[(Int,List[GiveAction])]
-  ): Game = {
-    val players = playerGen.genPlayers(rules,playerSeed)
-    if(players.length != rules.numPlayers)
-      throw new Exception("players.length (%d) != rules.numPlayers (%d)".format(players.length,rules.numPlayers))
+                 rules: Rules,
+                 gameSeed: Long,
+                 playerSeed: Long,
+                 playerGen: PlayerGen,
+                 doPrint: Boolean,
+                 useAnsiColors: Boolean,
+                 debugTurnAndPath: Option[(Int, List[GiveAction])]
+               ): Game = {
+    val players = playerGen.genPlayers(rules, playerSeed)
+    if (players.length != rules.numPlayers)
+      throw new Exception("players.length (%d) != rules.numPlayers (%d)".format(players.length, rules.numPlayers))
 
-    if(doPrint)
+    if (doPrint)
       println("GameSeed: " + gameSeed + " PlayerSeed: " + playerSeed)
 
-    val game = Game(rules,gameSeed)
+    val game = Game(rules, gameSeed)
     game.drawInitialCards()
 
-    for(pid <- 0 to (players.length - 1)) {
+    //get the initial deck
+    for (i <- 0 to game.seenMap.cards.length-1) {
+      game.initialDeck += game.seenMap.cards(i)
+    }
+
+    for (pid <- 0 to (players.length - 1)) {
       players(pid).handleGameStart(game.hiddenFor(pid))
     }
 
-    while(!game.isDone()) {
-      debugTurnAndPath.foreach { case (turn,path) =>
-        if(game.turnNumber == turn)
+    while (!game.isDone()) {
+      debugTurnAndPath.foreach { case (turn, path) =>
+        if (game.turnNumber == turn)
           game.debugPath = Some(path)
         else
           game.debugPath = None
       }
 
       val player = players(game.curPlayer)
+      game.currPlayerArray += game.curPlayer
       val ga = player.getAction(game.hiddenFor(game.curPlayer))
-      if(!game.isLegal(ga)) {
+      if (!game.isLegal(ga)) {
         throw new Exception("Illegal action: " + game.giveActionToString(ga))
       }
       else {
         val preGame = Game(game)
         val sa = game.seenAction(ga)
-        if(doPrint)
-          println(game.toString(useAnsiColors) + "  " + game.seenActionToString(sa,useAnsiColors))
+
+        //if (doPrint)
+          //println(game.toString(useAnsiColors) + "  " + game.seenActionToString(sa, useAnsiColors))
+        game.toString(useAnsiColors) + "  " + game.seenActionToString(sa, useAnsiColors)
+        //adding the action of each step to the array
+        game.actions += game.seenActionToString(sa, useAnsiColors)
         game.doAction(ga)
-        for(pid <- 0 to (players.length - 1)) {
+        for (pid <- 0 to (players.length - 1)) {
           players(pid).handleSeenAction(sa, preGame.hiddenFor(pid), game.hiddenFor(pid))
         }
       }
+
     }
 
-    if(doPrint) {
+    if (doPrint) {
       println(game.toString(useAnsiColors))
     }
     game
   }
 
   def runSingle(
-    rules: Rules,
-    playerGen: PlayerGen,
-    doPrint: Boolean,
-    useAnsiColors: Boolean
-  ): Game = {
+                 rules: Rules,
+                 playerGen: PlayerGen,
+                 doPrint: Boolean,
+                 useAnsiColors: Boolean
+               ): Game = {
     val rand = Rand()
     val gameSeed = rand.nextLong()
     val playerSeed = rand.nextLong()
@@ -76,21 +87,21 @@ object Sim {
   }
 
   def runMulti(
-    name: String,
-    rules: Rules,
-    numGames: Int,
-    runSeed: Long,
-    playerGen: PlayerGen,
-    doPrint: Boolean,
-    doPrintDetails: Boolean,
-    useAnsiColors: Boolean
-  ): List[Game] = {
-    if(doPrint)
+                name: String,
+                rules: Rules,
+                numGames: Int,
+                runSeed: Long,
+                playerGen: PlayerGen,
+                doPrint: Boolean,
+                doPrintDetails: Boolean,
+                useAnsiColors: Boolean
+              ): List[Game] = {
+    if (doPrint)
       println(name + " starting " + numGames + " games, runSeed: " + runSeed)
 
     val rand = Rand(runSeed)
     val games =
-      (0 to (numGames-1)).map { i =>
+      (0 to (numGames - 1)).map { i =>
         val gameSeed = rand.nextLong()
         val playerSeed = rand.nextLong()
         val game = runSingle(
@@ -102,7 +113,7 @@ object Sim {
           useAnsiColors = useAnsiColors,
           debugTurnAndPath = None
         )
-        if(doPrint)
+        if (doPrint)
           println(name + " Game " + i + " Score: " + game.numPlayed + " GameSeed: " + gameSeed)
         game
       }.toList
@@ -110,14 +121,14 @@ object Sim {
   }
 
   def runMulti(
-    name: String,
-    rules: Rules,
-    numGames: Int,
-    playerGen: PlayerGen,
-    doPrint: Boolean,
-    doPrintDetails: Boolean,
-    useAnsiColors: Boolean
-  ): List[Game] = {
+                name: String,
+                rules: Rules,
+                numGames: Int,
+                playerGen: PlayerGen,
+                doPrint: Boolean,
+                doPrintDetails: Boolean,
+                useAnsiColors: Boolean
+              ): List[Game] = {
     val rand = Rand()
     runMulti(
       name = name,

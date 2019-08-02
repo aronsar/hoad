@@ -1,4 +1,8 @@
 package fireflower
+import java.io.{BufferedWriter, FileWriter}
+import scala.collection.JavaConversions._
+import scala.collection.mutable.ListBuffer
+import au.com.bytecode.opencsv.CSVWriter
 
 object PlayerTests {
 
@@ -7,44 +11,85 @@ object PlayerTests {
       if(args.length >= 1)
         args(0).toInt
       else
-        1000
+        100
     }
+
+    val base_dir = {
+    if(args.length >= 1)
+      args(1).toString
+    else
+      "/Users/phamthanhhuyen/Documents"
+    }
+
     val numPlayers = {
       if(args.length >= 2)
-        Some(args(1).toInt)
+        Some(args(2).toInt)
       else
         None
     }
     println("NumGames=" + numGames)
 
-    runTests(prefix="",salt="g",numGames=numGames, numPlayers=numPlayers)
+    runTests(prefix="",base_dir=base_dir, salt="g",numGames=numGames, numPlayers=numPlayers)
   }
 
-  def runTests(prefix: String, salt: String, numGames: Int, numPlayers: Option[Int]): Unit = {
+  def makeRunSeed(name:String, salt:String): Long = {
+    RandUtils.sha256Long(RandUtils.sha256Long(name) + salt)
+  }
+
+  def runTests(prefix: String, base_dir: String, salt: String, numGames: Int, numPlayers: Option[Int]): Unit = {
     val start = System.nanoTime()
-    val rules2p = Rules.Standard(numPlayers=2,stopEarlyLoss=false)
-    val rules3p = Rules.Standard(numPlayers=3,stopEarlyLoss=false)
-    val rules4p = Rules.Standard(numPlayers=4,stopEarlyLoss=false)
+    var games: List[fireflower.Game] = List[fireflower.Game]()
 
-    def makeRunSeed(name:String): Long = {
-      RandUtils.sha256Long(RandUtils.sha256Long(name) + salt)
+    games = play_game2p(prefix, numGames, salt)
+    writeToCsvFile(base_dir, games, 2)
+
+    games = play_game3p(prefix, numGames, salt)
+    writeToCsvFile(base_dir, games, 3)
+
+    games = play_game4p(prefix, numGames, salt)
+    writeToCsvFile(base_dir, games, 4)
+
+    games = play_game5p(prefix, numGames, salt)
+    writeToCsvFile(base_dir, games, 5)
+
+    val end = System.nanoTime()
+
+    println("Done!")
+    println("")
+    println("Time: " + (end-start).toDouble / 1.0e9)
+  }
+
+  def getGameStepsForEachGame(games: List[fireflower.Game]): ListBuffer[Int]={
+    var gameStepArray = new ListBuffer[Int]()
+
+    for (i <- 0 to games.length-1) {
+      gameStepArray += games(i).turnNumber
     }
+    return gameStepArray
+  }
 
+
+  def play_game2p(prefix: String, numGames: Int, salt: String): List[fireflower.Game]={
+    val rules2p = Rules.Standard(numPlayers=2,stopEarlyLoss=false)
     val name2p = prefix + "HeuristicStandard2P"
     val games2p = {
       Sim.runMulti(
         name = name2p,
         rules = rules2p,
         numGames,
-        runSeed = makeRunSeed(name2p),
+        runSeed = makeRunSeed(name2p, salt),
         playerGen = HeuristicPlayer,
         doPrint = true,
         doPrintDetails = false,
-        useAnsiColors = true
+        useAnsiColors = false
       )
     }
-    println(name2p + ":")
-    printScoreSummary(rules2p,games2p)
+
+    return games2p
+  }
+
+  def play_game3p(prefix: String, numGames: Int, salt: String): List[fireflower.Game]={
+    val rules3p = Rules.Standard(numPlayers=3,stopEarlyLoss=false)
 
     val name3p = prefix + "HeuristicStandard3P"
     val games3p = {
@@ -52,15 +97,18 @@ object PlayerTests {
         name = name3p,
         rules = rules3p,
         numGames,
-        runSeed = makeRunSeed(name3p),
+        runSeed = makeRunSeed(name3p, salt),
         playerGen = HeuristicPlayer,
         doPrint = true,
         doPrintDetails = false,
-        useAnsiColors = true
+        useAnsiColors = false
       )
     }
-    println(name3p + ":")
-    printScoreSummary(rules3p,games3p)
+    return games3p
+  }
+
+  def play_game4p(prefix: String, numGames: Int, salt: String): List[fireflower.Game]={
+    val rules4p = Rules.Standard(numPlayers=4,stopEarlyLoss=false)
 
     val name4p = prefix + "HeuristicStandard4P"
     val games4p = {
@@ -68,33 +116,35 @@ object PlayerTests {
         name = name4p,
         rules = rules4p,
         numGames,
-        runSeed = makeRunSeed(name4p),
+        runSeed = makeRunSeed(name4p, salt),
         playerGen = HeuristicPlayer,
         doPrint = true,
         doPrintDetails = false,
-        useAnsiColors = true
+        useAnsiColors = false
       )
     }
-    println(name4p + ":")
-    printScoreSummary(rules4p,games4p)
 
-    val end = System.nanoTime()
+    return games4p
+  }
 
-    println("Done!")
-    println("")
-    println(name2p + ":")
-    printScoreSummary(rules2p,games2p)
-    printScoreSummaryBombZero(rules2p,games2p)
-    println("")
-    println(name3p + ":")
-    printScoreSummary(rules3p,games3p)
-    printScoreSummaryBombZero(rules3p,games3p)
-    println("")
-    println(name4p + ":")
-    printScoreSummary(rules4p,games4p)
-    printScoreSummaryBombZero(rules4p,games4p)
-    println("")
-    println("Time: " + (end-start).toDouble / 1.0e9)
+  def play_game5p(prefix: String, numGames: Int, salt: String): List[fireflower.Game]={
+    val rules5p = Rules.Standard(numPlayers=5,stopEarlyLoss=false)
+
+    val name5p = prefix + "HeuristicStandard5P"
+    val games5p = {
+      Sim.runMulti(
+        name = name5p,
+        rules = rules5p,
+        numGames,
+        runSeed = makeRunSeed(name5p, salt),
+        playerGen = HeuristicPlayer,
+        doPrint = true,
+        doPrintDetails = false,
+        useAnsiColors = false
+      )
+    }
+
+    return games5p
   }
 
   def printScoreSummary(rules: Rules, games: List[Game]) = {
@@ -141,159 +191,64 @@ object PlayerTests {
     println("Average Utility: " + avgUtility)
   }
 
+  def getCsvFields (numPlayer: Int): Array[String] = {
+    val csvFields = ListBuffer("Game Number", "Game Step", "Initial Deck", "Move Type", "Card Color/Rank/Position", "Cards Involving", "Current Player ID")
+    for (i <- 0 to numPlayer-1) {
+      csvFields += "Player " + (i+1).toString
+    }
+
+    return csvFields.toArray
+  }
+
+  def writeToCsvFile (base_dir: String, games: List[fireflower.Game], numPlayer: Int) = {
+    var fileName = "fireflower_" + numPlayer.toString + "p_" + games.length.toString + ".csv"
+    val outputFile = new BufferedWriter(new FileWriter(base_dir + "/ganabi/experts/fireflower/" + fileName))
+    val csvWriter = new CSVWriter(outputFile)
+    val csvFields = getCsvFields(numPlayer)
+    var listOfRecords = new ListBuffer[Array[String]]()
+
+    //Card Rank is marked on based 0 (card Red 1-5 will be R0-4 etc
+    listOfRecords += csvFields
+    /*
+    Each action has 3 components:
+    - Move type: HintColor, HintRank, Play, Discard or Bomb
+    - Depending on the move type, the 2nd component has 3 options:
+      + If type==HintColor, it will be either RYWBG
+      + If type==HintRank, it will be 0-4, representing card number from 1-5
+      + If type==Play or Discard or Bomb, it will be 0-4, representing the position of the card on hand
+    - Card Involving: which card(s) that the action is related to
+    */
+
+    for (gameNum <- 0 to games.length-1) {
+      var actionsArray = games(gameNum).actions
+      var cardsArray = games(gameNum).playersCard
+      var currPlayerArray = games(gameNum).currPlayerArray
+      var initialDeck = games(gameNum).initialDeck
+
+      for (gameStep <- 0 to actionsArray.length-1) {
+        //split actions
+        var component = actionsArray(gameStep).split(" ")
+
+        //get each players card
+        var filledInLine = ListBuffer((gameNum+1).toString, (gameStep+1).toString, initialDeck, component(0), component(1), component(2), currPlayerArray(gameStep).toString)
+        var playerCard = cardsArray(gameStep).split('|')
+        for (player <- 0 to playerCard.length-1) {
+          filledInLine += playerCard(player)
+        }
+
+        listOfRecords += filledInLine.toArray
+      }
+    }
+
+    csvWriter.writeAll(listOfRecords.toList)
+    outputFile.close()
+  }
+
+
+
+
   /*
-   Results:
 
-   [info] HeuristicStandard2P:
-   [info] Score  0  Games:  0  Percent:  0.0%  Cum: 100.0%
-   [info] Score  1  Games:  0  Percent:  0.0%  Cum: 100.0%
-   [info] Score  2  Games:  1  Percent:  0.1%  Cum: 100.0%
-   [info] Score  3  Games:  0  Percent:  0.0%  Cum: 99.9%
-   [info] Score  4  Games:  0  Percent:  0.0%  Cum: 99.9%
-   [info] Score  5  Games:  0  Percent:  0.0%  Cum: 99.9%
-   [info] Score  6  Games:  1  Percent:  0.1%  Cum: 99.9%
-   [info] Score  7  Games:  0  Percent:  0.0%  Cum: 99.8%
-   [info] Score  8  Games:  1  Percent:  0.1%  Cum: 99.8%
-   [info] Score  9  Games:  2  Percent:  0.2%  Cum: 99.7%
-   [info] Score 10  Games:  2  Percent:  0.2%  Cum: 99.5%
-   [info] Score 11  Games:  3  Percent:  0.3%  Cum: 99.3%
-   [info] Score 12  Games:  1  Percent:  0.1%  Cum: 99.0%
-   [info] Score 13  Games:  1  Percent:  0.1%  Cum: 98.9%
-   [info] Score 14  Games:  4  Percent:  0.4%  Cum: 98.8%
-   [info] Score 15  Games:  3  Percent:  0.3%  Cum: 98.4%
-   [info] Score 16  Games:  7  Percent:  0.7%  Cum: 98.1%
-   [info] Score 17  Games:  9  Percent:  0.9%  Cum: 97.4%
-   [info] Score 18  Games: 15  Percent:  1.5%  Cum: 96.5%
-   [info] Score 19  Games: 28  Percent:  2.8%  Cum: 95.0%
-   [info] Score 20  Games: 23  Percent:  2.3%  Cum: 92.2%
-   [info] Score 21  Games: 38  Percent:  3.8%  Cum: 89.9%
-   [info] Score 22  Games: 58  Percent:  5.8%  Cum: 86.1%
-   [info] Score 23  Games: 114  Percent: 11.4%  Cum: 80.3%
-   [info] Score 24  Games: 124  Percent: 12.4%  Cum: 68.9%
-   [info] Score 25  Games: 565  Percent: 56.5%  Cum: 56.5%
-   [info] Average Score: 23.537
-   [info] Average Utility: 75.324
-
-   [info] HeuristicStandard3P:
-   [info] Score  0  Games:  0  Percent:  0.0%  Cum: 100.0%
-   [info] Score  1  Games:  0  Percent:  0.0%  Cum: 100.0%
-   [info] Score  2  Games:  0  Percent:  0.0%  Cum: 100.0%
-   [info] Score  3  Games:  0  Percent:  0.0%  Cum: 100.0%
-   [info] Score  4  Games:  3  Percent:  0.3%  Cum: 100.0%
-   [info] Score  5  Games:  3  Percent:  0.3%  Cum: 99.7%
-   [info] Score  6  Games:  4  Percent:  0.4%  Cum: 99.4%
-   [info] Score  7  Games:  1  Percent:  0.1%  Cum: 99.0%
-   [info] Score  8  Games:  2  Percent:  0.2%  Cum: 98.9%
-   [info] Score  9  Games:  1  Percent:  0.1%  Cum: 98.7%
-   [info] Score 10  Games:  4  Percent:  0.4%  Cum: 98.6%
-   [info] Score 11  Games:  8  Percent:  0.8%  Cum: 98.2%
-   [info] Score 12  Games:  3  Percent:  0.3%  Cum: 97.4%
-   [info] Score 13  Games:  3  Percent:  0.3%  Cum: 97.1%
-   [info] Score 14  Games:  6  Percent:  0.6%  Cum: 96.8%
-   [info] Score 15  Games:  9  Percent:  0.9%  Cum: 96.2%
-   [info] Score 16  Games:  7  Percent:  0.7%  Cum: 95.3%
-   [info] Score 17  Games:  9  Percent:  0.9%  Cum: 94.6%
-   [info] Score 18  Games: 12  Percent:  1.2%  Cum: 93.7%
-   [info] Score 19  Games: 24  Percent:  2.4%  Cum: 92.5%
-   [info] Score 20  Games: 25  Percent:  2.5%  Cum: 90.1%
-   [info] Score 21  Games: 42  Percent:  4.2%  Cum: 87.6%
-   [info] Score 22  Games: 77  Percent:  7.7%  Cum: 83.4%
-   [info] Score 23  Games: 135  Percent: 13.5%  Cum: 75.7%
-   [info] Score 24  Games: 220  Percent: 22.0%  Cum: 62.2%
-   [info] Score 25  Games: 402  Percent: 40.2%  Cum: 40.2%
-   [info] Average Score: 22.953
-   [info] Average Utility: 66.006
-
-   [info] HeuristicStandard4P:
-   [info] Score  0  Games:  0  Percent:  0.0%  Cum: 100.0%
-   [info] Score  1  Games:  0  Percent:  0.0%  Cum: 100.0%
-   [info] Score  2  Games:  0  Percent:  0.0%  Cum: 100.0%
-   [info] Score  3  Games:  0  Percent:  0.0%  Cum: 100.0%
-   [info] Score  4  Games:  0  Percent:  0.0%  Cum: 100.0%
-   [info] Score  5  Games:  1  Percent:  0.1%  Cum: 100.0%
-   [info] Score  6  Games:  1  Percent:  0.1%  Cum: 99.9%
-   [info] Score  7  Games:  0  Percent:  0.0%  Cum: 99.8%
-   [info] Score  8  Games:  3  Percent:  0.3%  Cum: 99.8%
-   [info] Score  9  Games:  1  Percent:  0.1%  Cum: 99.5%
-   [info] Score 10  Games:  3  Percent:  0.3%  Cum: 99.4%
-   [info] Score 11  Games:  2  Percent:  0.2%  Cum: 99.1%
-   [info] Score 12  Games:  2  Percent:  0.2%  Cum: 98.9%
-   [info] Score 13  Games:  6  Percent:  0.6%  Cum: 98.7%
-   [info] Score 14  Games:  2  Percent:  0.2%  Cum: 98.1%
-   [info] Score 15  Games:  9  Percent:  0.9%  Cum: 97.9%
-   [info] Score 16  Games:  8  Percent:  0.8%  Cum: 97.0%
-   [info] Score 17  Games:  9  Percent:  0.9%  Cum: 96.2%
-   [info] Score 18  Games:  8  Percent:  0.8%  Cum: 95.3%
-   [info] Score 19  Games: 25  Percent:  2.5%  Cum: 94.5%
-   [info] Score 20  Games: 35  Percent:  3.5%  Cum: 92.0%
-   [info] Score 21  Games: 66  Percent:  6.6%  Cum: 88.5%
-   [info] Score 22  Games: 124  Percent: 12.4%  Cum: 81.9%
-   [info] Score 23  Games: 188  Percent: 18.8%  Cum: 69.5%
-   [info] Score 24  Games: 242  Percent: 24.2%  Cum: 50.7%
-   [info] Score 25  Games: 265  Percent: 26.5%  Cum: 26.5%
-   [info] Average Score: 22.832
-   [info] Average Utility: 58.914
-
-   Much longer run:
-
-   [info] HeuristicStandard2P:
-   [info] Score  0  Games:  0  Percent:  0.0%  Cum: 100.0%
-   [info] Score  1  Games:  0  Percent:  0.0%  Cum: 100.0%
-   [info] Score  2  Games:  3  Percent:  0.0%  Cum: 100.0%
-   [info] Score  3  Games:  8  Percent:  0.0%  Cum: 100.0%
-   [info] Score  4  Games: 11  Percent:  0.0%  Cum: 100.0%
-   [info] Score  5  Games: 17  Percent:  0.1%  Cum: 99.9%
-   [info] Score  6  Games: 18  Percent:  0.1%  Cum: 99.8%
-   [info] Score  7  Games: 29  Percent:  0.1%  Cum: 99.8%
-   [info] Score  8  Games: 26  Percent:  0.1%  Cum: 99.7%
-   [info] Score  9  Games: 33  Percent:  0.1%  Cum: 99.6%
-   [info] Score 10  Games: 37  Percent:  0.1%  Cum: 99.4%
-   [info] Score 11  Games: 40  Percent:  0.2%  Cum: 99.3%
-   [info] Score 12  Games: 46  Percent:  0.2%  Cum: 99.1%
-   [info] Score 13  Games: 75  Percent:  0.3%  Cum: 98.9%
-   [info] Score 14  Games: 79  Percent:  0.3%  Cum: 98.6%
-   [info] Score 15  Games: 110  Percent:  0.4%  Cum: 98.3%
-   [info] Score 16  Games: 165  Percent:  0.7%  Cum: 97.9%
-   [info] Score 17  Games: 279  Percent:  1.1%  Cum: 97.2%
-   [info] Score 18  Games: 378  Percent:  1.5%  Cum: 96.1%
-   [info] Score 19  Games: 506  Percent:  2.0%  Cum: 94.6%
-   [info] Score 20  Games: 825  Percent:  3.3%  Cum: 92.6%
-   [info] Score 21  Games: 1377  Percent:  5.5%  Cum: 89.3%
-   [info] Score 22  Games: 2091  Percent:  8.4%  Cum: 83.8%
-   [info] Score 23  Games: 2514  Percent: 10.1%  Cum: 75.4%
-   [info] Score 24  Games: 3181  Percent: 12.7%  Cum: 65.3%
-   [info] Score 25  Games: 13152  Percent: 52.6%  Cum: 52.6%
-   [info] Average Score: 23.37016
-   [info] Average Utility: 73.04432
-   [info] Score  0  Games: 1226  Percent:  4.9%  Cum: 100.0%
-   [info] Score  1  Games:  0  Percent:  0.0%  Cum: 95.1%
-   [info] Score  2  Games:  0  Percent:  0.0%  Cum: 95.1%
-   [info] Score  3  Games:  0  Percent:  0.0%  Cum: 95.1%
-   [info] Score  4  Games:  0  Percent:  0.0%  Cum: 95.1%
-   [info] Score  5  Games:  0  Percent:  0.0%  Cum: 95.1%
-   [info] Score  6  Games:  0  Percent:  0.0%  Cum: 95.1%
-   [info] Score  7  Games:  1  Percent:  0.0%  Cum: 95.1%
-   [info] Score  8  Games:  1  Percent:  0.0%  Cum: 95.1%
-   [info] Score  9  Games:  1  Percent:  0.0%  Cum: 95.1%
-   [info] Score 10  Games:  4  Percent:  0.0%  Cum: 95.1%
-   [info] Score 11  Games:  5  Percent:  0.0%  Cum: 95.1%
-   [info] Score 12  Games:  6  Percent:  0.0%  Cum: 95.0%
-   [info] Score 13  Games: 22  Percent:  0.1%  Cum: 95.0%
-   [info] Score 14  Games: 27  Percent:  0.1%  Cum: 94.9%
-   [info] Score 15  Games: 47  Percent:  0.2%  Cum: 94.8%
-   [info] Score 16  Games: 89  Percent:  0.4%  Cum: 94.6%
-   [info] Score 17  Games: 186  Percent:  0.7%  Cum: 94.3%
-   [info] Score 18  Games: 270  Percent:  1.1%  Cum: 93.5%
-   [info] Score 19  Games: 392  Percent:  1.6%  Cum: 92.5%
-   [info] Score 20  Games: 722  Percent:  2.9%  Cum: 90.9%
-   [info] Score 21  Games: 1242  Percent:  5.0%  Cum: 88.0%
-   [info] Score 22  Games: 1978  Percent:  7.9%  Cum: 83.0%
-   [info] Score 23  Games: 2474  Percent:  9.9%  Cum: 75.1%
-   [info] Score 24  Games: 3155  Percent: 12.6%  Cum: 65.2%
-   [info] Score 25  Games: 13152  Percent: 52.6%  Cum: 52.6%
-   [info] Average Score: 22.55656
-   [info] Average Utility: 71.41712
-
-   */
+*/
 
 }

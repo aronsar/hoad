@@ -14,6 +14,8 @@ package fireflower
 
 import RichImplicits._
 
+import scala.collection.mutable.ListBuffer
+
 object Game {
 
   //Construct a Game from the given rules and a seed for shuffling the deck.
@@ -58,7 +60,11 @@ object Game {
       nextPlayable = nextPlayable,
       numCardRemaining = numCardRemaining,
       revHistory = List(),
-      debugPath = None
+      debugPath = None,
+      currPlayerArray = ListBuffer[Int](),
+      actions = ListBuffer[String](),
+      playersCard = ListBuffer[String](),
+      initialDeck = ""
     )
   }
 
@@ -82,6 +88,10 @@ object Game {
       nextPlayable = that.nextPlayable.clone(),
       numCardRemaining = that.numCardRemaining.clone(),
       revHistory = that.revHistory,
+      currPlayerArray = that.currPlayerArray,
+      actions = that.actions,
+      playersCard = that.playersCard,
+      initialDeck = that.initialDeck,
       debugPath = that.debugPath
     )
   }
@@ -99,26 +109,27 @@ class Game private (
   //Used by the HeuristicPlayer to track how many hints it has given where it hasn't simulated the particular
   //hint, so that it can account for the value that on average they are presumably worth later.
   var numUnknownHintsGiven: Int,
-
+  var currPlayerArray: ListBuffer[Int],
   var seenMap: SeenMap,
   var played: List[CardId],
   var discarded: List[CardId],
   var deck: List[CardId],
   var curPlayer: PlayerId,
+  var initialDeck: String,
   //This is -1, except once the deck runs out, where it is the number of turns left in the game, with the
   //game ending when this hits 0.
   var finalTurnsLeft: Int,
-
+  var playersCard: ListBuffer[String],
   val hands: Array[Hand],
   //Indexed by ColorId, the next Number that is playable.
   val nextPlayable: Array[Number],
   //Number of this card remaining in deck or hand, indexed by card.arrayIdx
   val numCardRemaining: Array[Int],
   val revHistory: List[SeenAction],
-
+  var actions: ListBuffer[String], //action of each step of the game
   //Used by the HeuristicPlayer, to only print debug information tracing down a particular line of the search.
   //The mechanism is that while this is Some, every GiveAction done pops the head of the list if it exactly
-  //matches the head of the list, else it sets this to None if it doesn't. When this is Some, debugging is on.
+  //matches the head of the list, else it sets this to None if it doesn't. When this is Some, debugging is on
   var debugPath: Option[List[GiveAction]]
 ) {
 
@@ -309,6 +320,12 @@ class Game private (
       toPlayString + "P" + pid + ": " + hands(pid).toString(seenMap,useAnsiColors)
     }.mkString("|")
 
+    val savedHandsString = (0 to (rules.numPlayers-1)).map { pid =>
+      hands(pid).toString(seenMap,useAnsiColors)
+    }.mkString("|")
+
+    playersCard += savedHandsString
+
     val playedString = rules.colors().flatMap { color =>
       val next = nextPlayable(color.id)
       if(next <= 0)
@@ -331,7 +348,7 @@ class Game private (
         ""
     }
 
-    "T%3d HL %d NB %d ND %2d Played %s %s danger %s %s".format(
+    "TurnNum%3d HintLeft %d NumBomb %d NumDiscard %2d Played %s %s danger %s %s".format(
       turnNumber,
       numHints,
       numBombs,
@@ -346,20 +363,21 @@ class Game private (
   def seenActionToString(sa: SeenAction, useAnsiColors: Boolean): String = {
     sa match {
       case SeenDiscard(hid,cid) =>
-        "Discard #%d %s".format(hid+1,seenMap(cid).toString(useAnsiColors))
+        "DISCARD %d %s".format(hid+1,seenMap(cid).toString(useAnsiColors))
       case SeenPlay(hid,cid) =>
-        "Play #%d %s".format(hid+1,seenMap(cid).toString(useAnsiColors))
+        "PLAY %d %s".format(hid+1,seenMap(cid).toString(useAnsiColors))
       case SeenBomb(hid,cid) =>
-        "Bomb #%d %s".format(hid+1,seenMap(cid).toString(useAnsiColors))
+        "Bomb %d %s".format(hid+1,seenMap(cid).toString(useAnsiColors))
       case SeenHint(pid,hint,appliedTo) =>
         val hintString = hint match {
           case HintColor(color) =>
             if(useAnsiColors)
               color.toAnsiColorCode() + color.toString() + Color.ansiResetColor
             else
-              color.toString()
+              "_COLOR " + color.toString()
           case HintNumber(number) =>
-            (number+1).toString()
+            //(number+1).toString()
+            "_RANK " + (number).toString()
           case HintSameColor =>
             "color"
           case HintSameNumber =>
@@ -375,7 +393,8 @@ class Game private (
           else None
         }.mkString("")
 
-        "Hint P%d %s %s".format(pid,hintString,appliedString)
+        //"Hint P%d %s %s".format(pid,hintString,appliedString)
+        "REVEAL%s %s".format(hintString,appliedString)
     }
   }
 

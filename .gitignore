@@ -10,3 +10,5 @@ data
 output
 .DS_Store
 .java-version
+venv/
+.idea/
