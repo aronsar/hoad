@@ -394,7 +394,7 @@ class Game private (
         }.mkString("")
 
         //"Hint P%d %s %s".format(pid,hintString,appliedString)
-        "REVEAL%s %s".format(hintString,appliedString)
+        "REVEAL%s %d %s".format(hintString,pid, appliedString)
     }
   }
 

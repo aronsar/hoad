@@ -146,13 +146,62 @@ def one_hot_vectorized_action(data, num_moves, game_num, game_step):
         action: action in the form recognizable by the Hanabi environment
                 (idk something like {'discard': 5})
     '''
+    action_index = 0
     for index in range(len(data['Game Number'])):
-        if data['Game Number'][index] == game_num and data['Game Step'][index] == game_step:
+        if int(data['Game Number'][index]) == game_num and int(data['Game Step'][index]) == game_step:
             action_index = index
             break
 
+    move_type = data['Move Type'][action_index]
+    card_info = data['Card Color/Rank/Position'][action_index]
+    
+    print('game num', game_num)
+    print('game_step', game_step)
+    print('movetype', move_type)
+
+
     one_hot_action_vector = [0]*num_moves
-    action = {'action_type': 'PLAY', 'card_index': 0}
+
+
+    action = {}
+    action['action_type'] = move_type
+
+    if move_type == 'PLAY':
+        # converting to hanabi idx because scala hand is in flipped format
+        idx = int(card_info, 10) - 1
+        if idx == 0:
+            idx = 4
+        elif idx == 1:
+            idx = 3
+        elif idx == 3:
+            idx = 1
+        elif idx == 0:
+            idx = 4
+        action['card_index'] = idx
+    elif move_type == 'DISCARD':
+        # converting to hanabi idx because scala hand is in flipped format
+        idx = int(card_info, 10) - 1
+        if idx == 0:
+            idx = 4
+        elif idx == 1:
+            idx = 3
+        elif idx == 3:
+            idx = 1
+        elif idx == 0:
+            idx = 4
+        action['card_index'] = idx
+    elif move_type == 'REVEAL_COLOR':
+        action['color'] = str(card_info)
+        action['target_offset'] = 1
+    elif move_type == 'REVEAL_RANK':
+        action['rank'] = int(card_info)
+        action['target_offset'] = 1
+
+    else:
+        print("Invalid move")
+        raise Exception("Invalid move given in one_hot_vectorized_action func; wrong format data given")
+
+    print(action)
 #    action_idx = obs['legal_moves_as_int'][obs['legal_moves'].index(action)]
 #    one_hot_action_vector[action_idx] = 1
 
@@ -171,24 +220,22 @@ def convert_data(data, args, num_players):
         converted_data.append([[],[]])
         obs = env.reset(deck)
         game_done = False
-        game_step = -1
+        game_step = 0
             
         while not game_done:
             for agent_id in range(num_players):
                 game_step += 1
 
-                agent_hand = obs['player_observations'][agent_id]['observed_hands'][1]
-
                 one_hot_action_vector, action = one_hot_vectorized_action(
                         data,
                         env.num_moves(),
-                        game_num, 
+                        game_num + 1, 
                         game_step)
 
                 converted_data[game_num][0].append(obs['player_observations'][agent_id]['vectorized'])
                 converted_data[game_num][1].append(one_hot_action_vector)
 
-                observations, _, game_done, _ = env.step(action)
+                obs, _, game_done, _ = env.step(action)
 
                 if game_done:
                     break

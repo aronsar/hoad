@@ -192,7 +192,7 @@ object PlayerTests {
   }
 
   def getCsvFields (numPlayer: Int): Array[String] = {
-    val csvFields = ListBuffer("Game Number", "Game Step", "Initial Deck", "Move Type", "Card Color/Rank/Position", "Cards Involving", "Current Player ID")
+    val csvFields = ListBuffer("Game Number", "Game Step", "Initial Deck", "Move Type", "Card Color/Rank/Position", "Cards Involving", "Target Player", "Current Player ID")
     for (i <- 0 to numPlayer-1) {
       csvFields += "Player " + (i+1).toString
     }
@@ -228,9 +228,21 @@ object PlayerTests {
       for (gameStep <- 0 to actionsArray.length-1) {
         //split actions
         var component = actionsArray(gameStep).split(" ")
+        /*
+        - component(0): moveType
+        - component(1): Card Color/Rank/Position
+        - component(2): Target Player
+        - component(3): cards involving
+        */
+
+        var filledInLine = ListBuffer[String]()
 
         //get each players card
-        var filledInLine = ListBuffer((gameNum+1).toString, (gameStep+1).toString, initialDeck, component(0), component(1), component(2), currPlayerArray(gameStep).toString)
+        if (component.length == 4) {
+          filledInLine = ListBuffer((gameNum + 1).toString, (gameStep + 1).toString, initialDeck, component(0), component(1), component(3), component(2), currPlayerArray(gameStep).toString)
+        } else {
+          filledInLine = ListBuffer((gameNum + 1).toString, (gameStep + 1).toString, initialDeck, component(0), component(1), component(2), " ", currPlayerArray(gameStep).toString)
+        }
         var playerCard = cardsArray(gameStep).split('|')
         for (player <- 0 to playerCard.length-1) {
           filledInLine += playerCard(player)
