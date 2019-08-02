@@ -21,7 +21,7 @@ import pickle
 def parse():
     parser = argparse.ArgumentParser()
     parser.add_argument('--agent_name',
-                        default='iggi')
+                        default='fireflower')
 
     parser.add_argument('--num_players',
                         type=int)
@@ -34,19 +34,14 @@ def parse():
     args = parser.parse_args()
     return args
 
+
 # TODO: For future work, we can have the target agent and other agents to be different types
-def create_csv_from_java(jar_filename, csv_filename, agent_name, player_count, game_count, seed):
-    with open(csv_filename, "w") as csv_file:
-        # Args to be used to create data using walton.jar
-        args = ["java", "-jar"
-                , jar_filename
-                , agent_name
-                , agent_name 
-                , str(player_count) 
-                , str(game_count) 
-                , str(seed)]
+def create_csv_from_scala(numGames, numPlayers):
+        subprocess.run("export JAVA_HOME=/data1/shared/fireflowerenv/jre1.8.0_221", shell=True)
+        subprocess.run("export PATH=$JAVA_HOME/bin:$PATH", shell=True)
         
-        process = subprocess.Popen(args, universal_newlines=True, stdout=csv_file)
+        args = ["/data1/shared/fireflowerenv/sbt/bin/sbt", "run " + str(numGames) + " " + str(numPlayers)]
+        process = subprocess.Popen(args, universal_newlines=True)
         process.communicate() # solves issue where Popen hangs
 
 
@@ -163,11 +158,11 @@ def create_pkl_data(args, csv_data):
 
 def act_based_pipeline(args):
     # Sort Params
-    seed = 1 
+    #seed = 1 
     csv_filename, pkl_filename, jar_filename = create_data_filenames(args) 
 
     # Create csv on Disk by using Java code
-    create_csv_from_scala(jar_filename, csv_filename, args.agent_name, args.num_players, args.num_games, seed)
+    create_csv_from_scala(args.num_games, args.num_players)
 
     # Read csv
     csv_data = pd.read_csv(csv_filename, header=None)
@@ -187,6 +182,6 @@ def main(args):
     act_based_pipeline(args)
         
 if __name__ == '__main__':
-    print("Create walton data")
+    print("Create Fireflower Data")
     args = parse()
     main(args)

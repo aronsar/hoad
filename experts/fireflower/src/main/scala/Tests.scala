@@ -77,7 +77,7 @@ object PlayerTests {
         runSeed = makeRunSeed(name2p, salt),
         playerGen = HeuristicPlayer,
         doPrint = true,
-        doPrintDetails = true,
+        doPrintDetails = false,
         useAnsiColors = false
       )
     }
@@ -97,7 +97,7 @@ object PlayerTests {
         runSeed = makeRunSeed(name3p, salt),
         playerGen = HeuristicPlayer,
         doPrint = true,
-        doPrintDetails = true,
+        doPrintDetails = false,
         useAnsiColors = false
       )
     }
@@ -116,7 +116,7 @@ object PlayerTests {
         runSeed = makeRunSeed(name4p, salt),
         playerGen = HeuristicPlayer,
         doPrint = true,
-        doPrintDetails = true,
+        doPrintDetails = false,
         useAnsiColors = false
       )
     }
@@ -136,7 +136,7 @@ object PlayerTests {
         runSeed = makeRunSeed(name5p, salt),
         playerGen = HeuristicPlayer,
         doPrint = true,
-        doPrintDetails = true,
+        doPrintDetails = false,
         useAnsiColors = false
       )
     }
