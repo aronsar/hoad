@@ -7,6 +7,8 @@ extern crate csv;
 use game::*;
 use strategy::*;
 use encoding_csv::*;
+use std::fs::OpenOptions;
+use std::fs;
 
 fn new_deck(seed: u32) -> Cards {
     let mut deck: Cards = Cards::new();
@@ -31,6 +33,24 @@ pub fn simulate_once(
     ) -> GameState {
     let deck = new_deck(seed);
 
+    // Delete .csv if they exist
+    fs::remove_file("rust_agent.csv");
+    fs::remove_file("dk_cards.csv");
+    let file = OpenOptions::new().write(true).create_new(true).open("rust_agent.csv");
+    let file = OpenOptions::new().write(true).create_new(true).open("dk_cards.csv");
+
+    // Write the newly created deck to CSV
+    let mut temp_cards = vec![];
+    let mut temp_dk_cards = vec![];
+    for card in &deck {
+        temp_cards.push(card.color.to_string()+ &card.value.to_string());
+    }
+    let joined = temp_cards.join("-");
+    temp_dk_cards.push(&joined);
+    let mut dk_card_file = OpenOptions::new().write(true).append(true).create(true).open("dk_cards.csv").unwrap();
+    let mut card_writer = csv::Writer::from_writer(dk_card_file);
+    card_writer.write_record(&temp_dk_cards);
+
     let mut game = GameState::new(opts, deck);
 
     let mut strategies = game.get_players().map(|player| {
@@ -53,7 +73,7 @@ pub fn simulate_once(
         };
 
         //========================================================
-        ::encoding_csv::encoding_game(&game, player);
+        ::encoding_csv::encoding_game(&game, player, &choice);
         //========================================================
 
         let turn = game.process_choice(choice);
