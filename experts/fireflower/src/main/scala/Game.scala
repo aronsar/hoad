@@ -25,7 +25,7 @@ object Game {
     assert(rules.deckSize >= rules.numPlayers * rules.handSize)
     assert(rules.initialHints >= 0)
     assert(rules.maxHints >= rules.initialHints)
-    assert(rules.maxBombs >= 0)
+    assert(rules.maxBombs == 0)
     assert(rules.maxDiscards >= 0)
     assert(rules.maxNumber >= 0)
     assert(rules.maxNumber < Card.NUMBER_LIMIT)
@@ -363,9 +363,11 @@ class Game private (
   def seenActionToString(sa: SeenAction, useAnsiColors: Boolean): String = {
     sa match {
       case SeenDiscard(hid,cid) =>
-        "DISCARD %d %s".format(hid+1,seenMap(cid).toString(useAnsiColors))
+        //"DISCARD %d %s".format(hid+1,seenMap(cid).toString(useAnsiColors))
+        "DISCARD %s".format(seenMap(cid).toString(useAnsiColors))
       case SeenPlay(hid,cid) =>
-        "PLAY %d %s".format(hid+1,seenMap(cid).toString(useAnsiColors))
+        //"PLAY %d %s".format(hid+1,seenMap(cid).toString(useAnsiColors))
+        "PLAY %s".format(seenMap(cid).toString(useAnsiColors))
       case SeenBomb(hid,cid) =>
         "Bomb %d %s".format(hid+1,seenMap(cid).toString(useAnsiColors))
       case SeenHint(pid,hint,appliedTo) =>
@@ -377,7 +379,7 @@ class Game private (
               "_COLOR " + color.toString()
           case HintNumber(number) =>
             //(number+1).toString()
-            "_RANK " + (number).toString()
+            "_RANK X" + (number).toString()
           case HintSameColor =>
             "color"
           case HintSameNumber =>
@@ -394,7 +396,7 @@ class Game private (
         }.mkString("")
 
         //"Hint P%d %s %s".format(pid,hintString,appliedString)
-        "REVEAL%s %d %s".format(hintString,pid, appliedString)
+        "REVEAL%s %s".format(hintString, appliedString)
     }
   }
 
