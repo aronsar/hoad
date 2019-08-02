@@ -47,8 +47,8 @@ object Sim {
         val preGame = Game(game)
         val sa = game.seenAction(ga)
 
-        //if (doPrint)
-          //println(game.toString(useAnsiColors) + "  " + game.seenActionToString(sa, useAnsiColors))
+        if (doPrint)
+          println(game.toString(useAnsiColors) + "  " + game.seenActionToString(sa, useAnsiColors))
         game.toString(useAnsiColors) + "  " + game.seenActionToString(sa, useAnsiColors)
         //adding the action of each step to the array
         game.actions += game.seenActionToString(sa, useAnsiColors)
