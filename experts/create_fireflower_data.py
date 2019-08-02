@@ -48,8 +48,7 @@ def set_data_path():
 
     # Set working directory to data_path
     os.chdir(data_path)
-    print(os.getcwd())
-
+    
 
 # Create data path directory
 def create_data_path(data_path):
@@ -94,10 +93,9 @@ def dump_pickle_data(fireflower_data, file_name):
     # Dump data to appropriate directory
     pickle.dump(fireflower_data, open(file_name + ".p", "wb"))
 
-# currently fixed to 3p config
-# FIXME: get config from reading file
-def get_config(data):
-    config = {'colors': 5, 'ranks': 5, 'players': 3, 'hand_size': 5,
+
+def get_config(data, num_players):
+    config = {'colors': 5, 'ranks': 5, 'players': num_players, 'hand_size': 5,
             'max_information_tokens': 8, 'max_life_tokens': 3,
             'observation_type': 1, 'seed': 1234, 'random_start_player': False}
     return config
@@ -140,38 +138,79 @@ def retrieve_decks_deepmind_format(data):
     return decks
 
 
-# FIXME: run hanabi env
-def convert_data(data):
-    config = get_config(data)
+#FIXME: make return one hot data from raw data
+def one_hot_vectorized_action(data, num_moves, game_num, game_step):
+    '''
+    Inputs:
+        agent: agent object we imported and initialized with agent_config
+        num_moves: length of the action vector
+        obs: observation object (has lots of good info, run print(obs.keys()) to see)
+    Returns:
+        one_hot_action_vector: one hot action vector
+        action: action in the form recognizable by the Hanabi environment
+                (idk something like {'discard': 5})
+    '''
+#    action = agent.act(obs)
+    one_hot_action_vector = [0]*num_moves
+    action = {'action_type': 'PLAY', 'card_index': 0}
+#    action_idx = obs['legal_moves_as_int'][obs['legal_moves'].index(action)]
+#    one_hot_action_vector[action_idx] = 1
+
+    return one_hot_action_vector, action
+
+
+def convert_data(data, args, num_players):
+    converted_data = []
+    config = get_config(data, num_players)
     decks = retrieve_decks_deepmind_format(data)
-    num_games = data["Game Number"][len(data["Game Number"]) - 1]
 
     env = rl_env.HanabiEnv(config)
 
-    for game_num in range(num_games):
+    for game_num in range(args.num_games):
         deck = decks[game_num]
+        converted_data.append([[],[]])
         obs = env.reset(deck)
+        game_done = False
+        game_step = -1
+            
+        while not game_done:
+            for agent_id in range(num_players):
+                game_step += 1
 
-    converted_data = data
+                agent_hand = obs['player_observations'][agent_id]['observed_hands'][1]
+
+                one_hot_action_vector, action = one_hot_vectorized_action(
+                        data,
+                        env.num_moves(),
+                        game_num, 
+                        game_step)
+
+                converted_data[game_num][0].append(obs['player_observations'][agent_id]['vectorized'])
+                converted_data[game_num][1].append(one_hot_action_vector)
+
+                observations, _, game_done, _ = env.step(action)
+
+                if game_done:
+                    break
+
     return converted_data
+
 
 def get_file_name(num_players, num_games):
     return "fireflower_" + str(num_players) + "p_" + str(num_games)
 
-def read_convert_data(num_players, num_games):
-    file_name = get_file_name(num_players, num_games)
+
+def read_convert_data(num_players, args):
+    file_name = get_file_name(num_players, args.num_games)
     data = read_data(file_name)
-    data = convert_data(data)
+    data = convert_data(data, args, num_players)
     dump_pickle_data(data, file_name)
-    print_pickle_data()
 
 
-# FIXME: don't hardcode numgames, get from file
-def convert_all_data_files():
+def convert_all_data_files(args):
     set_data_path()
     for num_players in range(2,6,1):
-        num_games = 100
-        read_convert_data(num_players,num_games)
+        read_convert_data(num_players,args)
     
 
 def jar_wrapper(*jar_args):
@@ -216,7 +255,7 @@ def create_data(args):
 def main(args):
     # FIXME: compile fireflower agent into jar
     # create_data(args)
-    convert_all_data_files()
+    convert_all_data_files(args)
 
 
 if __name__ == '__main__':
