@@ -100,7 +100,14 @@ def get_config(data, num_players):
             'observation_type': 1, 'seed': 1234, 'random_start_player': False}
     return config
 
+def create_csv_from_scala(numGames, datapath):
+        subprocess.call("export JAVA_HOME=/data1/shared/fireflowerenv/jre1.8.0_221", shell=True)
+        subprocess.call("export PATH=$JAVA_HOME/bin:$PATH", shell=True)
 
+        args = ["/data1/shared/fireflowerenv/sbt/bin/sbt", "run " + str(numGames) + " " +  datapath]
+        process = subprocess.Popen(args, universal_newlines=True)
+        process.communicate() # solves issue where Popen hangs
+        
 # retrieve deck from data file in format given
 def get_decks(data):
     decks = []
@@ -260,48 +267,18 @@ def convert_all_data_files(args):
         read_convert_data(num_players,args)
     
 
-def jar_wrapper(*jar_args):
-    process = subprocess.Popen(['java', '-jar']+list(jar_args),
-                               stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    ret = []
-    while process.poll() is None:
-        line = process.stdout.readline()
-        if line != '' and line.endswith('\n'):
-            ret.append(line[:-1])
-    stdout, stderr = process.communicate()
-    ret += stdout.split('\n')
-    if stderr != '':
-        ret += stderr.split('\n')
-    ret.remove('')
-    return ret
-
 
 def create_data(args):
     # changing working directory to jar to run
-    jar_path = os.getcwd() + '/fireflower'
-    os.chdir(jar_path)
+    data_path = os.getcwd() + '/fireflower'
+    os.chdir(data_path)
 
-    '''
-    simple untested method to call jar (don't know if it can handle args):
-    
-    subprocess.call(['java', 'jar', 'fireflower.jar'])
-    '''
-
-    '''
-    more complex method to call jar, can handle args and will print out errors and ret (which is null)
-    '''
-
-    jar_args = ['fireflower.jar', '--agent_name' + args.agent_name, '--num_players' + args.num_players,
-                '--num_games' + args.num_games,'--datapath' + args.datapath]
-
-    result = jar_wrapper(*jar_args)
-
-    print(result)
-
+    create_csv_from_scala(args.num_games, data_path)
 
 def main(args):
     # FIXME: compile fireflower agent into jar
     # create_data(args)
+    create_data(args)
     convert_all_data_files(args)
 
 
