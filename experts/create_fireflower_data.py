@@ -150,7 +150,12 @@ def one_hot_vectorized_action(data, num_moves, game_num, game_step):
         action: action in the form recognizable by the Hanabi environment
                 (idk something like {'discard': 5})
     '''
-#    action = agent.act(obs)
+    for index in range(len(data['Game Number'])):
+        if data['Game Number'][index] == game_num and data['Game Step'][index] == game_step:
+            action_index = index
+            break
+    print(data['Move Type'][index])
+
     one_hot_action_vector = [0]*num_moves
     action = {'action_type': 'PLAY', 'card_index': 0}
 #    action_idx = obs['legal_moves_as_int'][obs['legal_moves'].index(action)]
