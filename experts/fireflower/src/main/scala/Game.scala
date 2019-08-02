@@ -64,7 +64,7 @@ object Game {
       currPlayerArray = ListBuffer[Int](),
       actions = ListBuffer[String](),
       playersCard = ListBuffer[String](),
-      initialDeck = ""
+      initialDeck = ListBuffer[String]()
     )
   }
 
@@ -115,7 +115,7 @@ class Game private (
   var discarded: List[CardId],
   var deck: List[CardId],
   var curPlayer: PlayerId,
-  var initialDeck: String,
+  var initialDeck: ListBuffer[String],
   //This is -1, except once the deck runs out, where it is the number of turns left in the game, with the
   //game ending when this hits 0.
   var finalTurnsLeft: Int,

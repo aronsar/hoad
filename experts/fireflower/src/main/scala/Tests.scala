@@ -225,11 +225,15 @@ object PlayerTests {
           if (component(0) == "REVEAL_COLOR") {
             filledInLine += "-1"
           }
-          else if (component(0) == "Bomb")
-            filledInLine += " "
           else {
             filledInLine += component(1)(1).toString
           }
+
+          //fill in initial deck
+          for (i <-0 to initialDeck.length-1) {
+            filledInLine += initialDeck(i)
+          }
+
           listOfRecords += filledInLine.toArray
         }
 

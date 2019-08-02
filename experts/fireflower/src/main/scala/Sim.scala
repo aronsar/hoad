@@ -22,7 +22,7 @@ object Sim {
 
     //get the initial deck
     for (i <- 0 to game.seenMap.cards.length-1) {
-      game.initialDeck += game.seenMap.cards(i)
+      game.initialDeck += game.seenMap.cards(i).toString
     }
 
     for (pid <- 0 to (players.length - 1)) {
