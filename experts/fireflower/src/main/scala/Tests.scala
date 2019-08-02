@@ -13,36 +13,44 @@ object PlayerTests {
       else
         100
     }
+
+    val base_dir = {
+    if(args.length >= 1)
+      args(1).toString
+    else
+      "/Users/phamthanhhuyen/Documents"
+    }
+
     val numPlayers = {
       if(args.length >= 2)
-        Some(args(1).toInt)
+        Some(args(2).toInt)
       else
         None
     }
     println("NumGames=" + numGames)
 
-    runTests(prefix="",salt="g",numGames=numGames, numPlayers=numPlayers)
+    runTests(prefix="",base_dir=base_dir, salt="g",numGames=numGames, numPlayers=numPlayers)
   }
 
   def makeRunSeed(name:String, salt:String): Long = {
     RandUtils.sha256Long(RandUtils.sha256Long(name) + salt)
   }
 
-  def runTests(prefix: String, salt: String, numGames: Int, numPlayers: Option[Int]): Unit = {
+  def runTests(prefix: String, base_dir: String, salt: String, numGames: Int, numPlayers: Option[Int]): Unit = {
     val start = System.nanoTime()
     var games: List[fireflower.Game] = List[fireflower.Game]()
 
     games = play_game2p(prefix, numGames, salt)
-    writeToCsvFile(base_dir = "/Users/phamthanhhuyen/Documents", games, 2)
+    writeToCsvFile(base_dir, games, 2)
 
     games = play_game3p(prefix, numGames, salt)
-    writeToCsvFile(base_dir = "/Users/phamthanhhuyen/Documents", games, 3)
+    writeToCsvFile(base_dir, games, 3)
 
     games = play_game4p(prefix, numGames, salt)
-    writeToCsvFile(base_dir = "/Users/phamthanhhuyen/Documents", games, 4)
+    writeToCsvFile(base_dir, games, 4)
 
     games = play_game5p(prefix, numGames, salt)
-    writeToCsvFile(base_dir = "/Users/phamthanhhuyen/Documents", games, 5)
+    writeToCsvFile(base_dir, games, 5)
 
     val end = System.nanoTime()
 
