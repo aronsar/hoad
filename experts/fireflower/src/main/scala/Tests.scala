@@ -202,7 +202,7 @@ object PlayerTests {
 
   def writeToCsvFile (base_dir: String, games: List[fireflower.Game], numPlayer: Int) = {
     var fileName = "fireflower_" + numPlayer.toString + "p_" + games.length.toString + ".csv"
-    val outputFile = new BufferedWriter(new FileWriter(base_dir + fileName))
+    val outputFile = new BufferedWriter(new FileWriter(fileName))
     val csvWriter = new CSVWriter(outputFile)
     val csvFields = getCsvFields(numPlayer)
     var listOfRecords = new ListBuffer[Array[String]]()

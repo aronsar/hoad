@@ -57,7 +57,6 @@ def create_data_path(data_path):
 
 # Read in raw data and return it
 def read_data(file_name):
-
     # Read in data in csv format using Pandas lib
     raw_data = pandas.read_csv(file_name + ".csv")
     return raw_data
@@ -100,11 +99,11 @@ def get_config(data, num_players):
             'observation_type': 1, 'seed': 1234, 'random_start_player': False}
     return config
 
-def create_csv_from_scala(numGames, datapath):
-        subprocess.call("export JAVA_HOME=/data1/shared/fireflowerenv/jre1.8.0_221", shell=True)
-        subprocess.call("export PATH=$JAVA_HOME/bin:$PATH", shell=True)
-
-        args = ["/data1/shared/fireflowerenv/sbt/bin/sbt", "run " + str(numGames) + " " +  datapath]
+def create_csv_from_scala(numGames):
+        subprocess.run("export JAVA_HOME=/data1/shared/fireflowerenv/jre1.8.0_221", shell=True)
+        subprocess.run("export PATH=$JAVA_HOME/bin:$PATH", shell=True)
+        
+        args = ["/data1/shared/fireflowerenv/sbt/bin/sbt", "run " + str(numGames) + " " +  os.getcwd()]
         process = subprocess.Popen(args, universal_newlines=True)
         process.communicate() # solves issue where Popen hangs
         
@@ -255,6 +254,7 @@ def get_file_name(num_players, num_games):
 
 
 def read_convert_data(num_players, args):
+    print(os.getcwd())
     file_name = get_file_name(num_players, args.num_games)
     data = read_data(file_name)
     data = convert_data(data, args, num_players)
@@ -262,7 +262,6 @@ def read_convert_data(num_players, args):
 
 
 def convert_all_data_files(args):
-    set_data_path()
     for num_players in range(2,6,1):
         read_convert_data(num_players,args)
     
@@ -270,10 +269,8 @@ def convert_all_data_files(args):
 
 def create_data(args):
     # changing working directory to jar to run
-    data_path = os.getcwd() + '/fireflower'
-    os.chdir(data_path)
-
-    create_csv_from_scala(args.num_games, data_path)
+    set_data_path()
+    create_csv_from_scala(args.num_games)
 
 def main(args):
     # FIXME: compile fireflower agent into jar
