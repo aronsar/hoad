@@ -370,7 +370,7 @@ class Game private (
         "PLAY %s".format(seenMap(cid).toString(useAnsiColors))
       case SeenBomb(hid,cid) =>
         //"Bomb %d %s".format(hid+1,seenMap(cid).toString(useAnsiColors))
-        "DISCARD %s".format(seenMap(cid).toString(useAnsiColors))
+        "PLAY %s".format(seenMap(cid).toString(useAnsiColors))
       case SeenHint(pid,hint,appliedTo) =>
         val hintString = hint match {
           case HintColor(color) =>

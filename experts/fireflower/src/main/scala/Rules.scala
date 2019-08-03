@@ -49,7 +49,7 @@ object Rules {
 
     val initialHints = 8
     val maxHints = 8
-    val maxBombs = 2
+    val maxBombs = 3
 
     val maxDiscards = numPlayers match {
       case 2 => 17
