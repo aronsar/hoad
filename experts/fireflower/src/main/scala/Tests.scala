@@ -56,16 +56,6 @@ object PlayerTests {
     println("Time: " + (end - start).toDouble / 1.0e9)
   }
 
-  //  def getGameStepsForEachGame(games: List[fireflower.Game]): ListBuffer[Int]={
-  //    var gameStepArray = new ListBuffer[Int]()
-  //
-  //    for (i <- 0 to games.length-1) {
-  //      gameStepArray += games(i).turnNumber
-  //    }
-  //    return gameStepArray
-  //  }
-
-
   def play_game2p(prefix: String, numGames: Int, salt: String): List[fireflower.Game] = {
     val rules2p = Rules.Standard(numPlayers = 2, stopEarlyLoss = false)
     val name2p = prefix + "HeuristicStandard2P"
@@ -77,7 +67,7 @@ object PlayerTests {
         runSeed = makeRunSeed(name2p, salt),
         playerGen = HeuristicPlayer,
         doPrint = true,
-        doPrintDetails = false,
+        doPrintDetails = true,
         useAnsiColors = false
       )
     }
@@ -195,6 +185,7 @@ object PlayerTests {
     val csvWriter = new CSVWriter(outputFile)
     var listOfRecords = new ListBuffer[Array[String]]()
     var filledInLine = new ListBuffer[String]()
+    var filledInLineFinal = new ListBuffer[String]()
 
     /*
     Csv file fields:
