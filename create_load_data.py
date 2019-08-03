@@ -72,7 +72,7 @@ def create_fireflower_data(datapath, num_players, num_games, agent_name):
                       "--datapath", datapath,
                       "--num_players", str(num_players),
                       "--num_games", str(num_games),
-                      "--agent_name", default_rainbow_agent_name]
+                      "--agent_name", agent_name]
     subprocess.Popen(args)
     subprocess.Popen.communicate()
 
