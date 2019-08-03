@@ -48,15 +48,18 @@ def create_csv_from_scala(numGames, numPlayers):
 def create_data_filenames(args):    
     # Config csv & pkl file path
     agent_data_filename = args.agent_name + "_" + str(args.num_players) + "_" + str(args.num_games)
-    datapath = os.path.dirname(args.datapath)
-    csv_filename = os.path.join(datapath, agent_data_filename + ".csv")
-    pkl_filename = os.path.join(datapath, agent_data_filename + ".pkl")
-    
-    # Config jar file path
-    jar_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "walton_models")
-    jar_filename = os.path.join(jar_path, "walton.jar")
+    #datapath = os.path.dirname(args.datapath)
+    #csv_filename = os.path.join(datapath, agent_data_filename + ".csv")
+    csv_filename = agent_data_filename + ".csv"
+    #pkl_filename = os.path.join(datapath, agent_data_filename + ".pkl")
+    pkl_filename = agent_data_filename + ".pkl"
 
-    return csv_filename, pkl_filename, jar_filename
+    # Config jar file path
+    #jar_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "walton_models")
+    #jar_filename = os.path.join(jar_path, "walton.jar")
+
+    #return csv_filename, pkl_filename, jar_filename
+    return csv_filename, pkl_filename
 
 
 def get_action(action_type, color, rank, obs):
@@ -159,7 +162,8 @@ def create_pkl_data(args, csv_data):
 def act_based_pipeline(args):
     # Sort Params
     #seed = 1 
-    csv_filename, pkl_filename, jar_filename = create_data_filenames(args) 
+    #csv_filename, pkl_filename, jar_filename = create_data_filenames(args) 
+    csv_filename, pkl_filename = create_data_filenames(args)
 
     # Create csv on Disk by using Java code
     create_csv_from_scala(args.num_games, args.num_players)
