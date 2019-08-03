@@ -24,10 +24,10 @@ def parse():
                         default='fireflower')
 
     parser.add_argument('--num_players',
-                        type=int)
+                        type=int, default=2)
 
     parser.add_argument('--num_games',
-                        type=int)
+                        type=int, default=10)
 
     parser.add_argument('--datapath')
 
@@ -41,6 +41,7 @@ def create_csv_from_scala(numGames, numPlayers):
         subprocess.run("export PATH=$JAVA_HOME/bin:$PATH", shell=True)
         
         args = ["/data1/shared/fireflowerenv/sbt/bin/sbt", "run " + str(numGames) + " " + str(numPlayers)]
+        os.chdir(os.getcwd() + "/fireflower")
         process = subprocess.Popen(args, universal_newlines=True)
         process.communicate() # solves issue where Popen hangs
 
