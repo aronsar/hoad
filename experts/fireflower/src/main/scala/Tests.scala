@@ -67,7 +67,7 @@ object PlayerTests {
         runSeed = makeRunSeed(name2p, salt),
         playerGen = HeuristicPlayer,
         doPrint = true,
-        doPrintDetails = true,
+        doPrintDetails = false,
         useAnsiColors = false
       )
     }

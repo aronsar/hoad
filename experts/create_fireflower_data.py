@@ -114,6 +114,7 @@ def create_pkl_data(args, csv_data):
     env = rl_env.HanabiEnv(config)
     raw_data = []
     for game_num in range(args.num_games):
+        print("############## GAME "+ str(game_num) + " ###############")
         raw_data.append([[], []])
         game_done = False
 
