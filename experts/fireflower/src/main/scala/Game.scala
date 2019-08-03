@@ -25,7 +25,7 @@ object Game {
     assert(rules.deckSize >= rules.numPlayers * rules.handSize)
     assert(rules.initialHints >= 0)
     assert(rules.maxHints >= rules.initialHints)
-    assert(rules.maxBombs == 0)
+    assert(rules.maxBombs >= 0)
     assert(rules.maxDiscards >= 0)
     assert(rules.maxNumber >= 0)
     assert(rules.maxNumber < Card.NUMBER_LIMIT)
@@ -369,7 +369,8 @@ class Game private (
         //"PLAY %d %s".format(hid+1,seenMap(cid).toString(useAnsiColors))
         "PLAY %s".format(seenMap(cid).toString(useAnsiColors))
       case SeenBomb(hid,cid) =>
-        "Bomb %d %s".format(hid+1,seenMap(cid).toString(useAnsiColors))
+        //"Bomb %d %s".format(hid+1,seenMap(cid).toString(useAnsiColors))
+        "DISCARD %s".format(seenMap(cid).toString(useAnsiColors))
       case SeenHint(pid,hint,appliedTo) =>
         val hintString = hint match {
           case HintColor(color) =>
