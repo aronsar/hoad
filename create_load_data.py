@@ -67,12 +67,11 @@ def create_piers_data(datapath, num_players, num_games):
     create_walton_data(datapath, num_players, num_games,default_walton_agent_name)
 
 #Fireflower Agent
-def create_fireflower_data(datapath, num_players, num_games, agent_name):
+def create_fireflower_data(datapath, num_players, num_games):
     args = ["python", "experts/create_fireflower_data.py",
                       "--datapath", datapath,
                       "--num_players", str(num_players),
-                      "--num_games", str(num_games),
-                      "--agent_name", agent_name]
+                      "--num_games", str(num_games)]
     subprocess.Popen(args)
     subprocess.Popen.communicate()
 
