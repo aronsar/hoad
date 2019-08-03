@@ -4,24 +4,32 @@ import argparse
 
 def parse():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--mode', 
+    parser.add_argument('--mode',
                         default='full_gan',
                         help='which part of ablation study or baseline to run')
 
     parser.add_argument('--modedir',
-                        default='./modes')
+                        default='./modes') # deprecated
 
     parser.add_argument('--configpath',
                         help='gin config file path')
 
     parser.add_argument('--datadir',
                         default='./data/')
-    
+
     parser.add_argument('--evaldatapath',
                         help='specify only if evaluating, and data is in unexpected path')
 
     parser.add_argument('--expertdir',
                         default='./experts')
+
+    parser.add_argument('--agents_to_use',
+                        nargs='+',
+                        default=['rainbow'],
+                        help='Space deliniated list of agents to use. Options are:\n' \
+                             '    rainbow\n' \
+                             '    walton-rivers (not yet)\n' \
+                             '    etc...')
 
     parser.add_argument('--ckptdir')
 
@@ -33,9 +41,9 @@ def parse():
     parser.add_argument('-newrun',
                         action='store_true',
                         help="If specified, creates a directory inside the output "
-                             "directory (specified with --outdir), with a "       
+                             "directory (specified with --outdir), with a "
                              "checkpoint and results directory inside it, plus a "
-                             "copy of the gin config files. The run ID is the "   
+                             "copy of the gin config files. The run ID is the "
                              "next available number.")
 
     args = parser.parse_args()
@@ -46,7 +54,7 @@ def resolve_datapath(args,
         num_players=2,
         num_unique_agents=6,
         num_games=50):
-    
+
     if args.datapath == None:
         data_filename = game_type + "_" + str(num_players) + "_" \
                 + str(num_unique_agents) + "_" + str(num_games) + ".pkl"
@@ -58,5 +66,5 @@ def resolve_configpath(args):
     if args.configpath == None:
         config_filename = args.mode + ".config.gin"
         args.configpath = os.path.join(args.modedir, config_filename)
-    
+
     return args
