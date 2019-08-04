@@ -41,7 +41,9 @@ def create_csv_from_scala(numGames, numPlayers):
         subprocess.run("export PATH=$JAVA_HOME/bin:$PATH", shell=True)
         
         args = ["/data1/shared/fireflowerenv/sbt/bin/sbt", "run " + str(numGames) + " " + str(numPlayers)]
-        os.chdir(os.getcwd() + "/fireflower")
+        
+        dir_path = os.path.dirname(os.path.abspath(__file__))
+        os.chdir(os.path.join(dir_path, 'fireflower'))
         process = subprocess.Popen(args, universal_newlines=True)
         process.communicate() # solves issue where Popen hangs
 
@@ -177,7 +179,7 @@ def act_based_pipeline(args):
     if (remove_csv):
         os.remove(csv_filename)
 
-def main(args):
+def main(args):      
     act_based_pipeline(args)
         
 if __name__ == '__main__':

@@ -121,7 +121,7 @@ class DataLoader(object):
         Outputs:
             (str): the full relative path of where the agent's data will be saved
         '''
-        agent_data_filename = agent_name + "_" + str(self.num_players) + "_" \
+        agent_data_filename = agent_name+ "_" + str(self.num_players) + "_" \
                         + str(self.num_games) + ".pkl"
         return os.path.join(datadir, agent_data_filename)
 
