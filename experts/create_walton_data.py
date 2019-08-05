@@ -38,7 +38,8 @@ def parse():
 def create_csv_from_java(jar_filename, csv_filename, agent_name, player_count, game_count, seed):
     with open(csv_filename, "w") as csv_file:
         # Args to be used to create data using walton.jar
-        args = ["java", "-jar"
+        javapath = "/data1/shared/fireflowerenv/jre1.8.0_221/bin/java"
+        args = [javapath, "-jar"
                 , jar_filename
                 , agent_name
                 , agent_name 
