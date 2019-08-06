@@ -827,6 +827,8 @@ impl InformationPlayerStrategy {
         // NOTE When changing this, make sure to keep the "discard" branch of update() up to date!
         let will_hint =
             if view.board.hints_remaining > 0 && public_info.someone_else_needs_hint(view) { true }
+            // Deepmind Env disallows discarding when info tokens == MAX
+            else if view.board.hints_remaining == view.board.hints_total { true }
             else if view.board.discard_size() <= discard_threshold && useless_indices.len() > 0 { false }
             // hinting is better than discarding dead cards
             // (probably because it stalls the deck-drawing).

@@ -5,6 +5,10 @@ import random
 import subprocess
 from utils import parse_args
 
+PATH_GANABI = os.path.dirname(os.path.abspath(__file__))
+PATH_HANABI_ENV = os.path.join(PATH_GANABI, "hanabi_env")
+PATH_EXPERTS = os.path.join(PATH_GANABI, 'experts')
+
 
 def create_rainbow_data(datapath, num_players, num_games):
     '''Call the script responsible for creating gameplay data using the rainbow agent.
@@ -126,6 +130,14 @@ def create_cheatbot_data(datapath, num_players, num_games):
 def create_newcheatbot_data(datapath, num_players, num_games):
     create_quux_data(datapath, num_players, num_games, "quux_newcheatbot")
 
+
+def create_WTFWT_data(datapath, num_players, num_games):
+    args = ['python3', PATH_EXPERTS + '/create_WTFWT_data.py', '-q',
+            '--n', num_games,
+            '--p', num_players,
+            '--P', datapath]
+    process = subprocess.Popen(args)
+    process.wait()
 
 def create_example_data():
     # TODO: insert your Popen for your script here

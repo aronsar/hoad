@@ -1,3 +1,4 @@
+#![allow(warnings)]
 extern crate getopts;
 #[macro_use]
 extern crate log;
