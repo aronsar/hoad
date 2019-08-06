@@ -12,6 +12,9 @@ output
 *.a
 *.dylib
 experts/WTFWT/target
+.java-version
+.idea/
 
 # Add by James for walton agents
 */walton_rivers_agents/results
+

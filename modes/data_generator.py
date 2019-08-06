@@ -1,6 +1,7 @@
 import keras
 import numpy as np
 
+
 # TODO: implement/merge below
 # instead of current implementation, have each mode file subclass this class, and
 # move DataGenerator to its own .py file
@@ -15,12 +16,12 @@ class BaseDataGenerator(keras.utils.Sequence):
             Initialization
         """
 
-        self.epoch_len = 0 # total game steps, N
+        self.epoch_len = 0  # total game steps, N
 
         self.obs = np.array([], dtype=np.float64).reshape(0, self.obs_dim)
         self.act = np.array([], dtype=np.float64).reshape(0, self.act_dim)
         self.parse_data(raw_data)
-        
+
         self.on_epoch_end()
 
     # Customizable
@@ -42,9 +43,9 @@ class BaseDataGenerator(keras.utils.Sequence):
                 new_act = np.array(raw_data[agent_name][game_number][1])
                 self.obs = np.vstack([self.obs, new_obs])
                 self.act = np.vstack([self.act, new_act])
-        
+
         if np.shape(self.obs)[0] != np.shape(self.act)[0]:
-            raise("Incorrect Behavior occur during parse_data")
+            raise ("Incorrect Behavior occur during parse_data")
         else:
             self.epoch_len = np.shape(self.obs)[0]
 
@@ -74,7 +75,7 @@ class BaseDataGenerator(keras.utils.Sequence):
         return self.obs[sampled_indices, :], self.act[sampled_indices, :]
 
     # Customizable
-    def batch_sampler(self, index):        
+    def batch_sampler(self, index):
         """
         batch_sampler(self)
         Args: None
@@ -87,9 +88,10 @@ class BaseDataGenerator(keras.utils.Sequence):
         lower_bound = index * self.batch_size
         upper_bound = min((index + 1) * self.batch_size, self.epoch_len)
 
-        return range(lower_bound, upper_bound) 
+        return range(lower_bound, upper_bound)
 
-    # Customizable
+        # Customizable
+
     def on_epoch_end(self):
         """
         on_epoch_end(self)
@@ -97,7 +99,7 @@ class BaseDataGenerator(keras.utils.Sequence):
         Usage:
             Specificies the action to perform at the end of an epoch. Current behavior set to shuffle self.obs & self.act correspondingly.
         """
-        
+
         ids = np.arange(0, self.epoch_len, 1)
         np.random.shuffle(ids)
         if self.shuffle == True:

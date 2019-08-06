@@ -1,18 +1,19 @@
-from utils import parse_args
-from utils import dir_utils
 import gin
-from subprocess import call
-import random
 import numpy as np
-import keras
-import os, glob, re
-import datagenerator as dg
+from keras.layers import Input, Activation, Dense, ReLU, Softmax
+from keras.models import Model
+from modes import data_generator as dg
 
+# TODO: Fix to allow Activation Classes, not just namespace
 @gin.configurable
 def build_model(cfg={}):
     #TODO define your model here
-    # return Model(inputs=, outputs=)
-    return None
+    observation_input = Input(shape=(658,))
+    h1 = Dense(256, activation='relu')(observation_input)
+    action_output = Dense(20, activation='softmax')(h1)
+
+    return Model(inputs=observation_input, outputs=action_output)
+
 
 @gin.configurable
 class DataGenerator(dg.BaseDataGenerator):
