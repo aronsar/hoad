@@ -10,6 +10,9 @@ from tensorflow import keras
 SIZE_OBS_VEC = 658
 SIZE_ACT_VEC = 20
 
+#FIX ME  need the correct path of the pkl file
+PATH = os.path.dirname(os.path.abspath(__file__))+'/'
+
 #hyper-parameters for baseline
 hypers = {'lr': 0.00034,
           'batch_size': 44,
@@ -22,7 +25,7 @@ hypers = {'lr': 0.00034,
 
 def run_exp():
     #FIX ME since idk how the X and Y will be loaded
-    with open(PATH+pkl_format.format(agent), 'rb') as f:
+    with open(PATH, 'rb') as f:
         X, Y, masks, ind, cutoffs = pickle.load(f)
 
     for mask in masks:
