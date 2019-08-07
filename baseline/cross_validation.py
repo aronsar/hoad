@@ -11,7 +11,9 @@ PATH = os.path.dirname(os.path.abspath(__file__))+'/'
 SIZE_OBS_VEC = 658
 SIZE_ACT_VEC = 20
 
-def CV(pkl_path=PATH+'../data/Hanabi-Full_2_6_150.pkl',
+
+#FIX ME change the path of cross_validation
+def CV(pkl_path=PATH+'whateverthisis.pkl',
        agent='rainbow_agent_6', save_pkl=True, shuffle=True, seed=1234):
     """ Generate [# of Games]/10 pairs of training and validation sets where
         training set in each pair has a size of 10. [# of Games] Must be a

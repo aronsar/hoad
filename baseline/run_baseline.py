@@ -24,6 +24,10 @@ hypers = {'lr': 0.00034,
           'regularizer': None}
 
 def run_exp():
+
+    # fold_accs = []
+
+
     #FIX ME since idk how the X and Y will be loaded
     with open(PATH, 'rb') as f:
         X, Y, masks, ind, cutoffs = pickle.load(f)
