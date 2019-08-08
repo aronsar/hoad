@@ -10,6 +10,7 @@ import sys
 
 sys.path.insert(0, ganabi_path)
 sys.path.insert(0, hanabi_env_path)
+import rl_env
 
 import subprocess
 # from subprocess import call
