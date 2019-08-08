@@ -10,7 +10,6 @@ import sys
 
 sys.path.insert(0, ganabi_path)
 sys.path.insert(0, hanabi_env_path)
-import rl_env
 
 import subprocess
 # from subprocess import call
@@ -136,7 +135,7 @@ def create_pkl_data(args, csv_data):
               'random_start_player': False}
 
     # Create the Hanabi Environment with the defined configuration.
-    env = rl_env.HanabiEnv(config)
+    env = hanabi_env_path.rl_env.HanabiEnv(config)
     raw_data = []
     for game_num in range(args.num_games):
         raw_data.append([[], []])
