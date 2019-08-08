@@ -24,13 +24,17 @@ SIZE_ACT_VEC = 20
 PATH_EX_PKL = os.path.join(PATH_GANABI,
     'output/WTFWT_data_2_1000000/0/WTFWT_2_25000.pkl')
 
-def CV(path_pkl=PATH_EX_PKL):
+def CV(path_pkl=PATH_EX_PKL, size_train=0.9, seed=1234):
     """ Convert a Pickle file of observations and actions into np matrices with
         a boolean mask indicating the training rows.
 
     Arguments:
         - path_pkl: str
             Path to the pickle file containing the game data.
+        - size_train: float
+            Size of the training set.
+        - seed: int
+            Seed for choosing which rows for training.
     Returns:
       - X: np.matrix
           Matrix that contains the observations in following format:
@@ -51,12 +55,12 @@ def CV(path_pkl=PATH_EX_PKL):
       - mask: np.array
           A boolean mask for the training set.
           Training and validation sets can be accessed by:
-            - Training pair:   X[masks[0], :]  Y[masks[0], :]
-            - Validation pair: X[~masks[0], :] Y[~masks[0], :]
+            - Training pair:   X[mask, :]  Y[mask, :]
+            - Validation pair: X[~mask, :] Y[~mask, :]
     """
     with open(path_pkl, 'rb') as f:
         pkl = pickle.load(f)
-
+    np.random.seed(seed)
     # Number of rows == total number of turns across all games
     n_rows = 0
     # for each game
@@ -69,7 +73,6 @@ def CV(path_pkl=PATH_EX_PKL):
 
     cur_idx = 0
     for game in range(len(pkl)):
-        print(cur_idx)
         # Revert the integer back to binary list
         obs = np.matrix([b2int.revert(i, SIZE_OBS_VEC) for i in pkl[game][0]])
         act = np.matrix(pkl[game][1])
@@ -78,6 +81,8 @@ def CV(path_pkl=PATH_EX_PKL):
         cur_idx += act.shape[0]
         assert(obs.shape[0] == act.shape[0])
 
-    mask = None
+    idx = np.random.choice(n_rows, int(n_rows * size_train) , replace=False)
+    mask = np.full(n_rows, False)
+    mask[idx] = True
 
     return X, Y, mask
