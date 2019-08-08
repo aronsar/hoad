@@ -6,15 +6,13 @@ from keras.models import Model
 from modes import data_generator as dg
 
 # TODO: Fix to allow Activation Classes, not just namespace
-@gin.configurable
 def build_model(cfg={}):
     #TODO define your model here
-    observation_input = tf.keras.layers.Input(shape=(658,))
+    observation_input = Input(shape=(658,))
+    h1 = Dense(256, activation='relu')(observation_input)
+    action_output = Dense(20, activation='softmax')(h1)
 
-    h1 = tf.keras.layers.Input.Dense(256, activation='relu')(observation_input)
-    action_output = tf.keras.layers.Input.Dense(20, activation='softmax')(h1)
-
-    return tf.keras.models.Model(inputs=observation_input, outputs=action_output)
+    return Model(inputs=observation_input, outputs=action_output)
 
 
 @gin.configurable
