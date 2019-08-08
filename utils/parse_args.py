@@ -60,6 +60,8 @@ def parse():
 
 def resolve_run_directory(args):
     if args.new_run:
+        if not os.path.exists(args.output_dir):
+            os.makedirs(args.output_dir)
         new_run_id = get_new_run_id(args.output_dir)
         os.mkdir(os.path.join(args.output_dir, 'run%03d' % new_run_id))
         args.run_dir = os.path.join(args.output_dir, 'run%03d' % new_run_id)
@@ -97,9 +99,9 @@ def resolve_configpath(args):
     return args
 
 
-def get_new_run_id(outdir):
+def get_new_run_id(output_dir):
     last_run_id = 0
-    run_names = [fname for fname in os.listdir(outdir) if "run" in fname]
+    run_names = [fname for fname in os.listdir(output_dir) if "run" in fname]
     if len(run_names) is not 0:
         run_names.sort(key=lambda f: int(''.join(filter(str.isdigit, f))))
         last_run_id = int(''.join(filter(str.isdigit, run_names[-1])))
