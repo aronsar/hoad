@@ -44,7 +44,7 @@ def parse():
         default='./output/')
 
     parser.add_argument(
-        '-newrun',
+        '--new_run',
         action='store_true',
         help="If specified, creates a directory inside the output "
              "directory (specified with --outdir), with a "
