@@ -62,6 +62,8 @@ def resolve_run_directory(args):
     if args.new_run:
         if not os.path.exists(args.output_dir):
             os.makedirs(args.output_dir)
+        if not os.path.exists(args.data_dir):
+            os.makedirs(args.data_dir)
         new_run_id = get_new_run_id(args.output_dir)
         os.mkdir(os.path.join(args.output_dir, 'run%03d' % new_run_id))
         args.run_dir = os.path.join(args.output_dir, 'run%03d' % new_run_id)
