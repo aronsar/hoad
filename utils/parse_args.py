@@ -59,7 +59,7 @@ def parse():
 
 
 def resolve_run_directory(args):
-    if args.newrun:
+    if args.new_run:
         new_run_id = get_new_run_id(args.output_dir)
         os.mkdir(os.path.join(args.output_dir, 'run%03d' % new_run_id))
         args.run_dir = os.path.join(args.output_dir, 'run%03d' % new_run_id)
