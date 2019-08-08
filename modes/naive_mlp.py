@@ -1,5 +1,6 @@
 import gin
 import numpy as np
+import tensorflow as tf
 from keras.layers import Input, Activation, Dense, ReLU, Softmax
 from keras.models import Model
 from modes import data_generator as dg
@@ -8,11 +9,12 @@ from modes import data_generator as dg
 @gin.configurable
 def build_model(cfg={}):
     #TODO define your model here
-    observation_input = Input(shape=(658,))
-    h1 = Dense(256, activation='relu')(observation_input)
-    action_output = Dense(20, activation='softmax')(h1)
+    observation_input = tf.keras.layers.Input(shape=(658,))
 
-    return Model(inputs=observation_input, outputs=action_output)
+    h1 = tf.keras.layers.Input.Dense(256, activation='relu')(observation_input)
+    action_output = tf.keras.layers.Input.Dense(20, activation='softmax')(h1)
+
+    return tf.keras.models.Model(inputs=observation_input, outputs=action_output)
 
 
 @gin.configurable
