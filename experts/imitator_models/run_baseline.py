@@ -1,50 +1,26 @@
-import csv
-import sys
-
-from datetime import datetime
 from mlp import *
-from tensorflow.keras.layers import ReLU, PReLU
-from tensorflow.keras.activations import selu
-from tensorflow import keras
 
-SIZE_OBS_VEC = 658
-SIZE_ACT_VEC = 20
+def main():
+    hypers = {'lr': 0.00015,
+              'batch_size': 32,
+              'hl_activations': [PReLU],
+              'hl_sizes': [463],
+              'decay': 0.00032,
+              'bNorm': False,
+              'dropout': True,
+              'regularizer': None}
 
-#FIX ME  need the correct path of the pkl file
-PATH = os.path.dirname(os.path.abspath(__file__))+'/'
+    X, Y, mask = CV(PATH_EX_PKL)
+    gen_tr = DataGenerator(X[mask], Y[mask], hypers['batch_size'])
+    gen_va = DataGenerator(X[~mask], Y[~mask], 100000)
 
-#hyper-parameters for baseline
-hypers = {'lr': 0.00034,
-          'batch_size': 44,
-          'hl_activations': ReLU,
-          'hl_sizes': 366,
-          'decay': 0.00037,
-          'bNorm': False,
-          'dropout': True,
-          'regularizer': None}
-
-def run_exp():
-
-    # fold_accs = []
-
-
-    #FIX ME since idk how the X and Y will be loaded
-    with open(PATH, 'rb') as f:
-        X, Y, masks, ind, cutoffs = pickle.load(f)
-
-    for mask in masks:
-        X_tr, Y_tr = X[mask], Y[mask]
-        X_va, Y_va = X[~mask], Y[~mask]
-
-        m = Mlp(X_tr, Y_tr, X_va, Y_va,
-                io_sizes=(SIZE_OBS_VEC, SIZE_ACT_VEC),
-                out_activation=Softmax, loss='categorical_crossentropy',
-                metrics=['accuracy'], **hypers, verbose=0)
-
-        m.construct_model()
-        #FIX ME not sure what should be the training epochs
-        m.train_model(n_epoch=100, verbose=False)
-        m.save('imitator.h5') #FIX ME we might want to change the dir of file
+    m = Mlp(
+        io_sizes=(glb.SIZE_OBS_VEC, glb.SIZE_ACT_VEC),
+        out_activation=Softmax, loss='categorical_crossentropy',
+        metrics=['accuracy'], **hypers, verbose=1)
+    m.construct_model()
+    m.train_model(gen_tr, gen_va, n_epoch=1, verbose=True)
+    m.model.save('example_path.h5') # TODO: make it userdefined
 
 if __name__ == '__main__':
-    run_exp()
+    main()
