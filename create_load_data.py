@@ -139,6 +139,14 @@ def create_WTFWT_data(datapath, num_players, num_games):
     process = subprocess.Popen(args)
     process.wait()
 
+def create_fireflower_data(datapath, num_players, num_games):
+    args = ["python", "experts/create_fireflower_data.py",
+                      "--datapath", datapath,
+                      "--num_players", str(num_players),
+                      "--num_games", str(num_games)]
+    subprocess.Popen(args)
+    subprocess.Popen.communicate()
+
 def create_example_data():
     # TODO: insert your Popen for your script here
     # do any necessary stuff
@@ -165,6 +173,7 @@ CREATE_DATA_FOR = {
     'quux_infobot': create_infobot_data,
     'quux_cheatbot': create_cheatbot_data,
     'quux_newcheatbot': create_newcheatbot_data,
+    'fireflower': create_fireflower_data,
 }
 
 
