@@ -118,7 +118,7 @@ class Mlp(object):
         self.model =  Model(inputs=input, outputs=out)
 
     def train_model(self, gen_tr, gen_va, n_epoch=100, callbacks=None,
-                    verbose=False):
+                    verbose=False, workers=1):
         """
         Train self.model with dataset stored in attributes.
         Arguments:
@@ -136,6 +136,8 @@ class Mlp(object):
                 List of keras.callbacks.Callback objects to run
             - verbose: boolean, default True
                 If true, model info will be displayed.
+            - workers: int, default 1
+                Number of workers for fit_generator().
         """
         if verbose:
             print("Learning Rate:\t", self.lr)
@@ -145,12 +147,6 @@ class Mlp(object):
             print("Loss function:\t", self.loss)
             print("Callbacks:\t", callbacks)
             self.model.summary()
-            # print("Hidden Acts.:\t", self.hl_activations)
-            # print("I/O Sizes:\t", self.io_sizes)
-            # print("Hidden Sizes:\t", self.hl_sizes)
-            # print("Output Acts.:\t", self.out_activation)
-            # print("Dropout:\t", self.dropout)
-            # print("Batch Norm:\t", self.bNorm)
             print()
 
         self.model.compile(optimizer=Adam(lr=self.lr, decay=self.decay),
@@ -161,5 +157,5 @@ class Mlp(object):
                                              epochs=n_epoch,
                                              verbose=self.verbose,
                                              use_multiprocessing=True,
-                                             workers=5,
+                                             workers=workers,
                                              callbacks=callbacks)
