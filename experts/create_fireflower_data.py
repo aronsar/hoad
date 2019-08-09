@@ -43,7 +43,7 @@ def create_csv_from_scala(numGames, numPlayers):
         args = ["/data1/shared/fireflowerenv/sbt/bin/sbt", "run " + str(numGames) + " " + str(numPlayers)]
         
         dir_path = os.path.dirname(os.path.abspath(__file__))
-        os.chdir(os.path.join(dir_path, 'fireflower'))
+        os.chdir(os.path.join(dir_path, 'fireflower_model'))
         process = subprocess.Popen(args, universal_newlines=True)
         process.communicate() # solves issue where Popen hangs
 
