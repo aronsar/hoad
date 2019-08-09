@@ -25,8 +25,9 @@ class glb:
 # TODO: remove this before shipping
 PATH_EX_PKL = os.path.join(PATH_GANABI,
     'output/WTFWT_data_2_1000000/0/WTFWT_2_25000.pkl')
+PATH_EX_DIR = os.path.join(PATH_GANABI, 'output/WTFWT_data_2_1000000/')
 
-def CV(path_pkl=PATH_EX_PKL, size_train=0.9, seed=1234):
+def CV(path_dir=PATH_EX_DIR, size_train=0.9, seed=1234):
     """ Convert a Pickle file of observations and actions into np matrices with
         a boolean mask indicating the training rows.
 
@@ -60,32 +61,47 @@ def CV(path_pkl=PATH_EX_PKL, size_train=0.9, seed=1234):
             - Training pair:   X[mask, :]  Y[mask, :]
             - Validation pair: X[~mask, :] Y[~mask, :]
     """
-    with open(path_pkl, 'rb') as f:
-        pkl = pickle.load(f)
+    # with open(path_pkl, 'rb') as f:
+    #     pkl = pickle.load(f)
     np.random.seed(seed)
+
+    path_pkls = []
+    for root, dirs, files in os.walk(path_dir):
+        for file in files:
+            path_pkls.append(os.path.join(root, file))
+
     # Number of rows == total number of turns across all games
     n_rows = 0
-    # for each game
-    for game in range(len(pkl)):
-        # add number of turns in this game
-        n_rows += len(pkl[game][0])
+    for path in path_pkls:
+        print(path)
+        with open(path, 'rb') as f:
+            pkl = pickle.load(f)
+        for game in range(len(pkl)):
+            n_rows += len(pkl[game][0])
 
     glb.SIZE_ACT_VEC = len(pkl[game][1][0])
-    X = np.zeros([n_rows, 1], dtype=object)
-    Y = np.zeros([n_rows, glb.SIZE_ACT_VEC])
+    X = np.zeros([n_rows, 1], dtype=object) # 0.5 gB
+    Y = np.zeros([n_rows, glb.SIZE_ACT_VEC], dtype=np.int8) # 1.4 gB
 
     cur_idx = 0
-    for game in range(len(pkl)):
-        # Use arbitrary length python integer to store large ints
-        obs = np.matrix(pkl[game][0], dtype=object).T
-        act = np.matrix(pkl[game][1])
-        X[cur_idx:(cur_idx + obs.shape[0]), :] = obs
-        Y[cur_idx:(cur_idx + act.shape[0]), :] = act
-        cur_idx += act.shape[0]
-        assert(obs.shape[0] == act.shape[0])
+    for path in path_pkls:
+        print(path)
+        with open(path, 'rb') as f:
+            pkl = pickle.load(f)
+        for game in range(len(pkl)):
+            # Use arbitrary length python integer to store large ints
+            obs = np.matrix(pkl[game][0], dtype=object).T
+            act = np.matrix(pkl[game][1])
+            X[cur_idx:(cur_idx + obs.shape[0]), :] = obs
+            Y[cur_idx:(cur_idx + act.shape[0]), :] = act
+            cur_idx += act.shape[0]
+            assert(obs.shape[0] == act.shape[0])
 
     idx = np.random.choice(n_rows, int(n_rows * size_train) , replace=False)
     mask = np.full(n_rows, False)
     mask[idx] = True
 
+    # TOTAL MEMORY: ~10 gB
+    #   X: 0.5 + 7.5 gB
+    #   Y: 1.4 gB
     return X, Y, mask
