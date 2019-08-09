@@ -17,8 +17,10 @@ sys.path.insert(0, PATH_UTILS)
 
 import binary_list_to_int as b2int
 
-SIZE_OBS_VEC = 658
-SIZE_ACT_VEC = 20
+# Global Variable Class
+class glb:
+    SIZE_OBS_VEC = 658
+    SIZE_ACT_VEC = 20
 
 # TODO: remove this before shipping
 PATH_EX_PKL = os.path.join(PATH_GANABI,
@@ -68,8 +70,9 @@ def CV(path_pkl=PATH_EX_PKL, size_train=0.9, seed=1234):
         # add number of turns in this game
         n_rows += len(pkl[game][0])
 
+    glb.SIZE_ACT_VEC = len(pkl[game][1][0])
     X = np.zeros([n_rows, 1], dtype=object)
-    Y = np.zeros([n_rows, SIZE_ACT_VEC])
+    Y = np.zeros([n_rows, glb.SIZE_ACT_VEC])
 
     cur_idx = 0
     for game in range(len(pkl)):
