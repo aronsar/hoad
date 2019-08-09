@@ -6,18 +6,19 @@ import tensorflow.keras.backend as K
 from tensorflow.keras.models import Model
 from tensorflow.keras.layers import Dense, Embedding, Input, Flatten, Dropout
 from tensorflow.keras.layers import BatchNormalization, LeakyReLU, ELU, Softmax
+from tensorflow.keras.layers import PReLU
 from tensorflow.keras.activations import sigmoid, tanh
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.regularizers import l2
 # from tensorflow.keras.utils import plot_model
-from cross_validation import *
+from DataGenerator import *
 
 # suppress TF warnings
 logging.getLogger("tensorflow").setLevel(logging.ERROR)
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 class Mlp(object):
-    def __init__(self, X_tr, Y_tr, X_va, Y_va, io_sizes, out_activation, loss,
+    def __init__(self, io_sizes, out_activation, loss,
                  metrics, lr, batch_size, hl_activations, hl_sizes, decay,
                  bNorm=False, dropout=False, regularizer=None, verbose=1):
         """ Initialize parameters required for training & testing the network.
@@ -38,14 +39,6 @@ class Mlp(object):
                              [Output]
                       length: @io_sizes[1]
         Arguments:
-            - X_tr: np.matrix
-                Training matrix that contains the observations.
-            - Y_tr: np.matrix
-                Training matrix that contains the actions.
-            - X_va: np.matrix
-                Validation matrix that contains the observations.
-            - Y_va: np.matrix
-                Validation matrix that contains the actions.
             - lr: int
                 Learning rate of the network.
             - io_sizes: tuple
@@ -78,10 +71,6 @@ class Mlp(object):
 
         assert(len(hl_sizes) == len(hl_activations))
 
-        self.X_tr = X_tr
-        self.Y_tr = Y_tr
-        self.X_va = X_va
-        self.Y_va = Y_va
         self.lr = lr
         self.decay = decay
         self.batch_size = batch_size
@@ -128,10 +117,19 @@ class Mlp(object):
 
         self.model =  Model(inputs=input, outputs=out)
 
-    def train_model(self, n_epoch=100, callbacks=None, verbose=True):
+    def train_model(self, gen_tr, gen_va, n_epoch=100, callbacks=None,
+                    verbose=False):
         """
         Train self.model with dataset stored in attributes.
         Arguments:
+            - gen_tr: keras.utils.Sequence
+                Generator that will generate the training data batch-by-batch
+                during training.
+            - gen_va: keras.utils.Sequence
+                Generator that will generate the validation data batch-by-batch
+                during validation.
+            - Y_va: np.matrix
+                Validation matrix that contains the actions.
             - n_epoch: int, default 150
                 Number of epochs to train.
             - callbacks: list, default None
@@ -158,7 +156,10 @@ class Mlp(object):
         self.model.compile(optimizer=Adam(lr=self.lr, decay=self.decay),
                            loss=self.loss, metrics=self.metrics)
 
-        self.hist = self.model.fit(self.X_tr, self.Y_tr, epochs=n_epoch,
-                                   verbose=self.verbose,
-                                   validation_data=(self.X_va, self.Y_va),
-                                   batch_size=self.batch_size)
+        self.hist = self.model.fit_generator(generator=gen_tr,
+                                             validation_data=gen_va,
+                                             epochs=n_epoch,
+                                             verbose=self.verbose,
+                                             use_multiprocessing=True,
+                                             workers=5,
+                                             callbacks=callbacks)
