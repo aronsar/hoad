@@ -68,13 +68,13 @@ def CV(path_pkl=PATH_EX_PKL, size_train=0.9, seed=1234):
         # add number of turns in this game
         n_rows += len(pkl[game][0])
 
-    X = np.zeros([n_rows, SIZE_OBS_VEC])
+    X = np.zeros([n_rows, 1], dtype=object)
     Y = np.zeros([n_rows, SIZE_ACT_VEC])
 
     cur_idx = 0
     for game in range(len(pkl)):
-        # Revert the integer back to binary list
-        obs = np.matrix([b2int.revert(i, SIZE_OBS_VEC) for i in pkl[game][0]])
+        # Use arbitrary length python integer to store large ints
+        obs = np.matrix(pkl[game][0], dtype=object).T
         act = np.matrix(pkl[game][1])
         X[cur_idx:(cur_idx + obs.shape[0]), :] = obs
         Y[cur_idx:(cur_idx + act.shape[0]), :] = act
