@@ -9,9 +9,16 @@ CMakeFiles
 *.pyc
 data
 output
+<<<<<<< HEAD
 *.a
 *.dylib
 experts/WTFWT/target
 
 # Add by James for walton agents
 */walton_rivers_agents/results
+=======
+.DS_Store
+.java-version
+venv/
+.idea/
+>>>>>>> nikhil-huyen-fireflower
