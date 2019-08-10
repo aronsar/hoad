@@ -1,7 +1,7 @@
 import gin
 import numpy as np
-from keras.layers import Input, Dense
-from keras.models import Model
+from tensorflow.python.keras.layers import Input, Dense
+from tensorflow.python.keras.models import Model
 from modes import data_generator as dg
 
 # TODO: Fix to allow Activation Classes, not just namespace
@@ -17,7 +17,6 @@ def build_model(cfg={}):
 
 @gin.configurable
 class DataGenerator(dg.BaseDataGenerator):
-    @gin.configurable
     def __init__(self, raw_data, cfg={}):
         # Set Before calling init of base class
         self.batch_size = cfg["batch_size"]

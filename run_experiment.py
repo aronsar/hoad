@@ -4,7 +4,7 @@ It is set up so that the tasks within can easily be done manually as well,
 by splitting up the tasts into separate scripts/modules.
 """
 import gin
-import keras
+from tensorflow.python import keras
 from utils.parse_args import parse
 from train import train_model
 from create_load_data import create_load_data
@@ -42,8 +42,8 @@ def main():
     args = parse()
     config_path = args.config_path
 
-    gin.external_configurable(keras.optimizers.Adam, module='tf.keras.optimizers')
-    gin.external_configurable(keras.losses.categorical_crossentropy, module='tf.keras.losses')
+    gin.external_configurable(keras.optimizers.Adam, module='tensorflow.python.keras.optimizers')
+    gin.external_configurable(keras.losses.categorical_crossentropy, module='tensorflow.python.keras.losses')
     gin.parse_config_file(config_path)
 
     # args = RunConfig()

@@ -1,11 +1,11 @@
-import keras
+from tensorflow.python.keras.utils.data_utils import Sequence
 import numpy as np
 
 
 # TODO: implement/merge below
 # instead of current implementation, have each mode file subclass this class, and
 # move DataGenerator to its own .py file
-class BaseDataGenerator(keras.utils.Sequence):
+class BaseDataGenerator(Sequence):
     def __init__(self, raw_data, cfg={}):
         """
         __init__(self, raw_data)

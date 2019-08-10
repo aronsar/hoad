@@ -1,7 +1,7 @@
 import importlib
 import gin
 import os
-from keras.callbacks import CSVLogger, TensorBoard, ModelCheckpoint
+from tensorflow.python.keras.callbacks import CSVLogger, TensorBoard, ModelCheckpoint
 
 @gin.configurable
 class TrainConfig(object):
@@ -34,10 +34,10 @@ def train_model(data, args):
     )
 
     results_csv_file = os.path.join(args.results_dir, "results.csv")
-    weight_file = os.path.join(args.checkpoints_dir, "Epoch-{epoch:02d}-Val-Acc-{val_acc:.4f}.hdf5")
+    weight_file = os.path.join(args.checkpoints_dir, "Epoch-{epoch:02d}-Val-Acc-{val_accuracy:.4f}.hdf5")
 
     results_callback = CSVLogger(results_csv_file, append=True, separator=';')
-    checkpoints_callback = ModelCheckpoint(weight_file, save_best_only=True)
+    checkpoints_callback = ModelCheckpoint(weight_file, save_best_only=True, save_weights_only=True)
 
     tensorboard_callback = TensorBoard(log_dir=os.path.join(args.results_dir), histogram_freq=0, write_graph=True, write_images=True)
 

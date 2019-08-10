@@ -17,7 +17,7 @@ create_load_data.DataLoader.num_games = 10
 
 # Parameters for TrainConfig
 # ==============================================================================
-train.TrainConfig.optimizer = @keras.optimizers.Adam()
+train.TrainConfig.optimizer = @tensorflow.python.keras.optimizers.Adam()
 Adam.lr = 0.0001
 Adam.beta_1 = 0.9
 Adam.beta_2 = 0.999
@@ -25,7 +25,7 @@ Adam.epsilon = None
 Adam.decay = 0.0
 Adam.amsgrad = False
 
-train.TrainConfig.loss = @tf.keras.losses.categorical_crossentropy
+train.TrainConfig.loss = @tensorflow.python.keras.losses.categorical_crossentropy
 train.TrainConfig.metrics = ['accuracy']
 # train.Trainer.metrics = {'output_a': 'accuracy'} # for multi-output model
 train.TrainConfig.batch_size = 32
