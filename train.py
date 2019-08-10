@@ -51,4 +51,3 @@ def train_model(data, args):
     )
 
     return model
-
