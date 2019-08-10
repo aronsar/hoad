@@ -36,37 +36,37 @@ def create_walton_data(datapath, num_players, num_games, agent_name):
             "--num_players", str(num_players),
             "--num_games", str(num_games),
             "--agent_name", agent_name]
-        
+
     process = subprocess.Popen(args)
     process.communicate() # solves issue where Popen hangs
 
 # Walton Agent: IGGI Agent
-def create_iggi_data(datapath, num_players, num_games):    
+def create_iggi_data(datapath, num_players, num_games):
     default_walton_agent_name = 'iggi'
     create_walton_data(datapath, num_players, num_games,default_walton_agent_name)
 
 # Walton Agent: Outer Agent
-def create_outer_data(datapath, num_players, num_games):    
+def create_outer_data(datapath, num_players, num_games):
     default_walton_agent_name = 'outer'
     create_walton_data(datapath, num_players, num_games,default_walton_agent_name)
 
 # Walton Agent: Legal Random Agent
-def create_legal_random_data(datapath, num_players, num_games):    
+def create_legal_random_data(datapath, num_players, num_games):
     default_walton_agent_name = 'legal_random'
     create_walton_data(datapath, num_players, num_games,default_walton_agent_name)
 
 # Walton Agent: Van den Bergh Rule Agent
-def create_van_den_bergh_data(datapath, num_players, num_games):    
+def create_van_den_bergh_data(datapath, num_players, num_games):
     default_walton_agent_name = 'vdb-paper'
     create_walton_data(datapath, num_players, num_games,default_walton_agent_name)
 
 # Walton Agent: Flawed Agent
-def create_flawed_data(datapath, num_players, num_games):    
+def create_flawed_data(datapath, num_players, num_games):
     default_walton_agent_name = 'flawed'
     create_walton_data(datapath, num_players, num_games,default_walton_agent_name)
 
 # Walton Agent: Piers Agent
-def create_piers_data(datapath, num_players, num_games):    
+def create_piers_data(datapath, num_players, num_games):
     default_walton_agent_name = 'piers'
     create_walton_data(datapath, num_players, num_games,default_walton_agent_name)
 
@@ -130,6 +130,13 @@ def create_WTFWT_data(datapath, num_players, num_games):
     process = subprocess.Popen(args)
     process.wait()
 
+def create_fireflower_data(datapath, num_players, num_games):
+    args = ["python", "experts/create_fireflower_data.py",
+                      "--datapath", datapath,
+                      "--num_players", str(num_players),
+                      "--num_games", str(num_games)]
+    subprocess.Popen(args)
+    subprocess.Popen.communicate()
 
 def create_example_data():
     # TODO: insert your Popen for your script here
@@ -157,6 +164,7 @@ CREATE_DATA_FOR = {
     'quux_infobot': create_infobot_data,
     'quux_cheatbot': create_cheatbot_data,
     'quux_newcheatbot': create_newcheatbot_data,
+    'fireflower': create_fireflower_data,
 }
 
 
