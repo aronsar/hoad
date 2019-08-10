@@ -42,7 +42,7 @@ def create_csv_from_java(jar_filename, csv_filename, agent_name, player_count,
         # Args to be used to create data using walton.jar
         javapath = "/data1/shared/fireflowerenv/jre1.8.0_221/bin/java"
         # Use javapathon keystone instead of java
-        args = [javapath, "-jar", jar_filename, agent_name,
+        args = ["java", "-jar", jar_filename, agent_name,
                 agent_name, str(player_count), str(game_count), str(seed)]
 
         process = subprocess.Popen(

@@ -30,9 +30,9 @@ def parse():
         '--agents_to_use',
         nargs='+',
         default=['rainbow'],
-        help='Space deliniated list of agents to use. Options are:\n' \
-             '    rainbow\n' \
-             '    walton-rivers (not yet)\n' \
+        help='Space deliniated list of agents to use. Options are:\n'
+             '    rainbow\n'
+             '    walton-rivers (not yet)\n'
              '    etc...')
 
     parser.add_argument('--run_dir')
@@ -67,8 +67,10 @@ def resolve_run_directory(args):
         new_run_id = get_new_run_id(args.output_dir)
         os.mkdir(os.path.join(args.output_dir, 'run%03d' % new_run_id))
         args.run_dir = os.path.join(args.output_dir, 'run%03d' % new_run_id)
-        args.checkpoints_dir = os.path.join(args.output_dir, 'run%03d' % new_run_id, 'checkpoints/')
-        args.results_dir = os.path.join(args.output_dir, 'run%03d' % new_run_id, 'results/')
+        args.checkpoints_dir = os.path.join(
+            args.output_dir, 'run%03d' % new_run_id, 'checkpoints/')
+        args.results_dir = os.path.join(
+            args.output_dir, 'run%03d' % new_run_id, 'results/')
         os.mkdir(args.checkpoints_dir)
         os.mkdir(args.results_dir)
         # TODO: copy over gin config file
@@ -87,16 +89,16 @@ def resolve_datapath(
         num_games=50):
     if args.datapath == None:
         data_filename = game_type + "_" + str(num_players) + "_" \
-                        + str(num_unique_agents) + "_" + str(num_games) + ".pkl"
+            + str(num_unique_agents) + "_" + str(num_games) + ".pkl"
         args.datapath = os.path.join(args.datadir, data_filename)
 
     return args
 
 
 def resolve_configpath(args):
-    if args.configpath == None:
+    if args.config_path == None:
         config_filename = args.mode + ".config.gin"
-        args.configpath = os.path.join(args.modedir, config_filename)
+        args.config_path = os.path.join(args.modedir, config_filename)
 
     return args
 
