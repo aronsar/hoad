@@ -21,4 +21,4 @@ exp_*Bot
 
 # Walton Executables
 */walton_rivers_agents/results
-
+*.vscode/*

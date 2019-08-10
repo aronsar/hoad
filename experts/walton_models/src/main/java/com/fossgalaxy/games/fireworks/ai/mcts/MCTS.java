@@ -44,8 +44,8 @@ public class MCTS implements Agent {
     /**
      * Create a default MCTS implementation.
      * <p>
-     * This creates an MCTS agent that has a default roll-out length of 50_000 iterations, a depth of 18 and a tree
-     * multiplier of 1.
+     * This creates an MCTS agent that has a default roll-out length of 50_000
+     * iterations, a depth of 18 and a tree multiplier of 1.
      */
     public MCTS() {
         this(DEFAULT_ITERATIONS, DEFAULT_ROLLOUT_DEPTH, DEFAULT_TREE_DEPTH_MUL);
@@ -71,26 +71,22 @@ public class MCTS implements Agent {
     @Override
     public Action doMove(int agentID, GameState state) {
         long finishTime = System.currentTimeMillis() + 1000;
-        MCTSNode root = new MCTSNode(
-                (agentID + state.getPlayerCount() - 1) % state.getPlayerCount(),
-                null,
-                Utils.generateAllActions(agentID, state.getPlayerCount())
-        );
+        MCTSNode root = new MCTSNode((agentID + state.getPlayerCount() - 1) % state.getPlayerCount(), null,
+                Utils.generateAllActions(agentID, state.getPlayerCount()));
 
-        Map<Integer, List<Card>> possibleCards = DeckUtils.bindCard(agentID, state.getHand(agentID), state.getDeck().toList());
+        Map<Integer, List<Card>> possibleCards = DeckUtils.bindCard(agentID, state.getHand(agentID),
+                state.getDeck().toList());
         List<Integer> bindOrder = DeckUtils.bindOrder(possibleCards);
-
 
         if (logger.isTraceEnabled()) {
             logger.trace("Possible bindings: ");
-            possibleCards.forEach((slot, cards) -> logger.trace("\t {} {}", slot, DebugUtils.getHistStr(DebugUtils.histogram(cards))));
+            possibleCards.forEach((slot, cards) -> logger.trace("\t {} {}", slot,
+                    DebugUtils.getHistStr(DebugUtils.histogram(cards))));
 
             // Guaranteed cards
             logger.trace("Guaranteed Cards");
 
-            possibleCards.entrySet().stream()
-                    .filter(x -> x.getValue().size() == 1)
-                    .forEach(this::printCard);
+            possibleCards.entrySet().stream().filter(x -> x.getValue().size() == 1).forEach(this::printCard);
 
             logger.trace("We know the value of these");
             possibleCards.entrySet().stream()
@@ -100,9 +96,9 @@ public class MCTS implements Agent {
             DebugUtils.printTable(logger, state);
         }
 
-//        for (int round = 0; round < roundLength; round++) {
-        while(System.currentTimeMillis() < finishTime){
-            //find a leaf node
+        // for (int round = 0; round < roundLength; round++) {
+        while (System.currentTimeMillis() < finishTime) {
+            // find a leaf node
             GameState currentState = state.getCopy();
             IterationObject iterationObject = new IterationObject(agentID);
 
@@ -120,15 +116,19 @@ public class MCTS implements Agent {
             MCTSNode current = select(root, currentState, iterationObject);
             int score = rollout(currentState, current);
             current.backup(score);
-            if(calcTree){
+            if (calcTree) {
                 System.err.println(root.printD3());
             }
         }
 
         if (logger.isInfoEnabled()) {
             for (MCTSNode level1 : root.getChildren()) {
-                logger.info("rollout {} moves: max: {}, min: {}, avg: {}, N: {} ", level1.getAction(), level1.rolloutMoves.getMax(), level1.rolloutMoves.getMin(), level1.rolloutMoves.getMean(), level1.rolloutMoves.getN());
-                logger.info("rollout {} scores: max: {}, min: {}, avg: {}, N: {} ", level1.getAction(), level1.rolloutScores.getMax(), level1.rolloutScores.getMin(), level1.rolloutScores.getMean(), level1.rolloutScores.getN());
+                logger.debug("rollout {} moves: max: {}, min: {}, avg: {}, N: {} ", level1.getAction(),
+                        level1.rolloutMoves.getMax(), level1.rolloutMoves.getMin(), level1.rolloutMoves.getMean(),
+                        level1.rolloutMoves.getN());
+                logger.debug("rollout {} scores: max: {}, min: {}, avg: {}, N: {} ", level1.getAction(),
+                        level1.rolloutScores.getMax(), level1.rolloutScores.getMin(), level1.rolloutScores.getMean(),
+                        level1.rolloutScores.getN());
             }
         }
 
@@ -152,7 +152,7 @@ public class MCTS implements Agent {
         MCTSNode current = root;
         int treeDepth = calculateTreeDepthLimit(state);
         boolean expandedNode = false;
-        
+
         while (!state.isGameOver() && current.getDepth() < treeDepth && !expandedNode) {
             MCTSNode next;
             if (current.fullyExpanded(state)) {
@@ -161,10 +161,11 @@ public class MCTS implements Agent {
                 next = expand(current, state);
                 expandedNode = true;
             }
-            
+
             if (next == null) {
-                //XXX if all follow on states explored so far are null, we are now a leaf node
-            	//ok to early return here - we will have applied current last time round the loop!
+                // XXX if all follow on states explored so far are null, we are now a leaf node
+                // ok to early return here - we will have applied current last time round the
+                // loop!
                 return current;
             }
             current = next;
@@ -190,7 +191,7 @@ public class MCTS implements Agent {
         return current;
     }
 
-    protected int calculateTreeDepthLimit(GameState state){
+    protected int calculateTreeDepthLimit(GameState state) {
         return (state.getPlayerCount() * treeDepthMul) + 1;
     }
 
@@ -230,8 +231,9 @@ public class MCTS implements Agent {
             // return the correct node instead
             return parent.getChild(action);
         }
-        //XXX we may expand a node which we already visited? :S
-        MCTSNode child = new MCTSNode(parent, nextAgentID, action, Utils.generateAllActions(nextAgentID, state.getPlayerCount()));
+        // XXX we may expand a node which we already visited? :S
+        MCTSNode child = new MCTSNode(parent, nextAgentID, action,
+                Utils.generateAllActions(nextAgentID, state.getPlayerCount()));
         parent.addChild(child);
         return child;
     }
