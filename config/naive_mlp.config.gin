@@ -25,7 +25,7 @@ Adam.epsilon = None
 Adam.decay = 0.0
 Adam.amsgrad = False
 
-train.TrainConfig.loss = @keras.losses.categorical_crossentropy
+train.TrainConfig.loss = @tf.keras.losses.categorical_crossentropy
 train.TrainConfig.metrics = ['accuracy']
 # train.Trainer.metrics = {'output_a': 'accuracy'} # for multi-output model
 train.TrainConfig.batch_size = 32
