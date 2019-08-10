@@ -3,6 +3,7 @@ import gin
 import os
 from tensorflow.python.keras.callbacks import CSVLogger, TensorBoard, ModelCheckpoint
 
+
 @gin.configurable
 class TrainConfig(object):
     def __init__(self, args,
@@ -25,7 +26,7 @@ def train_model(data, args):
     train_generator = mode_module.DataGenerator(data.train_data)
     val_generator = mode_module.DataGenerator(data.validation_data)
 
-    model = mode_module.build_model(args)
+    model = mode_module.build_model()
 
     model.compile(
         optimizer=train_config.optimizer,
@@ -34,12 +35,15 @@ def train_model(data, args):
     )
 
     results_csv_file = os.path.join(args.results_dir, "results.csv")
-    weight_file = os.path.join(args.checkpoints_dir, "Epoch-{epoch:02d}-Val-Acc-{val_accuracy:.4f}.hdf5")
+    weight_file = os.path.join(
+        args.checkpoints_dir, "Epoch-{epoch:02d}-Val-Acc-{val_acc:.4f}.hdf5")
 
-    results_callback = CSVLogger(results_csv_file, append=True, separator=';')
-    checkpoints_callback = ModelCheckpoint(weight_file, save_best_only=True, save_weights_only=True)
+    results_callback = CSVLogger(results_csv_file, append=True, separator=',')
+    checkpoints_callback = ModelCheckpoint(
+        weight_file, save_best_only=True, save_weights_only=True)
 
-    tensorboard_callback = TensorBoard(log_dir=os.path.join(args.results_dir), histogram_freq=0, write_graph=True, write_images=True)
+    tensorboard_callback = TensorBoard(log_dir=os.path.join(
+        args.results_dir), histogram_freq=0, write_graph=True, write_images=True)
 
     model.fit_generator(
         generator=train_generator,
@@ -47,7 +51,8 @@ def train_model(data, args):
         verbose=2,
         epochs=train_config.epochs,
         shuffle=True,
-        callbacks=[results_callback, tensorboard_callback, checkpoints_callback]
+        callbacks=[results_callback,
+                   tensorboard_callback, checkpoints_callback]
     )
 
     return model
