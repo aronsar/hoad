@@ -134,10 +134,11 @@ def create_newcheatbot_data(datapath, num_players, num_games):
 
 
 def create_WTFWT_data(datapath, num_players, num_games):
-    args = ['python3', PATH_EXPERTS + '/create_WTFWT_data.py', '-q',
-            '--n', num_games,
-            '--p', num_players,
-            '--P', datapath]
+    args = ["python3", PATH_EXPERTS + "/create_WTFWT_data.py", "-q",
+            "--n", str(num_games),
+            "--p", str(num_players),
+            "--P", datapath]
+    print(args)
     process = subprocess.Popen(args)
     process.wait()
 
@@ -178,6 +179,7 @@ CREATE_DATA_FOR = {
     'quux_cheatbot': create_cheatbot_data,
     'quux_newcheatbot': create_newcheatbot_data,
     'fireflower': create_fireflower_data,
+    "wtftf": create_WTFWT_data
 }
 
 
