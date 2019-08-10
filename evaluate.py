@@ -1,22 +1,20 @@
-# Copy code from earlier version.
+from shutil import copy2
+import subprocess
+import os
 
 
-@gin.configurable
-class Evaluator(object):
-    def __init__(self):
+def save_gin_config(args):
+    copy2(args.config_path, args.run_dir)
 
-    def eval():
 
-def main(model, data_reader, args):
-    # read in test data
-    # forward pass with model
-    # display metrics, save results
+def save_git_hash(args):
+    git_hash_file_path = os.path.join(args.run_dir, "git_hash.txt")
+    git_hash_file = open(git_hash_file_path, "w")
+    git_command = ["git", "rev-parse", "HEAD"]
+    process = subprocess.Popen(git_command, stdout=git_hash_file)
+    process.communicate()
 
-def single_move():
-    #TODO
 
-if __name__ == "__main__":
-    args = parse_args.parse()
-    data_reader = create_data.main(args)
-    model = train.main(data_reader, args)
-    main(model, data_reader, args)
+def evaluate_model(data, model, args):
+    save_gin_config(args)
+    save_git_hash(args)

@@ -19,7 +19,6 @@
 # the multiplayer setting and the Hanabi Learning Environment.
 #
 """Run methods for training a DQN agent on Atari.
-
 Methods in this module are usually referenced by |train.py|.
 """
 
@@ -29,13 +28,13 @@ from __future__ import print_function
 
 import time
 
-from .third_party.dopamine import checkpointer
-from .third_party.dopamine import iteration_statistics
-from . import dqn_agent
+from experts.rainbow_models.third_party.dopamine import checkpointer
+from experts.rainbow_models.third_party.dopamine import iteration_statistics
+from experts.rainbow_models import dqn_agent
+from experts.rainbow_models import rainbow_agent
+from hanabi_env import rl_env
 import gin.tf
-import rl_env
 import numpy as np
-from . import rainbow_agent
 import tensorflow as tf
 
 LENIENT_SCORE = False
@@ -46,7 +45,6 @@ class ObservationStacker(object):
 
   def __init__(self, history_size, observation_size, num_players):
     """Initializer for observation stacker.
-
     Args:
       history_size: int, number of time steps to stack.
       observation_size: int, size of observation vector on one time step.
@@ -62,7 +60,6 @@ class ObservationStacker(object):
 
   def add_observation(self, observation, current_player):
     """Adds observation for the current player.
-
     Args:
       observation: observation vector for current player.
       current_player: int, current player id.
@@ -74,7 +71,6 @@ class ObservationStacker(object):
 
   def get_observation_stack(self, current_player):
     """Returns the stacked observation for current player.
-
     Args:
       current_player: int, current player id.
     """
@@ -99,7 +95,6 @@ class ObservationStacker(object):
 
 def load_gin_configs(gin_files, gin_bindings):
   """Loads gin configuration files.
-
   Args:
     gin_files: A list of paths to the gin configuration files for this
       experiment.
@@ -114,13 +109,11 @@ def load_gin_configs(gin_files, gin_bindings):
 @gin.configurable
 def create_environment(game_type='Hanabi-Full', num_players=2):
   """Creates the Hanabi environment.
-
   Args:
     game_type: Type of game to play. Currently the following are supported:
       Hanabi-Full: Regular game.
       Hanabi-Small: The small version of Hanabi, with 2 cards and 2 colours.
     num_players: Int, number of players to play this game.
-
   Returns:
     A Hanabi environment.
   """
@@ -131,11 +124,9 @@ def create_environment(game_type='Hanabi-Full', num_players=2):
 @gin.configurable
 def create_obs_stacker(environment, history_size=4):
   """Creates an observation stacker.
-
   Args:
     environment: environment object.
     history_size: int, number of steps to stack.
-
   Returns:
     An observation stacker object.
   """
@@ -148,15 +139,12 @@ def create_obs_stacker(environment, history_size=4):
 @gin.configurable
 def create_agent(environment, obs_stacker, agent_type='DQN'):
   """Creates the Hanabi agent.
-
   Args:
     environment: The environment.
     obs_stacker: Observation stacker object.
     agent_type: str, type of agent to construct.
-
   Returns:
     An agent for playing Hanabi.
-
   Raises:
     ValueError: if an unknown agent type is requested.
   """
@@ -176,7 +164,6 @@ def create_agent(environment, obs_stacker, agent_type='DQN'):
 def initialize_checkpointing(agent, experiment_logger, checkpoint_dir,
                              checkpoint_file_prefix='ckpt'):
   """Reloads the latest checkpoint if it exists.
-
   The following steps will be taken:
    - This method will first create a Checkpointer object, which will be used in
      the method and then returned to the caller for later use.
@@ -190,14 +177,12 @@ def initialize_checkpointing(agent, experiment_logger, checkpoint_dir,
      will then load the Logger's data from the bundle, and will return the
      iteration number keyed by 'current_iteration' as one of the return values
      (along with the Checkpointer object).
-
   Args:
     agent: The agent that will unbundle the checkpoint from checkpoint_dir.
     experiment_logger: The Logger object that will be loaded from the
       checkpoint.
     checkpoint_dir: str, the directory containing the checkpoints.
     checkpoint_file_prefix: str, the checkpoint file prefix.
-
   Returns:
     start_iteration: int, The iteration number to start the experiment from.
     experiment_checkpointer: The experiment checkpointer.
@@ -228,17 +213,14 @@ def initialize_checkpointing(agent, experiment_logger, checkpoint_dir,
 
 def format_legal_moves(legal_moves, action_dim):
   """Returns formatted legal moves.
-
   This function takes a list of actions and converts it into a fixed size vector
   of size action_dim. If an action is legal, its position is set to 0 and -Inf
   otherwise.
   Ex: legal_moves = [0, 1, 3], action_dim = 5
       returns [0, 0, -Inf, 0, -Inf]
-
   Args:
     legal_moves: list of legal actions.
     action_dim: int, number of actions.
-
   Returns:
     a vector of size action_dim.
   """
@@ -250,12 +232,10 @@ def format_legal_moves(legal_moves, action_dim):
 
 def parse_observations(observations, num_actions, obs_stacker):
   """Deconstructs the rich observation data into relevant components.
-
   Args:
     observations: dict, containing full observations.
     num_actions: int, The number of available actions.
     obs_stacker: Observation stacker object.
-
   Returns:
     current_player: int, Whose turn it is.
     legal_moves: `np.array` of floats, of length num_actions, whose elements
@@ -279,12 +259,10 @@ def parse_observations(observations, num_actions, obs_stacker):
 
 def run_one_episode(agent, environment, obs_stacker):
   """Runs the agent on a single game of Hanabi in self-play mode.
-
   Args:
     agent: Agent playing Hanabi.
     environment: The Hanabi environment.
     obs_stacker: Observation stacker object.
-
   Returns:
     step_number: int, number of actions in this episode.
     total_reward: float, undiscounted return for this episode.
@@ -339,7 +317,6 @@ def run_one_episode(agent, environment, obs_stacker):
 def run_one_phase(agent, environment, obs_stacker, min_steps, statistics,
                   run_mode_str):
   """Runs the agent/environment loop until a desired number of steps.
-
   Args:
     agent: Agent playing hanabi.
     environment: environment object.
@@ -348,7 +325,6 @@ def run_one_phase(agent, environment, obs_stacker, min_steps, statistics,
     statistics: `IterationStatistics` object which records the experimental
       results.
     run_mode_str: str, describes the run mode for this agent.
-
   Returns:
     The number of steps taken in this phase, the sum of returns, and the
       number of episodes performed.
@@ -378,10 +354,8 @@ def run_one_iteration(agent, environment, obs_stacker,
                       evaluate_every_n=100,
                       num_evaluation_games=100):
   """Runs one iteration of agent/environment interaction.
-
   An iteration involves running several episodes until a certain number of
   steps are obtained.
-
   Args:
     agent: Agent playing hanabi.
     environment: The Hanabi environment.
@@ -390,7 +364,6 @@ def run_one_iteration(agent, environment, obs_stacker,
     training_steps: int, the number of training steps to perform.
     evaluate_every_n: int, frequency of evaluation.
     num_evaluation_games: int, number of games per evaluation.
-
   Returns:
     A dict containing summary statistics for this iteration.
   """
@@ -439,7 +412,6 @@ def run_one_iteration(agent, environment, obs_stacker,
 def log_experiment(experiment_logger, iteration, statistics,
                    logging_file_prefix='log', log_every_n=1):
   """Records the results of the current iteration.
-
   Args:
     experiment_logger: A `Logger` object.
     iteration: int, iteration number.
@@ -455,7 +427,6 @@ def log_experiment(experiment_logger, iteration, statistics,
 def checkpoint_experiment(experiment_checkpointer, agent, experiment_logger,
                           iteration, checkpoint_dir, checkpoint_every_n):
   """Checkpoint experiment data.
-
   Args:
     experiment_checkpointer: A `Checkpointer` object.
     agent: An RL agent.

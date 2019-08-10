@@ -1,0 +1,156 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.fossgalaxy.games</groupId>
+    <artifactId>fireworks</artifactId>
+    <version>0.2.6-SNAPSHOT</version>
+    <packaging>jar</packaging>
+
+    <description>An implementation of the board game Hanabi</description>
+    <url>https://git.fossgalaxy.com/iggi/hanabi</url>
+
+    <properties>
+        <fossgalaxy.owner.id>iggi</fossgalaxy.owner.id>
+        <fossgalaxy.repo.id>hanabi</fossgalaxy.repo.id>
+        <mainclass>com.fossgalaxy.games.fireworks.cluster.PredictorRunnerSingle</mainclass>
+    </properties>
+
+    <scm>
+        <connection>scm:git:git@git.fossgalaxy.com:iggi/hanabi.git</connection>
+        <url>scm:git:git@git.fossgalaxy.com:iggi/hanabi.git</url>
+        <developerConnection>scm:git:git@git.fossgalaxy.com:iggi/hanabi.git</developerConnection>
+        <tag>HEAD</tag>
+    </scm>
+
+    <!-- Use FOSS Galaxy's parent POM to do most of the build setup for us -->
+    <parent>
+        <groupId>com.fossgalaxy.common</groupId>
+        <artifactId>parent-pom</artifactId>
+        <version>0.4</version>
+    </parent>
+
+    <distributionManagement>
+        <site>
+            <id>fossgalaxy.website.static</id>
+            <url>scp://docs.fossgalaxy.com/srv/public_sites/${project.artifactId}</url>
+        </site>
+    </distributionManagement>
+
+    <developers>
+        <developer>
+            <id>pwillic</id>
+            <name>Piers Williams</name>
+            <email>pwillic@essex.ac.uk</email>
+        </developer>
+        <developer>
+            <id>webpigeon</id>
+            <name>Joseph Walton-Rivers</name>
+            <email>webpigeon@fossgalaxy.com</email>
+        </developer>
+    </developers>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.1</version>
+                <configuration>
+                    <showDeprecation>true</showDeprecation>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.sonatype.plugins</groupId>
+                <artifactId>nexus-staging-maven-plugin</artifactId>
+                <version>1.6.7</version>
+                <extensions>true</extensions>
+                <configuration>
+                    <serverId>ossrh</serverId>
+                    <nexusUrl>https://oss.sonatype.org/</nexusUrl>
+                    <autoReleaseAfterClose>false</autoReleaseAfterClose>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>3.0.2</version>
+                <configuration>
+                    <archive>
+                        <manifest>
+                            <addClasspath>true</addClasspath>
+                            <mainClass>${mainclass}</mainClass>
+                        </manifest>
+                    </archive>
+                </configuration>
+            </plugin>
+            <plugin>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <configuration>
+                    <descriptorRefs>
+                        <descriptorRef>jar-with-dependencies</descriptorRef>
+                    </descriptorRefs>
+                    <archive>
+                        <manifest>
+                            <mainClass>${mainclass}</mainClass>
+                        </manifest>
+                    </archive>
+                </configuration>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
+    <dependencies>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.11</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>pl.pragmatists</groupId>
+            <artifactId>JUnitParams</artifactId>
+            <version>1.0.4</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <version>2.3.0</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>1.7.24</version>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
+            <version>1.7.24</version>
+        </dependency>
+        <dependency>
+            <groupId>org.reflections</groupId>
+            <artifactId>reflections</artifactId>
+            <version>0.9.11</version>
+        </dependency>
+        <dependency>
+            <groupId>com.googlecode.json-simple</groupId>
+            <artifactId>json-simple</artifactId>
+            <version>1.1.1</version>
+        </dependency>
+        <dependency>
+            <groupId>com.google.code.gson</groupId>
+            <artifactId>gson</artifactId>
+            <version>2.8.5</version>
+        </dependency>
+
+    </dependencies>
+</project>
