@@ -29,11 +29,32 @@ CalculateOptimalWeight(T, F, S, m, k):
 '''
 
 def two_stage_transfer(target_data_set, source_data_sets, num_boosting_iter, num_cross_val_folds, max_num_source_data_sets):
-    x = 5 #filler code so it runs
+    weights = []
+    for data_set in source_data_sets:
+        #FIXME: define phi
+        weights.append(calculate_optimal_weight(target_data_set, phi, data_set, num_boosting_iter, num_cross_val_folds)
+    sort(S in dec order of weights)
+    F = phi
+    
+    for set_num in range(1, max_num_source_data_sets):
+        weight = calculate_optimal_weight(target_data_set, F, source_data_sets[set_num], num_boosting_iter, num_cross_val_folds)
+        F = F union source_data_sets[set_num] ^ weight
+    train classifier on target_data_set  union F
+    return classifier
+
 
 # FIXME: rename F accordingly and update above
 def calculate_optimal_weight(target_data_set, F, source_data_sets, num_boosting_iter, num_cross_val_folds):
-    x = 5 #filler code
+    weights = []
+    for boosting_iter in range(1, num_boosting_iter):
+        weights[boosting_iter] = (len(target_data_set) / (len(target_data_set) + len(source_data_sets))) * (1 - (boosting_iter / (num_boosting_iter - 1)))
+    
+    error = []
+    for boosting_iter in range(1, num_boosting_iter):
+        error[boosting_iter] = error(k-fold cross validtion on T using F and S^{w_i} as additional training data)
+
+    return weights[j | j == argmax(error[i])]
+
 
 def parse_args(args):
     x = 5 #filler code
