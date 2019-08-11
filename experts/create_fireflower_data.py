@@ -64,7 +64,7 @@ def get_action(action_type, color, rank, obs):
     '''
     action = {}
     action['action_type'] = action_type
-    print(action_type, color, rank)
+    #print(action_type, color, rank)
     if (action_type == 'DISCARD'):
         match_indices = []
         for i, card in enumerate(obs):
@@ -175,7 +175,7 @@ def act_based_pipeline(args):
     pickle.dump(pkl_data, open(pkl_filename, "wb"))
 
     # Remove csv on Disk
-    remove_csv = True
+    remove_csv = False
     if (remove_csv):
         os.remove(csv_filename)
 
