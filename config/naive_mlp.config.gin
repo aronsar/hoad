@@ -33,7 +33,10 @@ train.TrainConfig.epochs = 10
 
 # Parameters for build_model
 # ==============================================================================
-
+modes.naive_mlp.build_model.cfg = {
+    'h1_act': 'relu',
+    'output_act': 'softmax'
+}
 
 # Parameters for DataGenerator
 # ==============================================================================

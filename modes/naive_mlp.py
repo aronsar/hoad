@@ -7,10 +7,10 @@ from modes import data_generator as dg
 # TODO: Fix to allow Activation Classes, not just namespace
 @gin.configurable
 def build_model(cfg={}):
-    #TODO define your model here
+    # TODO define your model here
     observation_input = Input(shape=(658,))
-    h1 = Dense(256, activation='relu')(observation_input)
-    action_output = Dense(20, activation='softmax')(h1)
+    h1 = Dense(256, activation=cfg['h1_act'])(observation_input)
+    action_output = Dense(20, activation=cfg['output_act'])(h1)
 
     return Model(inputs=observation_input, outputs=action_output)
 
@@ -30,7 +30,8 @@ class DataGenerator(dg.BaseDataGenerator):
     """
     FYI: This is an example of overriding methods in BaseDataGenerator
     """
-    def batch_sampler(self, index):        
+
+    def batch_sampler(self, index):
         """
         batch_sampler(self)
         Args: None
@@ -39,4 +40,3 @@ class DataGenerator(dg.BaseDataGenerator):
         """
 
         return np.random.randint(low=0, high=self.epoch_len, size=self.batch_size)
-        

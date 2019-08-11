@@ -163,8 +163,9 @@ def main(args):
         - Value Errors for parsing unknown formats.
     """
     print('Seed used: %d' % args.s)
+    # Handle by build_env.sh
     # Make hanabi_env & import it
-    run('(cd {}/ && cmake -Wno-dev . && make)'.format(PATH_HANABI_ENV), args.q)
+    # run('(cd {}/ && cmake -Wno-dev . && make)'.format(PATH_HANABI_ENV), args.q)
     import rl_env
 
     random.seed(args.s)
@@ -177,6 +178,8 @@ def main(args):
         cmd = ('cargo run -q --manifest-path {}/WTFWT/Cargo.toml -- -n 1 -o 1 '
                '-s {} -p {} -g info').format(PATH_EXPERTS, s, args.p)
         debug = ['', ' -l debug'][args.debug]
+        print(cmd)
+        print(debug)
         run(cmd + debug, args.q)
 
         with open('dk_cards.csv') as f_dk, open('rust_agent.csv') as f_log:
@@ -211,7 +214,7 @@ def main(args):
         assert(done is True)
         combined_data.append(game_data)
 
-    fn = '{}/WTFWT_{}_{}.pkl'.format(args.P, args.p, args.n)
+    fn = '{}'.format(args.P)
     with open(fn, 'wb') as f:
         pickle.dump(combined_data, f)
     os.remove('dk_cards.csv')

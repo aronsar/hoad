@@ -9,19 +9,24 @@ PATH_GANABI = os.path.dirname(os.path.abspath(__file__))
 PATH_HANABI_ENV = os.path.join(PATH_GANABI, "hanabi_env")
 PATH_EXPERTS = os.path.join(PATH_GANABI, 'experts')
 
+
 def create_rainbow_data(datapath, num_players, num_games):
-    '''Call the script responsible for creating gameplay data using the rainbow agent.
-    
+    '''Call the script responsible for creating gameplay data using the
+       rainbow agent.
+
     Inputs:
-        datapath (str): the path/to/the/data/file being created, including the filename, with .pkl extension
+        datapath (str): the path/to/the/data/file being created, including the
+                        filename, with .pkl extension
         num_players (int): the number of players in the game
         num_games (int): the number of games to play and save the data for
     '''
-    # NOTE: since there are several rainbow agents right now, there's a hardcoded
-    # way of specifying which one to use; in the future there will be only one rainbow agent
+    # NOTE: since there are several rainbow agents right now, there's a
+    # hardcoded way of specifying which one to use; in the future there will
+    # be only one rainbow agent
     default_rainbow_agent_name = 'rainbow1'
     rainbowdir = './experts/rainbow_models'
-    process = subprocess.Popen(["/data1/shared/venvg2/bin/python", "experts/create_rainbow_data.py",
+    process = subprocess.Popen(["/data1/shared/venvg2/bin/python",
+                                "experts/create_rainbow_data.py",
                                 "--datapath", datapath,
                                 "--num_players", str(num_players),
                                 "--num_games", str(num_games),
@@ -38,37 +43,43 @@ def create_walton_data(datapath, num_players, num_games, agent_name):
             "--agent_name", agent_name]
 
     process = subprocess.Popen(args)
-    process.communicate() # solves issue where Popen hangs
+    process.communicate()  # solves issue where Popen hangs
 
 # Walton Agent: IGGI Agent
 def create_iggi_data(datapath, num_players, num_games):
     default_walton_agent_name = 'iggi'
-    create_walton_data(datapath, num_players, num_games,default_walton_agent_name)
+    create_walton_data(datapath, num_players, num_games,
+                       default_walton_agent_name)
 
 # Walton Agent: Outer Agent
 def create_outer_data(datapath, num_players, num_games):
     default_walton_agent_name = 'outer'
-    create_walton_data(datapath, num_players, num_games,default_walton_agent_name)
+    create_walton_data(datapath, num_players, num_games,
+                       default_walton_agent_name)
 
 # Walton Agent: Legal Random Agent
 def create_legal_random_data(datapath, num_players, num_games):
     default_walton_agent_name = 'legal_random'
-    create_walton_data(datapath, num_players, num_games,default_walton_agent_name)
+    create_walton_data(datapath, num_players, num_games,
+                       default_walton_agent_name)
 
 # Walton Agent: Van den Bergh Rule Agent
 def create_van_den_bergh_data(datapath, num_players, num_games):
     default_walton_agent_name = 'vdb-paper'
-    create_walton_data(datapath, num_players, num_games,default_walton_agent_name)
+    create_walton_data(datapath, num_players, num_games,
+                       default_walton_agent_name)
 
 # Walton Agent: Flawed Agent
 def create_flawed_data(datapath, num_players, num_games):
     default_walton_agent_name = 'flawed'
-    create_walton_data(datapath, num_players, num_games,default_walton_agent_name)
+    create_walton_data(datapath, num_players, num_games,
+                       default_walton_agent_name)
 
 # Walton Agent: Piers Agent
 def create_piers_data(datapath, num_players, num_games):
     default_walton_agent_name = 'piers'
-    create_walton_data(datapath, num_players, num_games,default_walton_agent_name)
+    create_walton_data(datapath, num_players, num_games,
+                       default_walton_agent_name)
 
 # Quuxplusone Agent Caller
 def create_quux_data(datapath, num_players, num_games, agent_name):
@@ -123,12 +134,14 @@ def create_newcheatbot_data(datapath, num_players, num_games):
 
 
 def create_WTFWT_data(datapath, num_players, num_games):
-    args = ['python3', PATH_EXPERTS + '/create_WTFWT_data.py', '-q',
-            '--n', num_games,
-            '--p', num_players,
-            '--P', datapath]
+    args = ["python3", PATH_EXPERTS + "/create_WTFWT_data.py", "-q",
+            "--n", str(num_games),
+            "--p", str(num_players),
+            "--P", datapath]
+    print(args)
     process = subprocess.Popen(args)
     process.wait()
+
 
 def create_fireflower_data(datapath, num_players, num_games):
     args = ["python", "experts/create_fireflower_data.py",
@@ -137,6 +150,7 @@ def create_fireflower_data(datapath, num_players, num_games):
                       "--num_games", str(num_games)]
     subprocess.Popen(args)
     subprocess.Popen.communicate()
+
 
 def create_example_data():
     # TODO: insert your Popen for your script here
@@ -165,6 +179,7 @@ CREATE_DATA_FOR = {
     'quux_cheatbot': create_cheatbot_data,
     'quux_newcheatbot': create_newcheatbot_data,
     'fireflower': create_fireflower_data,
+    "wtftf": create_WTFWT_data
 }
 
 
@@ -177,16 +192,16 @@ class DataLoader(object):
         self.num_players = num_players
         self.num_games = num_games
 
-        self.train_data = {} # gameplay data given to model
-        self.validation_data = {} # data not given to model, from same agents as train
-        self.test_data = {} # data from agents totally unseen to model
+        self.train_data = {}  # gameplay data given to model
+        self.validation_data = {}  # data not given to model, from same agents as train
+        self.test_data = {}  # data from agents totally unseen to model
 
-    def train_val_test_split(self, raw_data): #previously named "read"
+    def train_val_test_split(self, raw_data):  # previously named "read"
         '''Split up raw_data into train, validation, and test, and save in self.
-        
+
         Inputs:
             raw_data: a dictionary mapping agent names to a list of their games
-            
+
         This function randomly picks an agent to be the test agent, and sets it aside
         in self.test_data; this data is not to be trained or validated on. It splits the 
         data of the remaining agents up so that 90% of the games of each agent are saved
@@ -194,7 +209,6 @@ class DataLoader(object):
         '''
         # TODO: What kind of data should test_data have?
         # test_agent = random.choice(list(raw_data.keys()))
-
 
         for agent in raw_data:
             # if agent == test_agent:
@@ -213,17 +227,19 @@ def create_load_data(args):
     print(args)
     # composing a dictionary mapping agent names to a list of their games
     for agent_name in args.agents_to_use:
-        agent_data_filename = agent_name + "_" + str(loader.num_players) + "_" \
-                              + str(loader.num_games) + ".pkl"
+        agent_data_filename = agent_name + "_" + \
+            str(loader.num_players) + "_" + str(loader.num_games) + ".pkl"
 
         datapath = os.path.join(args.data_dir, agent_data_filename)
 
         if agent_data_filename not in os.listdir(args.data_dir):
-            CREATE_DATA_FOR[agent_name](datapath, loader.num_players, loader.num_games)
+            CREATE_DATA_FOR[agent_name](
+                datapath, loader.num_players, loader.num_games)
 
         agent_data = pickle.load(open(datapath, "rb"), encoding='latin1')
 
-        raw_data[agent_name] = agent_data  # placing agent_data into a dictionary
+        # placing agent_data into a dictionary
+        raw_data[agent_name] = agent_data
 
     loader.train_val_test_split(raw_data)
     return loader
@@ -233,4 +249,4 @@ if __name__ == "__main__":
     args = parse_args.parse()
     args = parse_args.resolve_configpath(args)
     # args = parse_args.resolve_agents_to_use(args)
-    main(args)
+    create_load_data(args)

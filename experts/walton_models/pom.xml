@@ -13,6 +13,7 @@
         <fossgalaxy.owner.id>iggi</fossgalaxy.owner.id>
         <fossgalaxy.repo.id>hanabi</fossgalaxy.repo.id>
         <mainclass>com.fossgalaxy.games.fireworks.cluster.PredictorRunnerSingle</mainclass>
+        <maven.test.skip>true</maven.test.skip>
     </properties>
 
     <scm>

@@ -42,8 +42,10 @@ def main():
     args = parse()
     config_path = args.config_path
 
-    gin.external_configurable(keras.optimizers.Adam, module='tensorflow.python.keras.optimizers')
-    gin.external_configurable(keras.losses.categorical_crossentropy, module='tensorflow.python.keras.losses')
+    gin.external_configurable(keras.optimizers.Adam,
+                              module='tensorflow.python.keras.optimizers')
+    gin.external_configurable(keras.losses.categorical_crossentropy,
+                              module='tensorflow.python.keras.losses')
     gin.parse_config_file(config_path)
 
     # args = RunConfig()
