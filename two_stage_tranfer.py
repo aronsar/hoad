@@ -5,7 +5,7 @@
 - T is target data set
 - S is set of source data sets S = {S_1, S_2, ..., S_n}
 - m is num of boosting iterations
-- k is num of folds for cross validation
+- k is num of folds for cross validation, k should be 10 as we have 10 games
 - b is max num of source data sets to include
 - S^w means data set S taken with weight w spread over instances
 - F is ??? #FIXME
@@ -31,10 +31,10 @@ CalculateOptimalWeight(T, F, S, m, k):
 def two_stage_transfer(target_data_set, source_data_sets, num_boosting_iter, num_cross_val_folds, max_num_source_data_sets):
     weights = []
     for data_set in source_data_sets:
-        #FIXME: define phi
-        weights.append(calculate_optimal_weight(target_data_set, phi, data_set, num_boosting_iter, num_cross_val_folds)
+        #phi is an empty set
+        weights.append(calculate_optimal_weight(target_data_set, [], data_set, num_boosting_iter, num_cross_val_folds)
     sort(S in dec order of weights)
-    F = phi
+    F = []
     
     for set_num in range(1, max_num_source_data_sets):
         weight = calculate_optimal_weight(target_data_set, F, source_data_sets[set_num], num_boosting_iter, num_cross_val_folds)
@@ -48,7 +48,7 @@ def calculate_optimal_weight(target_data_set, F, source_data_sets, num_boosting_
     weights = []
     for boosting_iter in range(1, num_boosting_iter):
         weights[boosting_iter] = (len(target_data_set) / (len(target_data_set) + len(source_data_sets))) * (1 - (boosting_iter / (num_boosting_iter - 1)))
-    
+    #find the index of the maximum error and return the weight at that index
     error = []
     for boosting_iter in range(1, num_boosting_iter):
         error[boosting_iter] = error(k-fold cross validtion on T using F and S^{w_i} as additional training data)
@@ -61,6 +61,6 @@ def parse_args(args):
 
 if __name__ = '__main__':
     T, S, m, k, b = parse_args(args)
-    classifier = two_stage_transfer(T, S, m, k, b)
+    classifier = two_stage_transfer(T, S, m, 10, b)
     return classifier
 
