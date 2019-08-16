@@ -3,7 +3,7 @@ import gin
 import numpy as np
 from utils.parse_args import parse
 from create_load_data import create_load_data
-#from sklearn.model_selection import cross_val_score, cross_validate, KFold
+from sklearn.model_selection import tree, cross_val_score, cross_validate, KFold
 
 '''
 - algorithm from Stone and Rosenfeld 2013
@@ -33,34 +33,46 @@ CalculateOptimalWeight(T, F, S, m, k):
     return wj such that j = argmaxi(erri)
 '''
 
-def two_stage_transfer(target_data_set, source_data_sets, num_boosting_iter, num_cross_val_folds, max_num_source_data_sets):
+def two_stage_transfer(target, source, num_boosting_iter, num_cross_val_folds, max_num_source_data_sets):
     #weights = []
     weight_sourcedata_dict = {}
-    for data_set in source_data_sets:
+    for data_set in source:
         #phi is an empty set
-        weight = calculate_optimal_weight(target_data_set, [], data_set, num_boosting_iter, num_cross_val_folds)
+        weight = calculate_optimal_weight(target, [], data_set, num_boosting_iter, num_cross_val_folds)
         source_weight_dict[weight] = data_set
 
     #sort S in decreasing order of wi
     sortedS = sort_data_by_weight(weight_sourcedata_dict)
-    '''
+    
     F = []
-    for set_num in range(1, max_num_source_data_sets):
-        weight = calculate_optimal_weight(target_data_set, F, source_data_sets[set_num], num_boosting_iter, num_cross_val_folds)
-        F = F union source_data_sets[set_num] ^ weight
-    train classifier on target_data_set  union F
+    for i in range(max_num_source_data_sets):
+        weight = calculate_optimal_weight(target, F, source[i], num_boosting_iter, num_cross_val_folds)
+        F = F.append(source[i] * weight)
+    training_data = target + F
+    return train_classifier(training_data)
+
+def train_classifier(training_data):
+    clf = tree.DecisionTreeClassifier()
+    obs = [data[0] for data in training_data]
+    act = [data[1] for data in training_data]
+
+    classifier = clf.fit(obs, act)
     return classifier
-    '''
+
+def calculate_err(target, F, S):
+
+    return err
 
 # FIXME: rename F accordingly and update above
-def calculate_optimal_weight(target_data_set, F, source_data_sets, num_boosting_iter, num_cross_val_folds):
+def calculate_optimal_weight(target, F, source, num_boosting_iter, num_cross_val_folds):
     weights = []
     max_err = 0
     max_err_ind = 0
     for boosting_iter in range(1, num_boosting_iter):
-        weights.append ((len(target_data_set) / (len(target_data_set) + len(source_data_sets))) * (1 - (boosting_iter / (num_boosting_iter - 1))))
+        weight = (len(target) / (len(target) + len(source))) * (1 - (boosting_iter / (num_boosting_iter - 1))
+        weights.append (weight)
     #find the index of the maximum error and return the weight at that index
-        err = 0#calculating error from k-fold cross validation on T using F and Swi as addtional training data
+        err = calculate_err(target, F, source * weight)#calculating error from k-fold cross validation on T using F and Swi as addtional training data
         if err > max_err:
             max_err = err
             max_err_ind = boosting_iter-1
@@ -76,11 +88,12 @@ def main():
     args = parse()
     #loading data
     data = create_load_data(args)
-    print(data.test_data)
+    #`1 game for target datasset
+    target = data.validation_data
+    # 9 games for source data set
+    source = data.train_data
 
-    #produce classifier
-    # T, S, m, k, b = parse_args(args)
-    # classifier = two_stage_transfer(T, S, m, 10, b)
+    classifier = two_stage_transfer(transfer, source, m, 10, len(source))
     # return classifier
 
 if __name__== '__main__':
