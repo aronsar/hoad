@@ -3,7 +3,7 @@ import gin
 import numpy as np
 from utils.parse_args import parse
 from create_load_data import create_load_data
-from sklearn.model_selection import cross_val_score, cross_validate, KFold
+#from sklearn.model_selection import cross_val_score, cross_validate, KFold
 
 '''
 - algorithm from Stone and Rosenfeld 2013
@@ -43,14 +43,14 @@ def two_stage_transfer(target_data_set, source_data_sets, num_boosting_iter, num
 
     #sort S in decreasing order of wi
     sortedS = sort_data_by_weight(weight_sourcedata_dict)
-
+    '''
     F = []
     for set_num in range(1, max_num_source_data_sets):
         weight = calculate_optimal_weight(target_data_set, F, source_data_sets[set_num], num_boosting_iter, num_cross_val_folds)
         F = F union source_data_sets[set_num] ^ weight
     train classifier on target_data_set  union F
     return classifier
-
+    '''
 
 # FIXME: rename F accordingly and update above
 def calculate_optimal_weight(target_data_set, F, source_data_sets, num_boosting_iter, num_cross_val_folds):
@@ -60,7 +60,7 @@ def calculate_optimal_weight(target_data_set, F, source_data_sets, num_boosting_
     for boosting_iter in range(1, num_boosting_iter):
         weights.append ((len(target_data_set) / (len(target_data_set) + len(source_data_sets))) * (1 - (boosting_iter / (num_boosting_iter - 1))))
     #find the index of the maximum error and return the weight at that index
-        err = #calculating error from k-fold cross validation on T using F and Swi as addtional training data
+        err = 0#calculating error from k-fold cross validation on T using F and Swi as addtional training data
         if err > max_err:
             max_err = err
             max_err_ind = boosting_iter-1
@@ -72,9 +72,7 @@ def sort_data_by_weight(weight_sourcedata_dict):
 # def train_classifier(data, args):
 #
 #     retun classifier
-
-
-if __name__ = '__main__':
+def main():
     args = parse()
     #loading data
     data = create_load_data(args)
@@ -85,3 +83,5 @@ if __name__ = '__main__':
     # classifier = two_stage_transfer(T, S, m, 10, b)
     # return classifier
 
+if __name__== '__main__':
+    main()
