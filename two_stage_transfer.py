@@ -1,4 +1,9 @@
 # pseudo-code to implement two stage transfer learning
+import sys
+import os
+#FIXME: add ganabi path to sys
+#FIXME: add data path to sys
+
 import gin
 import numpy as np
 from utils.parse_args import parse
@@ -13,7 +18,7 @@ from sklearn.model_selection import tree, cross_val_score, cross_validate, KFold
 - k is num of folds for cross validation, k should be 10 as we have 10 games
 - b is max num of source data sets to include
 - S^w means data set S taken with weight w spread over instances
-- F is ??? #FIXME
+- F is weighted source data
 
 TwoStageTransfer (T, S, m, k, b)
     for all S_i in S: do
@@ -44,11 +49,11 @@ def two_stage_transfer(target, source, num_boosting_iter, num_cross_val_folds, m
     #sort S in decreasing order of wi
     sortedS = sort_data_by_weight(weight_sourcedata_dict)
     
-    F = []
+    weighted_source = []
     for i in range(max_num_source_data_sets):
-        weight = calculate_optimal_weight(target, F, source[i], num_boosting_iter, num_cross_val_folds)
-        F = F.append(source[i] * weight)
-    training_data = target + F
+        weight = calculate_optimal_weight(target, weighted_source, source[i], num_boosting_iter, num_cross_val_folds)
+        weighted_source = weighted_source.append(source[i] * weight)
+    training_data = target + weighted_source
     return train_classifier(training_data)
 
 def train_classifier(training_data):
@@ -59,12 +64,11 @@ def train_classifier(training_data):
     classifier = clf.fit(obs, act)
     return classifier
 
-def calculate_err(target, F, S):
-
+def calculate_err(target, weighted_source, S):
     return err
 
-# FIXME: rename F accordingly and update above
-def calculate_optimal_weight(target, F, source, num_boosting_iter, num_cross_val_folds):
+
+def calculate_optimal_weight(target, weighted_source, source, num_boosting_iter, num_cross_val_folds):
     weights = []
     max_err = 0
     max_err_ind = 0
@@ -72,7 +76,7 @@ def calculate_optimal_weight(target, F, source, num_boosting_iter, num_cross_val
         weight = (len(target) / (len(target) + len(source))) * (1 - (boosting_iter / (num_boosting_iter - 1))
         weights.append (weight)
     #find the index of the maximum error and return the weight at that index
-        err = calculate_err(target, F, source * weight)#calculating error from k-fold cross validation on T using F and Swi as addtional training data
+        err = calculate_err(target, weighted_source, source * weight)#calculating error from k-fold cross validation on T using F and Swi as addtional training data
         if err > max_err:
             max_err = err
             max_err_ind = boosting_iter-1
@@ -84,6 +88,8 @@ def sort_data_by_weight(weight_sourcedata_dict):
 # def train_classifier(data, args):
 #
 #     retun classifier
+                                                                
+                                                                
 def main():
     args = parse()
     #loading data
