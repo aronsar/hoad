@@ -12,8 +12,9 @@ from sklearn.model_selection import tree, cross_val_score, cross_validate, KFold
 
 '''
 - algorithm from Stone and Rosenfeld 2013
-- T is target data set
-- S is set of source data sets S = {S_1, S_2, ..., S_n}
+- T is target data set (10 adhoc games from same agent)
+- S is set of source data sets S = {S_1, S_2, ..., S_n} (games from previously observed teammates,
+    which can be thousands of data points in length)
 - m is num of boosting iterations
 - k is num of folds for cross validation, k should be 10 as we have 10 games
 - b is max num of source data sets to include
@@ -56,6 +57,8 @@ def two_stage_transfer(target, source, num_boosting_iter, num_cross_val_folds, m
     training_data = target + weighted_source
     return train_classifier(training_data)
 
+
+# train decision tree with data of prev games using scikitlearn lib
 def train_classifier(training_data):
     clf = tree.DecisionTreeClassifier()
     obs = [data[0] for data in training_data]
@@ -64,6 +67,8 @@ def train_classifier(training_data):
     classifier = clf.fit(obs, act)
     return classifier
 
+
+# FIXME: aclculate error
 def calculate_err(target, weighted_source, S):
     return err
 
