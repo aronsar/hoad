@@ -118,7 +118,7 @@ class Mlp(object):
         self.model =  Model(inputs=input, outputs=out)
 
     def train_model(self, gen_tr, gen_va, n_epoch=100, callbacks=None,
-                    verbose=False, workers=1):
+                    verbose=False, workers=1, use_mp=False):
         """
         Train self.model with dataset stored in attributes.
         Arguments:
@@ -156,6 +156,6 @@ class Mlp(object):
                                              validation_data=gen_va,
                                              epochs=n_epoch,
                                              verbose=self.verbose,
-                                             use_multiprocessing=True,
+                                             use_multiprocessing=use_mp,
                                              workers=workers,
                                              callbacks=callbacks)
