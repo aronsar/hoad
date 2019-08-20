@@ -175,7 +175,8 @@ def create_pkl_data(args, csv_data):
                 one_hot_action_vector = [0] * 20  # FIXME: hard coded action length
                 one_hot_action_vector[action_idx] = 1
 
-                raw_data[game_num][0].append(obs['player_observations'][agent_id]['vectorized'])
+                raw_data[game_num][0].append(b2int.convert(
+                    obs['player_observations'][agent_id]['vectorized']))
                 raw_data[game_num][1].append(one_hot_action_vector)
 
                 # Step Through

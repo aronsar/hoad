@@ -39,19 +39,19 @@ def parse():
 def create_csv_from_scala(numGames, numPlayers):
         subprocess.run("export JAVA_HOME=/data1/shared/fireflowerenv/jre1.8.0_221", shell=True)
         subprocess.run("export PATH=$JAVA_HOME/bin:$PATH", shell=True)
-        
+
         args = ["/data1/shared/fireflowerenv/sbt/bin/sbt", "run " + str(numGames) + " " + str(numPlayers)]
-        
+
         dir_path = os.path.dirname(os.path.abspath(__file__))
         os.chdir(os.path.join(dir_path, 'fireflower_model'))
         process = subprocess.Popen(args, universal_newlines=True)
         process.communicate() # solves issue where Popen hangs
 
 
-def create_data_filenames(args):    
+def create_data_filenames(args):
     # Config csv & pkl file path
     agent_data_filename = args.agent_name + "_" + str(args.num_players) + "_" + str(args.num_games)
-    
+
     csv_filename = agent_data_filename + ".csv"
     pkl_filename = agent_data_filename + ".pkl"
 
@@ -87,7 +87,7 @@ def get_action(action_type, color, rank, obs):
         action['target_offset'] = 1
     elif (action_type == 'REVEAL_RANK'):
         assert(rank >=0 and rank <=4)
-        action['rank'] = rank 
+        action['rank'] = rank
         action['target_offset'] = 1
     else:
         raise("Unknow Action")
@@ -120,7 +120,7 @@ def create_pkl_data(args, csv_data):
         action_card_color = np.array(game_data.iloc[:, 3]).tolist()
         action_card_rank = np.array(game_data.iloc[:, 4]).tolist()
         deck = np.array(game_data.iloc[0, 5:]).tolist()
-        
+
         # Initialize the game with @deck. The arg is None by default.
         obs = env.reset(deck)
 
@@ -144,7 +144,9 @@ def create_pkl_data(args, csv_data):
                 one_hot_action_vector = [0]*20 # FIXME: hard coded action length
                 one_hot_action_vector[action_idx] = 1
 
-                raw_data[game_num][0].append(obs['player_observations'][agent_id]['vectorized'])
+                # raw_data[game_num][0].append(obs['player_observations'][agent_id]['vectorized'])
+                raw_data[game_num][0].append(b2int.convert(
+                    obs['player_observations'][agent_id]['vectorized']))
                 raw_data[game_num][1].append(one_hot_action_vector)
 
                 # Step Through
@@ -158,8 +160,8 @@ def create_pkl_data(args, csv_data):
 
 def act_based_pipeline(args):
     # Sort Params
-    #seed = 1 
-    #csv_filename, pkl_filename, jar_filename = create_data_filenames(args) 
+    #seed = 1
+    #csv_filename, pkl_filename, jar_filename = create_data_filenames(args)
     csv_filename, pkl_filename = create_data_filenames(args)
 
     # Create csv on Disk by using Java code
@@ -179,9 +181,9 @@ def act_based_pipeline(args):
     if (remove_csv):
         os.remove(csv_filename)
 
-def main(args):      
+def main(args):
     act_based_pipeline(args)
-        
+
 if __name__ == '__main__':
     print("Create Fireflower Data")
     args = parse()
