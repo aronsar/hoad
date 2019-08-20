@@ -2,12 +2,61 @@ import gin
 import os
 import pickle
 import random
+import multiprocessing as mp
+from datetime import datetime
+import shutil
+
 import subprocess
 from utils import parse_args
 
 PATH_GANABI = os.path.dirname(os.path.abspath(__file__))
 PATH_HANABI_ENV = os.path.join(PATH_GANABI, "hanabi_env")
 PATH_EXPERTS = os.path.join(PATH_GANABI, 'experts')
+
+def multi_gen(create_fn, datapath, num_players, num_games_per_proc, num_proc):
+    """ Invoke multiple generation functions.
+    Arguments:
+        - create_fn: func
+        - datapath: str
+            './outdir/rainbow_2_100'
+        - num_players: int
+
+        - num_games_per_proc: int
+
+        - num_proc: int
+
+
+    """
+    agent_name = create_fn.__name__.split('_')[1:-1]
+    agent_name = '-'.join(agent_name)
+
+
+    ts = hex(int((datetime.now()).timestamp()))[4:] # timestamp
+    PATH_TMP = '.{}_TMP_'.format(agent_name) + ts
+    os.mkdir(PATH_TMP)
+    pool = []
+    # Generate the data in parallel
+    for i in range(num_proc):
+        subdir = os.path.join(PATH_TMP, str(i))
+        os.mkdir(subdir)
+        path = '{}_{}_{}.pkl'.format(
+            agent_name, num_players, num_games_per_proc)
+        path = os.path.join(subdir, path)
+        p = mp.Process(
+            target=create_fn, args=(path, num_players, num_games_per_proc))
+        p.start()
+        pool.append(p)
+
+    for p in pool:
+        p.join()
+
+    cmd = 'tar -czvf {}.tar.gz '.format(datapath)
+    cmd += '--transform s/{}/{}/ '.format(PATH_TMP, datapath.split('/')[-1])
+    cmd += '{}/*'.format(PATH_TMP)
+    process = subprocess.Popen(cmd, shell=True)
+    process.wait()
+
+    shutil.rmtree(PATH_TMP)
 
 
 def create_rainbow_data(datapath, num_players, num_games):
@@ -184,11 +233,11 @@ class DataLoader(object):
 
     def resolve_datapath(self, datadir, agent_name):
         '''Compose and return the full relative path of where the agent's data will be saved.
-        
+
         Inputs:
             datadir (str): base directory in which to put the data files (default ./data)
             agent_name (str): name of the agent which is passed in on the command line; mapped to wrapper function name
-                    
+
         Outputs:
             (str): the full relative path of where the agent's data will be saved
         '''
@@ -198,12 +247,12 @@ class DataLoader(object):
 
     def train_val_test_split(self, raw_data):  # previously named "read"
         '''Split up raw_data into train, validation, and test, and save in self.
-        
+
         Inputs:
             raw_data: a dictionary mapping agent names to a list of their games
-            
+
         This function randomly picks an agent to be the test agent, and sets it aside
-        in self.test_data; this data is not to be trained or validated on. It splits the 
+        in self.test_data; this data is not to be trained or validated on. It splits the
         data of the remaining agents up so that 90% of the games of each agent are saved
         in self.train_data, and the rest in self.validation_data.
         '''
@@ -239,8 +288,8 @@ def main(args):
     return loader
 
 
-if __name__ == "__main__":
-    args = parse_args.parse()
-    args = parse_args.resolve_configpath(args)
-    # args = parse_args.resolve_agents_to_use(args)
-    main(args)
+# if __name__ == "__main__":
+#     args = parse_args.parse()
+#     args = parse_args.resolve_configpath(args)
+#     # args = parse_args.resolve_agents_to_use(args)
+#     main(args)
