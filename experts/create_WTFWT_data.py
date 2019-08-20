@@ -165,23 +165,23 @@ def parallel_generation(args):
         cmd += 'python3 {}/create_WTFWT_data.py '.format(PATH_EXPERTS)
         cmd += '--n {} --p {} -q --m 1)'.format(args.n, args.p)
         pool.append(subprocess.Popen(cmd, shell=True))
-    
+
     code = [p.wait() for p in pool]
     print('Exit codes:', code)
-    # Combine the generated data 
+    # Combine the generated data
     combined = []
     for i in range(args.m):
         filename = 'WTFWT_{}_{}.pkl'.format(args.p, args.n)
         with open(os.path.join(PATH_TMP, str(i), filename), 'rb') as f:
             combined += pickle.load(f)
-    
+
     name_tar = 'WTFWT_data_{}_{}'.format(args.p, args.m * args.n)
     cmd = 'tar -czvf {}/{}.tar.gz '.format(args.P, name_tar)
     cmd += '--transform s/.WTFWT_TMP_{}/{}/ '.format(ts, name_tar)
     cmd += '.WTFWT_TMP_{}/*'.format(ts)
     run(cmd)
 
-    shutil.rmtree(PATH_TMP) 
+    shutil.rmtree(PATH_TMP)
 
 def main(args):
     """ Observations & actions generation.
@@ -221,8 +221,6 @@ def main(args):
         cmd = ('cargo run -q --manifest-path {}/WTFWT/Cargo.toml -- -n 1 -o 1 '
                '-s {} -p {} -g info').format(PATH_EXPERTS, s, args.p)
         debug = ['', ' -l debug'][args.debug]
-        print(cmd)
-        print(debug)
         run(cmd + debug, args.q)
 
         with open('dk_cards.csv') as f_dk, open('rust_agent.csv') as f_log:
@@ -274,7 +272,7 @@ if __name__ == '__main__':
     parser.add_argument('-q', action='store_true', help='Quiet mode')
     parser.add_argument('-debug', action='store_true',
         help='Run with debug mode for WTFWT and assertion tests.')
-    parser.add_argument('--m', type=int, default=None, 
+    parser.add_argument('--m', type=int, default=0,
         help='Number of processes to run in parallel. M >= 0.')
     args = parser.parse_args()
 
