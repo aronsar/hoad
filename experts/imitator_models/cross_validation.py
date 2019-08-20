@@ -34,8 +34,9 @@ def CV(path_dir=PATH_EX_DIR, size_train=0.9, seed=1234):
         a boolean mask indicating the training rows.
 
     Arguments:
-        - path_pkl: str
-            Path to the pickle file containing the game data.
+        - path_dir: str
+            Path to the directory where pickle files containing the game data
+            are.
         - size_train: float
             Size of the training set.
         - seed: int
@@ -67,6 +68,7 @@ def CV(path_dir=PATH_EX_DIR, size_train=0.9, seed=1234):
     #     pkl = pickle.load(f)
     np.random.seed(seed)
 
+    # Get paths to all .pkls in the specified directory
     path_pkls = []
     for root, dirs, files in os.walk(path_dir):
         for file in files:
