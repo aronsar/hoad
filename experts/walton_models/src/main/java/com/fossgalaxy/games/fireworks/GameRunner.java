@@ -93,7 +93,7 @@ public class GameRunner {
      * @param player the player to add to the game
      */
     public void addPlayer(Player player) {
-        logger.info("player {} is {}", nPlayers, player);
+        logger.debug("player {} is {}", nPlayers, player);
         players[nPlayers++] = Objects.requireNonNull(player);
     }
 
@@ -126,12 +126,12 @@ public class GameRunner {
      * @param seed the random seed to use for deck ordering.
      */
     protected void init(Long seed) {
-        logger.info("game init started - {} player game with seed {}", players.length, seed);
+        logger.debug("game init started - {} player game with seed {}", players.length, seed);
         long startTime = getTick();
 
         // step 1: tell all players their IDs
         for (int i = 0; i < players.length; i++) {
-            logger.info("player {} is {}", i, players[i]);
+            logger.debug("player {} is {}", i, players[i]);
             players[i].setID(i, players.length, playerNames, type);
         }
 
@@ -179,7 +179,7 @@ public class GameRunner {
         notifyAction(-2, null, initEvents);
 
         long endTime = getTick();
-        logger.info("Game init complete: took {} ms", endTime - startTime);
+        logger.debug("Game init complete: took {} ms", endTime - startTime);
     }
 
     // TODO find a better way of doing this logging.
@@ -200,16 +200,16 @@ public class GameRunner {
         Player player = players[nextPlayer];
         assert player != null : "that player is not valid";
 
-        // logger.info("asking player {} for their move", nextPlayer);
+        // logger.debug("asking player {} for their move", nextPlayer);
         long startTime = getTick();
 
         // get the action and try to apply it
         Action action = player.getAction();
 
         long endTime = getTick();
-        // logger.info("agent {} took {} ms to make their move", nextPlayer, endTime -
+        // logger.debug("agent {} took {} ms to make their move", nextPlayer, endTime -
         // startTime);
-        logger.info("move {}: player {} made move {}", moves, nextPlayer, action);
+        logger.debug("move {}: player {} made move {}", moves, nextPlayer, action);
 
         // if the more was illegal, throw a rules violation
         if (!action.isLegal(nextPlayer, state)) {
@@ -217,7 +217,7 @@ public class GameRunner {
         }
 
         // perform the action and get the effects
-        // logger.info("player {} made move {} as turn {}", nextPlayer, action, moves);
+        // logger.debug("player {} made move {} as turn {}", nextPlayer, action, moves);
         moves++;
 
         Collection<GameEvent> events = action.apply(nextPlayer, state);
@@ -292,14 +292,14 @@ public class GameRunner {
                     .collect(Collectors.toList());
             players[i].resolveTurn(actor, action, visibleEvents);
 
-            logger.info("for {}, sent {} to {}", action, visibleEvents, currPlayer);
+            logger.debug("for {}, sent {} to {}", action, visibleEvents, currPlayer);
         }
 
     }
 
     // send messages as soon as they are available
     /*
-     * protected void send(GameEvent event) { logger.info("game sent event: {}",
+     * protected void send(GameEvent event) { logger.debug("game sent event: {}",
      * event); for (int i = 0; i < players.length; i++) { if (event.isVisibleTo(i))
      * { players[i].sendMessage(event); } } }
      */
