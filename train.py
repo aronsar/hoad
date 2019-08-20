@@ -1,73 +1,60 @@
-from utils import parse_args
 import importlib
-import load_data
 import gin
+import os
+from tensorflow.python.keras.callbacks import CSVLogger, TensorBoard, ModelCheckpoint
+
 
 @gin.configurable
-class Trainer(object):
-  @gin.configurable
-  def __init__(self, args,
-         optimizer=None,
-         loss=None,
-         metrics=None,
-         batch_size=None,
-         epochs=None):
-    self.optimizer = optimizer
-    self.loss = loss
-    self.metrics = metrics
-    self.batch_size = batch_size
-    self.epochs = epochs
+class TrainConfig(object):
+    def __init__(self, args,
+                 optimizer=None,
+                 loss=None,
+                 metrics=None,
+                 batch_size=None,
+                 epochs=None):
+        self.optimizer = optimizer
+        self.loss = loss
+        self.metrics = metrics
+        self.batch_size = batch_size
+        self.epochs = epochs
 
-# def main(data, args):
-  # trainer = Trainer(args) # gin configured
 
-  # #FIXME: combine into one line once stuff works
-  # mode_module = importlib.import_module(args.mode)              
-  # model = mode_module.build_model(args)
+def train_model(data, args):
+    train_config = TrainConfig(args)
+    mode_module = importlib.import_module("modes." + args.mode)
 
-  # model.compile(
-      # optimizer = trainer.optimizer,
-      # loss = trainer.loss,
-      # metrics = trainer.metrics)
+    train_generator = mode_module.DataGenerator(data.train_data)
+    val_generator = mode_module.DataGenerator(data.validation_data)
 
-  # tr_history = model.fit_generator(
-      # generator = data.generator('train'),
-      # verbose = 2, # one line per epoch
-      # batch_size = trainer.batch_size, 
-      # epochs = trainer.epochs, # = total data / batch_size
-      # validation_split = 0.1, # fraction of data used for val
-      # shuffle = True)
-        
-  # return model
-  
-def main(loader, args):
-  trainer = Trainer(args) # gin configured
-  mode_module = importlib.import_module("modes." + args.mode)
-  
-  # intent: by locating DataGeneratr inside the mode module, we are allowing
-  # different modes to easily handle their data differently
-  train_generator = mode_module.DataGenerator(loader.train_data)
-  val_generator = mode_module.DataGenerator(loader.val_data)
-  
-  model = mode_module.build_model(args)
-  
-  model.compile(
-      optimizer = trainer.optimizer,
-      loss = trainer.loss,
-      metrics = trainer.metrics)
+    model = mode_module.build_model()
 
-  tr_history = model.fit_generator(
-      generator = train_generator,
-      verbose = 2, # one line per epoch
-      epochs = trainer.epochs,
-      validation_data = val_generator,
-      shuffle = True,
-      callbacks = trainer.callbacks)
-        
-  return model
+    model.compile(
+        optimizer=train_config.optimizer,
+        loss=train_config.loss,
+        metrics=train_config.metrics
+    )
 
-if __name__ == "__main__":
-  args = parse_args.parse_with_resolved_paths()
-  gin.parse_config_file(args.configpath)
-  data = load_data.main(args)
-  main(data, args)
+    results_csv_file = os.path.join(args.results_dir, "results.csv")
+    ckpt_filename = "Epoch-{epoch:02d}-Val-Acc-{val_accuracy:.4f}.hdf5"
+    weight_file = os.path.join(args.checkpoints_dir, ckpt_filename)
+
+    results_callback = CSVLogger(results_csv_file, append=True, separator=',')
+    checkpoints_callback = ModelCheckpoint(weight_file,
+                                           save_best_only=True,
+                                           save_weights_only=True)
+
+    tensorboard_callback = TensorBoard(log_dir=args.results_dir,
+                                       histogram_freq=0, write_graph=True,
+                                       write_images=True)
+
+    model.fit_generator(
+        generator=train_generator,
+        validation_data=val_generator,
+        verbose=2,
+        epochs=train_config.epochs,
+        shuffle=True,
+        callbacks=[results_callback,
+                   tensorboard_callback, checkpoints_callback]
+    )
+
+    return model

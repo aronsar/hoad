@@ -1,0 +1,49 @@
+import train
+import modes.naive_mlp
+import create_load_data
+import run_experiment
+
+# Parameters for RunConfig
+# ==============================================================================
+__main__.RunConfig.mode = "naive_mlp"
+__main__.RunConfig.agents_to_use = ["iggi"]
+
+
+# Parameters for DataLoader
+# ==============================================================================
+create_load_data.DataLoader.num_players = 2
+create_load_data.DataLoader.num_games = 10
+
+
+# Parameters for TrainConfig
+# ==============================================================================
+train.TrainConfig.optimizer = @tensorflow.python.keras.optimizers.Adam()
+Adam.lr = 0.0001
+Adam.beta_1 = 0.9
+Adam.beta_2 = 0.999
+Adam.epsilon = None
+Adam.decay = 0.0
+Adam.amsgrad = False
+
+train.TrainConfig.loss = @tensorflow.python.keras.losses.categorical_crossentropy
+train.TrainConfig.metrics = ['accuracy']
+# train.Trainer.metrics = {'output_a': 'accuracy'} # for multi-output model
+train.TrainConfig.batch_size = 32
+train.TrainConfig.epochs = 10
+
+# Parameters for build_model
+# ==============================================================================
+modes.naive_mlp.build_model.cfg = {
+    'h1_act': 'relu',
+    'output_act': 'softmax'
+}
+
+# Parameters for DataGenerator
+# ==============================================================================
+modes.naive_mlp.DataGenerator.cfg = {
+    "batch_size": 32,
+    "verbose": True, # Turn to True only when debugging for subclass datagenerator
+    "shuffle": True,
+    "obs_dim": 658,
+    "act_dim": 20,
+}
