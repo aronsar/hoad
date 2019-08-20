@@ -34,17 +34,15 @@ def parse():
     args = parser.parse_args()
     return args
 
-
-# TODO: For future work, we can have the target agent and other agents to be different types
-def create_csv_from_scala(numGames, numPlayers):
-        subprocess.run("export JAVA_HOME=/data1/shared/fireflowerenv/jre1.8.0_221", shell=True)
-        subprocess.run("export PATH=$JAVA_HOME/bin:$PATH", shell=True)
-        
+def create_csv_from_scala(csv_filename, numGames, numPlayers):
+    # subprocess.run("export JAVA_HOME=/data1/shared/fireflowerenv/jre1.8.0_221", shell=True)
+    # subprocess.run("export PATH=$JAVA_HOME/bin:$PATH", shell=True)
+    with open(csv_filename, "w") as csv_file:
         args = ["/data1/shared/fireflowerenv/sbt/bin/sbt", "run " + str(numGames) + " " + str(numPlayers)]
         
         dir_path = os.path.dirname(os.path.abspath(__file__))
         os.chdir(os.path.join(dir_path, 'fireflower_model'))
-        process = subprocess.Popen(args, universal_newlines=True)
+        process = subprocess.Popen(args, universal_newlines=True, stdout=csv_file)
         process.communicate() # solves issue where Popen hangs
 
 
@@ -163,7 +161,7 @@ def act_based_pipeline(args):
     csv_filename, pkl_filename = create_data_filenames(args)
 
     # Create csv on Disk by using Java code
-    create_csv_from_scala(args.num_games, args.num_players)
+    create_csv_from_scala(csv_filename, args.num_games, args.num_players)
 
     # Read csv
     csv_data = pd.read_csv(csv_filename, header=None)
