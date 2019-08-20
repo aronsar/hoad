@@ -3,7 +3,7 @@ import numpy as np
 import pickle
 import logging
 import tensorflow.keras.backend as K
-from tensorflow.keras.models import Model
+from tensorflow.keras.models import Model, load_model
 from tensorflow.keras.layers import Dense, Embedding, Input, Flatten, Dropout
 from tensorflow.keras.layers import BatchNormalization, LeakyReLU, ELU, Softmax
 from tensorflow.keras.layers import PReLU
@@ -87,11 +87,23 @@ class Mlp(object):
         self.model = None # Model will be stored here after construct_model()
         self.hist = None  # History will be stored here after train_model()
 
-    def construct_model(self):
+    def construct_model(self, path_saved_model=None, weights_only=False):
         """ Construct model based on attributes
+        Arguments:
+            - path_saved_model: str, default None
+                Path to the saved model in .h5 format.
+            - weights_only: bool, default False
+                If False, the saved model to be loaded is expected to be a full
+                 model (saved by using model.save()). If True, it is expected
+                 to only contain the weights (saved by using
+                 model.save_weights()).
         """
+        # Load from saved model directly
+        if path_saved_model and weights_only is False:
+            self.model = load_model(path_saved_model)
+            return
 
-        input = Input(shape=self.io_sizes[0], name='input')
+        input = Input(shape=(self.io_sizes[0], ), name='input')
 
         layer = input
         for i in range(len(self.hl_sizes)):
@@ -116,9 +128,15 @@ class Mlp(object):
         out = self.out_activation()(out)
 
         self.model =  Model(inputs=input, outputs=out)
+        # Load saved weights
+        if path_saved_model:
+            self.model.load_weights(path_saved_model)
+
+        self.model.compile(optimizer=Adam(lr=self.lr, decay=self.decay),
+                           loss=self.loss, metrics=self.metrics)
 
     def train_model(self, gen_tr, gen_va, n_epoch=100, callbacks=None,
-                    verbose=False, workers=1, use_mp=False):
+                    verbose=False, workers=1, use_mp=False, max_q_size=4):
         """
         Train self.model with dataset stored in attributes.
         Arguments:
@@ -149,13 +167,11 @@ class Mlp(object):
             self.model.summary()
             print()
 
-        self.model.compile(optimizer=Adam(lr=self.lr, decay=self.decay),
-                           loss=self.loss, metrics=self.metrics)
-
         self.hist = self.model.fit_generator(generator=gen_tr,
                                              validation_data=gen_va,
                                              epochs=n_epoch,
                                              verbose=self.verbose,
                                              use_multiprocessing=use_mp,
                                              workers=workers,
-                                             callbacks=callbacks)
+                                             callbacks=callbacks,
+                                             max_queue_size=max_q_size)
