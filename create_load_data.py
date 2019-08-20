@@ -17,15 +17,37 @@ def multi_gen(create_fn, datapath, num_players, num_games_per_proc, num_proc):
     """ Invoke multiple generation functions.
     Arguments:
         - create_fn: func
+            The `create_*_data` functions.
         - datapath: str
-            './outdir/rainbow_2_100'
+            Path to the directory including the file name to save the data
+            WITHOUT the .pkl extension.
+            Ex: 'output/rainbow_2_500000'
         - num_players: int
-
+            Number of players in the game
         - num_games_per_proc: int
-
+            Number of games for each process to geenrate.
         - num_proc: int
+            Number of processes.
+            Note: the total number of games that will be generated is
+              (@num_games_per_proc * @num_games_per_proc)
 
+    Output:
+        A compressed file will be generated under @datapath. The compressed
+          file contains the data in the following format:
 
+        @datapath
+            |
+            |____ 0
+            |     |_____ [agent_name]_[@num_players]_[@num_games_per_proc].pkl
+            |
+            |____ 1
+            |     |_____ [agent_name]_[@num_players]_[@num_games_per_proc].pkl
+            |
+            |____ 2
+            |     |_____ [agent_name]_[@num_players]_[@num_games_per_proc].pkl
+           ...
+            |__ [num_proc - 1]
+                  |_____ [agent_name]_[@num_players]_[@num_games_per_proc].pkl
     """
     agent_name = create_fn.__name__.split('_')[1:-1]
     agent_name = '-'.join(agent_name)
