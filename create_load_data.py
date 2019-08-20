@@ -182,11 +182,12 @@ def create_newcheatbot_data(datapath, num_players, num_games):
     create_quux_data(datapath, num_players, num_games, "quux_newcheatbot")
 
 
-def create_WTFWT_data(datapath, num_players, num_games):
+def create_WTFWT_data(datapath, num_players, num_games, workers=0):
     args = ["python3", PATH_EXPERTS + "/create_WTFWT_data.py", "-q",
             "--n", str(num_games),
             "--p", str(num_players),
-            "--P", datapath]
+            "--P", datapath,
+            "--m", str(workers)]
     print(args)
     process = subprocess.Popen(args)
     process.wait()
@@ -197,8 +198,8 @@ def create_fireflower_data(datapath, num_players, num_games):
                       "--datapath", datapath,
                       "--num_players", str(num_players),
                       "--num_games", str(num_games)]
-    subprocess.Popen(args)
-    subprocess.Popen.communicate()
+    process = subprocess.Popen(args)
+    process.communicate()
 
 
 def create_example_data():
