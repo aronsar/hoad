@@ -204,7 +204,9 @@ def create_pkl_data(args, csv_data):
 
 def act_based_pipeline(args):
     # Sort Params
-    seed = 1
+    # seed = 1
+    seed = random.randint(0, 2**31-1)
+    print('seed:', seed)
     csv_filename, pkl_filename, jar_filename = create_data_filenames(args)
 
     # Create csv on Disk by using Java code
