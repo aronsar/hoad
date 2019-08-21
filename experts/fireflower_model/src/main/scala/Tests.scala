@@ -21,7 +21,7 @@ object PlayerTests {
       else
         2
     }
-    println("NumGames=" + numGames)
+    //println("NumGames=" + numGames)
 
     runTests(prefix = "", salt = "g", numGames = numGames, numPlayers = numPlayers)
   }
@@ -51,9 +51,9 @@ object PlayerTests {
 
     val end = System.nanoTime()
 
-    println("Done!")
-    println("")
-    println("Time: " + (end - start).toDouble / 1.0e9)
+    //println("Done!")
+    //println("")
+    //println("Time: " + (end - start).toDouble / 1.0e9)
   }
 
   def play_game2p(prefix: String, numGames: Int, salt: String): List[fireflower.Game] = {
@@ -66,7 +66,7 @@ object PlayerTests {
         numGames,
         runSeed = makeRunSeed(name2p, salt),
         playerGen = HeuristicPlayer,
-        doPrint = true,
+        doPrint = false,
         doPrintDetails = false,
         useAnsiColors = false
       )
@@ -86,7 +86,7 @@ object PlayerTests {
         numGames,
         runSeed = makeRunSeed(name3p, salt),
         playerGen = HeuristicPlayer,
-        doPrint = true,
+        doPrint = false,
         doPrintDetails = false,
         useAnsiColors = false
       )
@@ -105,7 +105,7 @@ object PlayerTests {
         numGames,
         runSeed = makeRunSeed(name4p, salt),
         playerGen = HeuristicPlayer,
-        doPrint = true,
+        doPrint = false,
         doPrintDetails = false,
         useAnsiColors = false
       )
