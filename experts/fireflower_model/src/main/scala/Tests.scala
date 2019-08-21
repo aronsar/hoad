@@ -3,7 +3,6 @@ import java.io.{BufferedWriter, FileWriter}
 import scala.collection.JavaConversions._
 import scala.collection.mutable.ListBuffer
 import au.com.bytecode.opencsv.CSVWriter
-import util.control.Breaks._
 
 object PlayerTests {
 
@@ -125,7 +124,7 @@ object PlayerTests {
         numGames,
         runSeed = makeRunSeed(name5p, salt),
         playerGen = HeuristicPlayer,
-        doPrint = true,
+        doPrint = false,
         doPrintDetails = false,
         useAnsiColors = false
       )
@@ -198,8 +197,6 @@ object PlayerTests {
 
     for (gameNum <- 0 to games.length - 1) {
       var actionsArray = games(gameNum).actions
-//      var cardsArray = games(gameNum).playersCard
-//      var currPlayerArray = games(gameNum).currPlayerArray
       var initialDeck = games(gameNum).initialDeck
 
       for (gameStep <- 0 to actionsArray.length - 1) {
@@ -209,25 +206,22 @@ object PlayerTests {
         - component(0): moveType
         - component(1): Card Color/Rank/Position
         */
-        if (component(0) != "Bomb") {
-          filledInLine = ListBuffer(gameNum.toString, "50", component(0), component(1)(0).toString)
+        filledInLine = ListBuffer(gameNum.toString, "50", component(0), component(1)(0).toString)
 
           //fill in the rank
-          if (component(0) == "REVEAL_COLOR") {
-            filledInLine += "-1"
-          }
-          else {
-            filledInLine += component(1)(1).toString
-          }
-
-          //fill in initial deck
-          for (i <-0 to initialDeck.length-1) {
-            filledInLine += initialDeck(i)
-          }
-
-          listOfRecords += filledInLine.toArray
+        if (component(0) == "REVEAL_COLOR") {
+          filledInLine += "-1"
+        }
+        else {
+          filledInLine += component(1)(1).toString
         }
 
+        //fill in initial deck
+        for (i <-0 to initialDeck.length-1) {
+          filledInLine += initialDeck(i)
+        }
+
+        listOfRecords += filledInLine.toArray
       }
 
     }
