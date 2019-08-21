@@ -7,6 +7,7 @@ from os.path import dirname, abspath, join
 ganabi_path = dirname(dirname(abspath(__file__)))
 hanabi_env_path = join(ganabi_path, "hanabi_env")
 import sys
+import random
 
 sys.path.insert(0, ganabi_path)
 sys.path.insert(0, hanabi_env_path)
@@ -19,6 +20,7 @@ import os
 import pandas as pd
 import numpy as np
 import pickle
+from utils import binary_list_to_int as b2int
 
 RUN_SCRIPT_MAP = {
     'quux_blindbot': "InfoBot",
@@ -191,7 +193,9 @@ def create_pkl_data(args, csv_data):
 
 def act_based_pipeline(args):
     # Sort Params
-    seed = 1
+    # seed = 1
+    seed = random.randint(0, 2**31-1)
+    print('seed:', seed)
     csv_filename, pkl_filename, quux_bot_script_path = create_data_filenames(args)
 
     # Create csv on Disk by using Java code
