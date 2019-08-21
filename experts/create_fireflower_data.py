@@ -35,8 +35,8 @@ def parse():
     return args
 
 def create_csv_from_scala(csv_filename, numGames, numPlayers):
-    # subprocess.run("export JAVA_HOME=/data1/shared/fireflowerenv/jre1.8.0_221", shell=True)
-    # subprocess.run("export PATH=$JAVA_HOME/bin:$PATH", shell=True)
+    wd = os.getcwd()
+
     args = ["/data1/shared/fireflowerenv/sbt/bin/sbt", "run " + str(numGames) + " " + str(numPlayers)]
         
     dir_path = os.path.dirname(os.path.abspath(__file__))
@@ -44,7 +44,7 @@ def create_csv_from_scala(csv_filename, numGames, numPlayers):
     process = subprocess.Popen(args, universal_newlines=True)
     process.communicate() # solves issue where Popen hangs
     
-    os.chdir(dir_path)
+    os.chdir(wd)
     subprocess.call(["mv", dir_path+"/fireflower_model/"+csv_filename,"."])
     
 
@@ -174,7 +174,7 @@ def act_based_pipeline(args):
     pickle.dump(pkl_data, open(pkl_filename, "wb"))
 
     # Remove csv on Disk
-    remove_csv = False
+    remove_csv = True
     if (remove_csv):
         os.remove(csv_filename)
 
