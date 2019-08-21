@@ -19,6 +19,7 @@ import os
 import pandas as pd
 import numpy as np
 import pickle
+import random
 
 RUN_SCRIPT_MAP = {
     'quux_blindbot': "InfoBot",
@@ -190,7 +191,7 @@ def create_pkl_data(args, csv_data):
 
 def act_based_pipeline(args):
     # Sort Params
-    seed = 1
+    seed = random.randint(1, 1000000)
     csv_filename, pkl_filename, quux_bot_script_path = create_data_filenames(args)
 
     # Create csv on Disk by using Java code
