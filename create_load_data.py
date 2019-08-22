@@ -106,11 +106,17 @@ def create_rainbow_data(datapath, num_players, num_games):
     process.communicate()  # solves issue where Popen hangs
 
 # Walton Agent Caller
-def create_walton_data(datapath, num_players, num_games, agent_name):
+def create_walton_data(datapath, num_players, num_games, agent_name,
+                       seed=None):
+    if seed == None:
+        seed = random.randint(0, 2**31-1)
+    print('Seed Used:', seed)
+
     args = ["python", "experts/create_walton_data.py",
             "--datapath", datapath,
             "--num_players", str(num_players),
             "--num_games", str(num_games),
+            "--seed", str(seed),
             "--agent_name", agent_name]
 
     process = subprocess.Popen(args)
