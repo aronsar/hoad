@@ -9,6 +9,7 @@ import os
 import pickle
 import subprocess
 import sys
+import time
 from os.path import abspath, dirname, join
 
 ganabi_path = dirname(dirname(abspath(__file__)))
@@ -22,15 +23,10 @@ import rl_env  # nopep8
 
 def parse():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--agent_name',
-                        default='iggi')
-
-    parser.add_argument('--num_players',
-                        type=int)
-
-    parser.add_argument('--num_games',
-                        type=int)
-
+    parser.add_argument('--agent_name', default='iggi')
+    parser.add_argument('--num_players', type=int)
+    parser.add_argument('--num_games', type=int)
+    parser.add_argument('--seed', type=int, default=1)
     parser.add_argument('--datapath')
 
     args = parser.parse_args()
@@ -67,13 +63,14 @@ def create_data_filenames(args):
     return csv_filename, pkl_filename, jar_filename
 
 
-def get_action(action_type, color, rank, obs):
+def get_action(action_type, color_rank, obs):
     '''
     Return action used for hanabi
     '''
+    color = color_rank[0]
+    rank = int(color_rank[1:])
     action = {}
     action['action_type'] = action_type
-    # print(action_type, color, rank)
     if (action_type == 'DISCARD'):
         match_indices = []
         for i, card in enumerate(obs):
@@ -151,11 +148,12 @@ def create_pkl_data(args, csv_data):
 
         game_filter = csv_data.iloc[:, 0] == game_num
         game_data = csv_data[game_filter]
-        deck_size = game_data.iloc[0, 1]
-        action_type = np.array(game_data.iloc[:, 2]).tolist()
-        action_card_color = np.array(game_data.iloc[:, 3]).tolist()
-        action_card_rank = np.array(game_data.iloc[:, 4]).tolist()
-        deck = np.array(game_data.iloc[0, 5:]).tolist()
+        deck_filter = game_data.iloc[:, 1] == "Deck"
+        deck = np.array(game_data[deck_filter].iloc[:, 2]).tolist()
+        action_filter = game_data.iloc[:, 1] != "Deck"
+        action = game_data[action_filter]
+        action_type = np.array(action.iloc[:, 1]).tolist()
+        action_color_rank = np.array(action.iloc[:, 2]).tolist()
 
         # Initialize the game with @deck. The arg is None by default.
         obs = env.reset(deck)
@@ -177,9 +175,8 @@ def create_pkl_data(args, csv_data):
                 agent_hand = get_agent_hand(obs, observer_agent_id)
 
                 # Retrieve Action Dict
-                action = get_action(
-                    action_type[game_step], action_card_color[game_step],
-                    action_card_rank[game_step], agent_hand)
+                action = get_action(action_type[game_step],
+                                    action_color_rank[game_step], agent_hand)
 
                 # Retrieve One-Hot Action
                 one_hot_action_vector = get_one_hot_action(
@@ -209,15 +206,23 @@ def act_based_pipeline(args):
     print('seed:', seed)
     csv_filename, pkl_filename, jar_filename = create_data_filenames(args)
 
+    # Generate game seed (Might not be needed TBH)
+    random.seed(args.seed)
+    game_seed = random.randint(0, 2**31-1)
+
+    start_time = time.time()
     # Create csv on Disk by using Java code
-    create_csv_from_java(jar_filename, csv_filename,
-                         args.agent_name, args.num_players, args.num_games, seed)
+    create_csv_from_java(jar_filename, csv_filename, args.agent_name,
+                         args.num_players, args.num_games, game_seed)
+    print("Time Elapsed To Generate Csv: {}".format(time.time() - start_time))
 
     # Read csv
     csv_data = pd.read_csv(csv_filename, header=None)
 
+    start_time = time.time()
     # Convert csv to pkl
     pkl_data = create_pkl_data(args, csv_data)
+    print("Time Elapsed To Generate Pickle: {}".format(time.time() - start_time))
 
     # Save pkl on Disk
     pickle.dump(pkl_data, open(pkl_filename, "wb"))
@@ -234,5 +239,7 @@ def main(args):
 
 if __name__ == '__main__':
     print("Create walton data")
+    start_time = time.time()
     args = parse()
     main(args)
+    print("Total Time Elapsed: {}".format(time.time() - start_time))

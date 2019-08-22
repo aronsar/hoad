@@ -27,10 +27,6 @@ public class PredictorRunnerSingle {
     }
 
     public static void main(String[] args) {
-        // System.out.println("Start at PredictorRunningSingle");
-        // int repeats = SetupUtils.getRepeatCount();
-        int repeats = 5;
-
         /*
          * Arguments for script: agentUnderTest - main agent, agentPaired - other agents
          */
@@ -43,6 +39,7 @@ public class PredictorRunnerSingle {
         String predictorType = args.length > 6 ? args[6] : agentPaired; // Not Used
 
         Random random = new Random(seed);
+        Random seed_generator = new Random(seed);
 
         String taskId = System.getenv("SGE_TASK_ID");
         PrintStream log = System.err;
@@ -53,6 +50,7 @@ public class PredictorRunnerSingle {
         for (int run = 0; run < game_count; run++) {
             for (int nPlayers = player_count; nPlayers <= player_count; nPlayers++) {
                 int agentUnderTestIndex = random.nextInt(nPlayers);
+                seed = seed_generator.nextLong();
 
                 // figure out if we need to generate a taskID or if one was provided by the
                 // runner
@@ -65,9 +63,9 @@ public class PredictorRunnerSingle {
                     gameID = String.format("%s-%d-%d", taskId, nPlayers, run);
                 }
 
-                log.println(SEPERATOR);
-                log.println("# begin game " + gameID);
-                log.println(SEPERATOR);
+                // log.println(SEPERATOR);
+                // log.println("# begin game " + gameID);
+                // log.println(SEPERATOR);
 
                 Agent[] agents = new Agent[nPlayers];
                 String[] agentStr = new String[5];
@@ -111,9 +109,9 @@ public class PredictorRunnerSingle {
                 // stats.lives, stats.moves, stats.score, stats.disqal, predictorType);
                 // System.out.println(csvLine);
 
-                log.println(SEPERATOR);
-                log.println("# end game " + gameID);
-                log.println(SEPERATOR);
+                // log.println(SEPERATOR);
+                // log.println("# end game " + gameID);
+                // log.println(SEPERATOR);
             }
         }
     }

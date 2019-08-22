@@ -34,26 +34,26 @@ def parse():
     args = parser.parse_args()
     return args
 
+def create_csv_from_scala(csv_filename, numGames, numPlayers):
+    wd = os.getcwd()
 
-# TODO: For future work, we can have the target agent and other agents to be different types
-def create_csv_from_scala(numGames, numPlayers):
-        subprocess.run("export JAVA_HOME=/data1/shared/fireflowerenv/jre1.8.0_221", shell=True)
-        subprocess.run("export PATH=$JAVA_HOME/bin:$PATH", shell=True)
+    args = ["/data1/shared/fireflowerenv/sbt/bin/sbt", "run " + str(numGames) + " " + str(numPlayers)]
 
-        args = ["/data1/shared/fireflowerenv/sbt/bin/sbt", "run " + str(numGames) + " " + str(numPlayers)]
+    dir_path = os.path.dirname(os.path.abspath(__file__))
+    os.chdir(os.path.join(dir_path, 'fireflower_model'))
+    process = subprocess.Popen(args, universal_newlines=True)
+    process.communicate() # solves issue where Popen hangs
 
-        dir_path = os.path.dirname(os.path.abspath(__file__))
-        os.chdir(os.path.join(dir_path, 'fireflower_model'))
-        process = subprocess.Popen(args, universal_newlines=True)
-        process.communicate() # solves issue where Popen hangs
+    os.chdir(wd)
+    subprocess.call(["mv", dir_path+"/fireflower_model/"+csv_filename,"."])
 
 
 def create_data_filenames(args):
     # Config csv & pkl file path
     agent_data_filename = args.agent_name + "_" + str(args.num_players) + "_" + str(args.num_games)
-
-    csv_filename = agent_data_filename + ".csv"
-    pkl_filename = agent_data_filename + ".pkl"
+    datapath = os.path.dirname(args.datapath)
+    csv_filename = os.path.join(agent_data_filename + ".csv")
+    pkl_filename = os.path.join(datapath, agent_data_filename + ".pkl")
 
     return csv_filename, pkl_filename
 
@@ -128,7 +128,6 @@ def create_pkl_data(args, csv_data):
         while not game_done:
             for agent_id in range(args.num_players):
                 game_step += 1
-                print("--------------{}----------------".format(game_step))
                 # FIXME: Make obs dict usage clearer
 
                 # Retrieve current player's hand used to get action
@@ -163,9 +162,9 @@ def act_based_pipeline(args):
     #seed = 1
     #csv_filename, pkl_filename, jar_filename = create_data_filenames(args)
     csv_filename, pkl_filename = create_data_filenames(args)
-
+    print(csv_filename, pkl_filename)
     # Create csv on Disk by using Java code
-    create_csv_from_scala(args.num_games, args.num_players)
+    create_csv_from_scala(csv_filename, args.num_games, args.num_players)
 
     # Read csv
     csv_data = pd.read_csv(csv_filename, header=None)
@@ -177,7 +176,7 @@ def act_based_pipeline(args):
     pickle.dump(pkl_data, open(pkl_filename, "wb"))
 
     # Remove csv on Disk
-    remove_csv = False
+    remove_csv = True
     if (remove_csv):
         os.remove(csv_filename)
 
