@@ -72,6 +72,12 @@ def multi_gen(create_fn, datapath, num_players, num_games_per_proc, num_proc):
     for p in pool:
         p.join()
 
+    for root, dirs, files in os.walk(PATH_TMP):
+        for file in files:
+            tokens = file.split('.')
+            if tokens[-1] == 'csv':
+                os.remove(os.path.join(root, file))
+
     cmd = 'tar -czvf {}.tar.gz '.format(datapath)
     cmd += '--transform s/{}/{}/ '.format(PATH_TMP, datapath.split('/')[-1])
     cmd += '{}/*'.format(PATH_TMP)
