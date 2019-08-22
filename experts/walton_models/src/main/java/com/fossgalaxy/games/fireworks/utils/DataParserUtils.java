@@ -26,10 +26,9 @@ public class DataParserUtils {
 
     public void writeAction(Action action) {
         // act_info: [action_type, played_card_color, played_card_rank]
-        String[] act_info = new String[3];
+        String[] act_info = new String[2];
         act_info[0] = String.format("%s", action.getType());
-        act_info[1] = action.getColorName();
-        act_info[2] = String.format("%s", action.getRank());
+        act_info[1] = String.format("%s%s", action.getColorName(), action.getRank()); // FIXME
 
         this.all_act_info.add(act_info);
     }
@@ -40,7 +39,30 @@ public class DataParserUtils {
 
     public void writeToDisk() {
         game_num += 1;
-        writeOnlyActAndDeck();
+        writeDeck();
+        writeAct();
+    }
+
+    public void writeDeck() {
+        // Write Start Hands
+        for (int k = 0; k < start_hands.size(); k++) {
+            System.out.printf(game_num + "," + "Deck" + "," + start_hands.get(k) + "\n");
+        }
+
+        // Write Deck
+        for (int k = 0; k < start_deck.size(); k++) {
+            System.out.printf(game_num + "," + "Deck" + "," + start_deck.get(k) + "\n");
+        }
+    }
+
+    public void writeAct() {
+        for (int i = 0; i < this.all_act_info.size(); i++) {
+            // Write action: action_type, played_card_color, played_card_rank
+            // In the future when playing with player > 2, might need to include
+            // target_offset
+            String[] act_info = this.all_act_info.get(i);
+            System.out.printf(game_num + "," + act_info[0] + "," + act_info[1] + "\n");
+        }
     }
 
     public void writeOnlyActAndDeck() {
