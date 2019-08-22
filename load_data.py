@@ -83,6 +83,7 @@ class Dataset(object):
         #FIXME: needs to return same_act
         return ([np_adhoc_games, game_lengths, agent_obs], agent_act)
 
+
 def main(args):
     data = Dataset()
     args = parse_args.resolve_datapath(args,

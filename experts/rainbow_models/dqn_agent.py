@@ -31,7 +31,7 @@ import random
 
 import gin.tf
 import numpy as np
-from . import replay_memory
+from experts.rainbow_models import replay_memory
 import tensorflow as tf
 
 
