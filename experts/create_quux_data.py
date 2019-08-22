@@ -196,7 +196,10 @@ def act_based_pipeline(args):
     # Sort Params
 
     seed = random.randint(0, 2**31-1)
-    print('seed:', seed)
+    print("Create quux data. seed:", seed)
+
+    OLD_STDOUT = sys.stdout
+    sys.stdout = open(os.devnull, 'w')
 
     csv_filename, pkl_filename, quux_bot_script_path = create_data_filenames(args)
 
@@ -217,12 +220,12 @@ def act_based_pipeline(args):
     if (remove_csv):
         os.remove(csv_filename)
 
+    sys.stdout = OLD_STDOUT
 
 def main(args):
     act_based_pipeline(args)
 
 
 if __name__ == '__main__':
-    print("Create quux data")
     args = parse()
     main(args)
