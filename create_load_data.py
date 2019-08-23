@@ -87,7 +87,7 @@ def multi_gen(create_fn, datapath, num_players, num_games_per_proc, num_proc):
     shutil.rmtree(PATH_TMP)
 
 # Sanity check
-def compare_pkls(rDir, fn=None, N=20, G=10, T=2, n_total_games=500000,
+def data_test(rDir, fn=None, N=20, G=10, T=2, n_total_games=500000,
                  n_games_per_proc=25000):
     """
     Sanity check for the generated datasets.
@@ -116,6 +116,9 @@ def compare_pkls(rDir, fn=None, N=20, G=10, T=2, n_total_games=500000,
             Repetitions are also automatically checked by the script, and if no
             repetition occurs, `[]` will be printed in the end.
     """
+    if fn == None:
+        fn = rDir
+
     pkls = []
     obs = set()
     repeats = []
