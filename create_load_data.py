@@ -86,6 +86,62 @@ def multi_gen(create_fn, datapath, num_players, num_games_per_proc, num_proc):
 
     shutil.rmtree(PATH_TMP)
 
+# Sanity check
+def compare_pkls(rDir, fn=None, N=20, G=10, T=2, n_total_games=500000,
+                 n_games_per_proc=25000):
+    """
+    Sanity check for the generated datasets.
+    Arguments
+        - rDir: str
+            Name prefix of the root directory of the data to be checked.
+            E.g.: 'quux_cheatbot'
+        - fn: str, default None
+            Name prefix of the individual pickle file.
+            @rDir is used if fn = None.
+        - N: int, default 10
+            The first N subdirectories in the extracted directory to check for.
+        - G: int, default 2
+            The first G games to check for.
+        - T: int, default 4
+            The first T turns to check for.
+            Note: some agents have lower number of turns, so a high value for T
+              results in an error in that case.
+        - n_total_games: int, default 500000
+            Total number of games generated.
+        - n_games_per_proc: int, default 25000
+            Number of games geenrated per process.
+    Outputs:
+        - Observations will be printed out for eyeballing. Look for repetitions
+            for observations as repetitions likely indicate an error.
+            Repetitions are also automatically checked by the script, and if no
+            repetition occurs, `[]` will be printed in the end.
+    """
+    pkls = []
+    obs = set()
+    repeats = []
+    # load
+    for i in range(N):
+        f = open('outdir/{}_data_2_{}/{}/{}_2_{}.pkl'.format(
+            rDir, n_total_games, i, fn, n_games_per_proc), 'rb')
+        pkl = pickle.load(f)
+        pkls.append(pkl)
+        print(len(pkl), end=' ', flush=True)
+    print()
+    # print turns
+    for g in range(G):
+        print('Number of turns')
+        for pkl in pkls:
+            print(len(pkl[g][0]))
+        for t in range(T):
+            print('Turn %d observations:' % t)
+            for pkl in pkls:
+                ob = pkl[g][0][t]
+                if ob in obs:
+                    print('#' * 20, 'REPETITION', '#' * 20)
+                    repeats.append((t, ob))
+                obs.add(ob)
+                print(ob)
+    print(repeats)
 
 def create_rainbow_data(datapath, num_players, num_games):
     '''Call the script responsible for creating gameplay data using the
