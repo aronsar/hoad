@@ -11,7 +11,7 @@ object PlayerTests {
       if (args.length >= 1)
         args(0).toInt
       else
-        100
+        5
     }
 
     val numPlayers = {
@@ -21,8 +21,20 @@ object PlayerTests {
         2
     }
     //println("NumGames=" + numGames)
+    var salt: String = generate_salt()
+    runTests(prefix = "", salt = salt, numGames = numGames, numPlayers = numPlayers)
+  }
 
-    runTests(prefix = "", salt = "g", numGames = numGames, numPlayers = numPlayers)
+  def generate_salt(): String= {
+    val alphabet = ('a' to 'z').toList
+    val r = scala.util.Random
+    var salt: String = ""
+
+    for (i <- 0 to 4) {
+      salt = salt + alphabet(r.nextInt(25))
+    }
+
+    salt
   }
 
   def makeRunSeed(name: String, salt: String): Long = {
@@ -65,8 +77,8 @@ object PlayerTests {
         numGames,
         runSeed = makeRunSeed(name2p, salt),
         playerGen = HeuristicPlayer,
-        doPrint = false,
-        doPrintDetails = false,
+        doPrint = true,
+        doPrintDetails = true,
         useAnsiColors = false
       )
     }
