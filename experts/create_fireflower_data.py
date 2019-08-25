@@ -11,7 +11,6 @@ sys.path.insert(0, hanabi_env_path)
 import rl_env
 
 import subprocess
-# from subprocess import call
 import argparse
 import os
 import pandas as pd
@@ -160,8 +159,8 @@ def act_based_pipeline(args):
     #seed = 1 
     #csv_filename, pkl_filename, jar_filename = create_data_filenames(args) 
     csv_filename, pkl_filename = create_data_filenames(args)
-    print(csv_filename, pkl_filename)
-    # Create csv on Disk by using Java code
+   
+   # Create csv on Disk by using Java code
     create_csv_from_scala(csv_filename, args.num_games, args.num_players)
 
     # Read csv
