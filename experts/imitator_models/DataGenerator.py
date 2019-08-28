@@ -3,7 +3,7 @@ import logging
 import pickle
 import numpy as np
 from tensorflow import keras
-from tensorflow.keras.utils import Progbar
+from tensorflow.keras.utils import Progbar, HDF5Matrix
 import h5py
 
 from cross_validation import *
@@ -12,7 +12,7 @@ from cross_validation import *
 logging.getLogger("tensorflow").setLevel(logging.ERROR)
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
-def save_as_hdf5(X, Y, mask, path_save, bs=1024):
+def save_as_hdf5(X, Y, mask, path_save, bs=1024, shuffle=False):
     """ Save training and validation X and Y in hdf5.
 
     Arguments:
@@ -25,34 +25,43 @@ def save_as_hdf5(X, Y, mask, path_save, bs=1024):
         - path_save: str
             path/to/save/data.hdf5.
     """
-    gen_tr = DataGenerator(X[mask], Y[mask], bs)
-    gen_va = DataGenerator(X[~mask], Y[~mask], bs)
+    gen_tr = DataGenerator(X[mask], Y[mask], bs, shuffle)
+    gen_va = DataGenerator(X[~mask], Y[~mask], bs, shuffle)
 
     def save(ds_X, ds_Y, gen):
         prog = Progbar(len(gen))
         cur_idx = 0
         for idx, (x, y) in enumerate(gen):
             rows = x.shape[0]
-            ds_X[cur_idx:rows, :] = x
-            ds_Y[cur_idx:rows, :] = y
+            assert(rows == y.shape[0])
+            ds_X[cur_idx:(cur_idx+rows), :] = x
+            ds_Y[cur_idx:(cur_idx+rows), :] = y
             cur_idx += rows
             prog.update(idx)
         print()
 
     with h5py.File(path_save, 'w') as f:
         ds = {}
-        ds['X_tr'] = f.create_dataset('X_tr', (X.shape[0], glb.SIZE_OBS_VEC),
-                                      dtype='i8', chunks=True)
-        ds['X_va'] = f.create_dataset('X_va', (X.shape[0], glb.SIZE_OBS_VEC),
-                                      dtype='i8', chunks=True)
-        ds['Y_tr'] = f.create_dataset('Y_tr', (X.shape[0], Y.shape[1]),
-                                      dtype='i8', chunks=True)
-        ds['Y_va'] = f.create_dataset('Y_va', (X.shape[0], Y.shape[1]),
-                                      dtype='i8', chunks=True)
-        print('Saving training sets')
+        ds['X_tr'] = f.create_dataset('X_tr',
+                                      (X[mask].shape[0], glb.SIZE_OBS_VEC),
+                                      dtype='i8',
+                                      chunks=True)
+        ds['X_va'] = f.create_dataset('X_va',
+                                      (X[~mask].shape[0], glb.SIZE_OBS_VEC),
+                                      dtype='i8',
+                                      chunks=True)
+        ds['Y_tr'] = f.create_dataset('Y_tr',
+                                      (X[mask].shape[0], Y.shape[1]),
+                                      dtype='i8',
+                                      chunks=True)
+        ds['Y_va'] = f.create_dataset('Y_va',
+                                      (X[~mask].shape[0], Y.shape[1]),
+                                      dtype='i8',
+                                      chunks=True)
+        print('Converting training sets')
         save(ds['X_tr'], ds['Y_tr'], gen_tr)
         f.flush()
-        print('Saving validation sets')
+        print('Converting validation sets')
         save(ds['X_va'], ds['Y_va'], gen_va)
 # X = f['X_tr']
 
