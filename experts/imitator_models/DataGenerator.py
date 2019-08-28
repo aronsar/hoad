@@ -12,7 +12,8 @@ from cross_validation import *
 logging.getLogger("tensorflow").setLevel(logging.ERROR)
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
-def save_as_hdf5(X, Y, mask, path_save, bs=1024, shuffle=False):
+def save_as_hdf5(X, Y, mask, path_save, bs=1024, shuffle=False,
+                 compression='gzip'):
     """ Save training and validation X and Y in hdf5.
 
     Arguments:
@@ -45,19 +46,23 @@ def save_as_hdf5(X, Y, mask, path_save, bs=1024, shuffle=False):
         ds['X_tr'] = f.create_dataset('X_tr',
                                       (X[mask].shape[0], glb.SIZE_OBS_VEC),
                                       dtype='i8',
-                                      chunks=True)
+                                      chunks=True,
+                                      compression=compression)
         ds['X_va'] = f.create_dataset('X_va',
                                       (X[~mask].shape[0], glb.SIZE_OBS_VEC),
                                       dtype='i8',
-                                      chunks=True)
+                                      chunks=True,
+                                      compression=compression)
         ds['Y_tr'] = f.create_dataset('Y_tr',
                                       (X[mask].shape[0], Y.shape[1]),
                                       dtype='i8',
-                                      chunks=True)
+                                      chunks=True,
+                                      compression=compression)
         ds['Y_va'] = f.create_dataset('Y_va',
                                       (X[~mask].shape[0], Y.shape[1]),
                                       dtype='i8',
-                                      chunks=True)
+                                      chunks=True,
+                                      compression=compression)
         print('Converting training sets')
         save(ds['X_tr'], ds['Y_tr'], gen_tr)
         f.flush()
