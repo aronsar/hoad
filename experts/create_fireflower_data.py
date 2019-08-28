@@ -3,6 +3,8 @@
 # here we add the repo's root directory to the path variable; everything
 # is imported relative to that to avoid problems
 from os.path import dirname, abspath, join
+from utils import binary_list_to_int as b2int
+
 ganabi_path = dirname(dirname(abspath(__file__)))
 hanabi_env_path = join(ganabi_path, "hanabi_env")
 import sys
@@ -161,7 +163,7 @@ def act_based_pipeline(args):
     #seed = 1
     #csv_filename, pkl_filename, jar_filename = create_data_filenames(args)
     csv_filename, pkl_filename = create_data_filenames(args)
-   
+
    # Create csv on Disk by using Java code
     create_csv_from_scala(csv_filename, args.num_games, args.num_players)
 
