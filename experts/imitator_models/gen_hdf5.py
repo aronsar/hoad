@@ -117,7 +117,9 @@ if __name__ == '__main__':
              'Overall, use a larger number if it\' HDD to reduce the frequency'
              'of writes.')
     parser.add_argument('--b', type=int, help=msg_h)
+    msg_h = 'Compression type. Default none.'
+    parser.add_argument('--c', type=str, default=None, help=msg_h)
     args = parser.parse_args()
 
     X, Y, mask = CV(args.p)
-    save_as_hdf5(X, Y, mask, args.o, args.b, True)
+    save_as_hdf5(X, Y, mask, args.o, args.b, True, args.c)
