@@ -112,7 +112,12 @@ if __name__ == '__main__':
     parser.add_argument('--p', type=str, help=msg_h)
     msg_h = 'path/to/output/file.hdf5'
     parser.add_argument('--o', type=str, help=msg_h)
+    msg_h = ('Batch size to feed into hdf5. This does not affect any property'
+             'of the output and only affects the speed of which is generated.'
+             'Overall, use a larger number if it\' HDD to reduce the frequency'
+             'of writes.')
+    parser.add_argument('--b', type=int, help=msg_h)
     args = parser.parse_args()
 
     X, Y, mask = CV(args.p)
-    save_as_hdf5(X, Y, mask, args.o, 1024, True)
+    save_as_hdf5(X, Y, mask, args.o, args.b, True)
