@@ -1,3 +1,5 @@
+import argparse
+
 # import multiprocessing
 from mlp import *
 from gen_hdf5 import *
@@ -7,7 +9,9 @@ import h5py_cache
 
 # multiprocessing.set_start_method('spawn', force=True)
 
-def train(p = 'output/rainbow_data_2_500000', workers=2, use_mp=True, max_q_size=3):
+def new(args):
+    print(args)
+
     n_epoch = 50
     hypers = {'lr': 0.00015,
               'batch_size': 512,
@@ -18,12 +22,12 @@ def train(p = 'output/rainbow_data_2_500000', workers=2, use_mp=True, max_q_size
               'dropout': True,
               'regularizer': None}
 
-    if p.split('.')[-1] in ['hdf5', 'HDF5']:
+    if args.p.split('.')[-1] in ['hdf5', 'HDF5']:
         f = h5py_cache.File(p, 'r', chunk_cache_mem_size=1*1024**3, swmr=True)
         gen_tr = Gen4h5(f['X_tr'], f['Y_tr'], hypers['batch_size'], False)
         gen_va = Gen4h5(f['X_va'], f['Y_va'], hypers['batch_size'], False)
     else:
-        X, Y, mask = CV(p)
+        X, Y, mask = CV(args.p)
         gen_tr = DataGenerator(X[mask], Y[mask], hypers['batch_size'])
         gen_va = DataGenerator(X[~mask], Y[~mask], 1000)
 
@@ -40,7 +44,7 @@ def train(p = 'output/rainbow_data_2_500000', workers=2, use_mp=True, max_q_size
     m.construct_model()
     m.train_model(
         gen_tr, gen_va, n_epoch=n_epoch,
-        verbose=True, workers=workers, use_mp=use_mp, max_q_size=max_q_size)
+        verbose=True, workers=args.w, use_mp=True, max_q_size=args.q)
 
     with open('./ckpts/rainbow_history_{}.pkl'.format(n_epoch), 'wb') as f:
         pickle.dump(m.hist.history, f)
@@ -48,8 +52,22 @@ def train(p = 'output/rainbow_data_2_500000', workers=2, use_mp=True, max_q_size
     m.model.save('./ckpts/rainbow_model_{}.h5'.format(n_epoch)) # TODO: make it userdefined
 
 
-def main():
-    train()
+def main(args):
+    new(args)
 
 if __name__ == '__main__':
-    main()
+    parser = argparse.ArgumentParser()
+    msg_h = 'path/to/root/pickle/data/directory/'
+    parser.add_argument('--p', type=str, help=msg_h)
+    msg_h = ('Path to directory where the models are or will be saved. '
+             'If the directory exists, trianing will continue from where it was'
+             ' left off. Otherwise, a new directory will be created and a new'
+             ' training will begin.')
+    parser.add_argument('--m', type=str, help=msg_h)
+    msg_h = 'Number of workers. Default 2.'
+    parser.add_argument('--w', type=int, default=2, help=msg_h)
+    msg_h = 'Size of queue of the pipline. Deefault 3.'
+    parser.add_argument('--q', type=int, default=3, help=msg_h)
+    args = parser.parse_args()
+
+    main(args)
