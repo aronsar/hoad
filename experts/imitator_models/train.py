@@ -1,5 +1,5 @@
 import argparse
-
+import csv
 import os
 # import multiprocessing
 from mlp import *
@@ -70,9 +70,73 @@ def new(args):
 
     m.model.save('./ckpts/rainbow_model_{}.h5'.format(n_epoch)) # TODO: make it userdefined
 
+def model_exists(path):
+    """ Check if model exists or is corrupted.
+
+    Argument:
+        - path: str
+            Path to the directory containing the model.
+
+    Return: True if model exists and is not corrupted; False if @path is empty
+            or doesn't exist.
+
+    Raise: ValueError if model directory is corrupted.
+    """
+    PATH_DIR_CKPT = os.path.join(path, 'ckpts')
+    PATH_LOG = os.path.join(path, 'training.log')
+    PATH_BEST = os.path.join(path, 'best.h5')
+
+    # Directory does not exist or is empty
+    if not os.path.exists(path) or len(os.listdir(path)) == 0:
+        return False
+    else:
+        # Missing any one of the files
+        missing_files = (
+            not os.path.exists(PATH_LOG)
+            or not os.path.exists(PATH_BEST)
+            or not os.path.exists(PATH_DIR_CKPT)
+            or len(os.listdir(PATH_DIR_CKPT)) == 0
+        )
+        if missing_files:
+            msg = 'Corruption: missing training.log, best.h5, or ckpts'
+            raise ValueError(msg)
+
+        # check log file
+        epochs = []
+        with open(PATH_LOG, 'r') as f:
+            reader = csv.reader(f)
+            # skip header
+            next(reader)
+            for row in reader:
+                epochs.append(row[0])
+        # Not continuously increasing or epoch doesnt start from 0
+        log_corruption = (
+            not all(int(b) - int(a) == 1 for a,b in zip(epochs, epochs[1:]))
+            or epochs[0] != '0'
+        )
+        if log_corruption:
+            msg = ('Corruption: training.log is not continuously increasing or '
+                    'epoch doesnt start from 0')
+            raise ValueError(msg)
+
+        # check ckpts
+        h5s = os.listdir(PATH_DIR_CKPT)
+        h5s.sort()
+        latest_epoch = int(h5s[-1].split('-')[0]) - 1
+        if  latest_epoch != int(epochs[-1]):
+            msg = ('Corruption: latest epoch # in trianing.log does not match '
+                   'that in /ckpts.')
+            raise ValueError(msg)
+
+        return True
 
 def main(args):
-    new(args)
+    if model_exists(args.m):
+        # continue from previously saved
+        pass
+    else:
+        # create new model
+        new(args)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
