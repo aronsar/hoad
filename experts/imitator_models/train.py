@@ -4,7 +4,7 @@ import os
 # import multiprocessing
 from mlp import *
 from gen_hdf5 import *
-from tensorflow.keras.callbacks import ModelCheckpoint
+from tensorflow.keras.callbacks import ModelCheckpoint, CSVLogger
 from tensorflow.keras.layers import ReLU
 import h5py_cache
 
@@ -52,7 +52,9 @@ def new(args):
             os.path.join(PATH_DIR_CKPT, '{epoch:02d}-{val_accuracy:.2f}.h5'),
             monitor='val_loss', verbose=1, save_best_only=False,
             save_weights_only=True, mode='auto', period=1
-        )]
+        ),
+        CSVLogger(os.path.join(args.m, 'training.log'), append=True)
+        ]
 
     m = Mlp(
         io_sizes=(glb.SIZE_OBS_VEC, glb.SIZE_ACT_VEC),
