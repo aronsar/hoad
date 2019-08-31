@@ -1,15 +1,13 @@
+# import multiprocessing
 from mlp import *
+from gen_hdf5 import *
+from tensorflow.keras.callbacks import ModelCheckpoint
+from tensorflow.keras.layers import ReLU
+import h5py_cache
 
-def main():
+# multiprocessing.set_start_method('spawn', force=True)
 
-    from tensorflow.keras.callbacks import ModelCheckpoint
-    from tensorflow.keras.layers import ReLU
-    # from keras.callbacks import ModelCheckpoint
-    # from keras.layers import ReLU
-    X, Y, mask = CV('output/rainbow_data_2_500000')
-
-    #X, Y, mask = CV('/Volumes/ext_ssd/jlab/rainbow_data_2_500000/0/')
-
+def train(p = 'output/rainbow_data_2_500000', workers=2, use_mp=True, max_q_size=3):
     n_epoch = 50
     hypers = {'lr': 0.00015,
               'batch_size': 512,
@@ -20,12 +18,19 @@ def main():
               'dropout': True,
               'regularizer': None}
 
-    gen_tr = DataGenerator(X[mask], Y[mask], hypers['batch_size'])
-    gen_va = DataGenerator(X[~mask], Y[~mask], 1000)
+    if p.split('.')[-1] in ['hdf5', 'HDF5']:
+        f = h5py_cache.File(p, 'r', chunk_cache_mem_size=1*1024**3, swmr=True)
+        gen_tr = Gen4h5(f['X_tr'], f['Y_tr'], hypers['batch_size'], False)
+        gen_va = Gen4h5(f['X_va'], f['Y_va'], hypers['batch_size'], False)
+    else:
+        X, Y, mask = CV(p)
+        gen_tr = DataGenerator(X[mask], Y[mask], hypers['batch_size'])
+        gen_va = DataGenerator(X[~mask], Y[~mask], 1000)
 
     callbacks = [
         ModelCheckpoint(
-            './ckpts/rainbow_best.h5', monitor='val_loss', verbose=1, save_best_only=True,
+            './ckpts/rainbow_best.h5', monitor='val_loss', verbose=1,
+            save_best_only=True,
             save_weights_only=True, mode='auto', period=1)]
 
     m = Mlp(
@@ -34,13 +39,17 @@ def main():
         metrics=['accuracy'], **hypers, verbose=1)
     m.construct_model()
     m.train_model(
-        gen_tr, gen_va, n_epoch=n_epoch, callbacks=callbacks,
-        verbose=True, workers=4, use_mp=True, max_q_size=5)
+        gen_tr, gen_va, n_epoch=n_epoch,
+        verbose=True, workers=workers, use_mp=use_mp, max_q_size=max_q_size)
 
     with open('./ckpts/rainbow_history_{}.pkl'.format(n_epoch), 'wb') as f:
         pickle.dump(m.hist.history, f)
 
     m.model.save('./ckpts/rainbow_model_{}.h5'.format(n_epoch)) # TODO: make it userdefined
+
+
+def main():
+    train()
 
 if __name__ == '__main__':
     main()
