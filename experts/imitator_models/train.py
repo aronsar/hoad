@@ -1,5 +1,6 @@
 import argparse
 
+import os
 # import multiprocessing
 from mlp import *
 from gen_hdf5 import *
@@ -10,7 +11,12 @@ import h5py_cache
 # multiprocessing.set_start_method('spawn', force=True)
 
 def new(args):
-    print(args)
+    """ Creates new model since the model directory does not exist.
+    """
+
+    print('{} does not exist or is empty. Creating new model.'.format(args.p))
+
+    PATH_DIR_CKPT = os.path.join(args.m, 'ckpts')
 
     n_epoch = 50
     hypers = {'lr': 0.00015,
@@ -22,6 +28,7 @@ def new(args):
               'dropout': True,
               'regularizer': None}
 
+    # checking input data format.
     if args.p.split('.')[-1] in ['hdf5', 'HDF5']:
         f = h5py_cache.File(p, 'r', chunk_cache_mem_size=1*1024**3, swmr=True)
         gen_tr = Gen4h5(f['X_tr'], f['Y_tr'], hypers['batch_size'], False)
@@ -31,11 +38,21 @@ def new(args):
         gen_tr = DataGenerator(X[mask], Y[mask], hypers['batch_size'])
         gen_va = DataGenerator(X[~mask], Y[~mask], 1000)
 
+
+    os.makedirs(PATH_DIR_CKPT, exist_ok=True)
+
+    # Callbacks: save best & latest models.
     callbacks = [
         ModelCheckpoint(
-            './ckpts/rainbow_best.h5', monitor='val_loss', verbose=1,
+            os.path.join(args.m, 'best.h5'), monitor='val_loss', verbose=1,
             save_best_only=True,
-            save_weights_only=True, mode='auto', period=1)]
+            save_weights_only=True, mode='auto', period=1
+        ),
+        ModelCheckpoint(
+            os.path.join(PATH_DIR_CKPT, '{epoch:02d}-{val_accuracy:.2f}.h5'),
+            monitor='val_loss', verbose=1, save_best_only=False,
+            save_weights_only=True, mode='auto', period=1
+        )]
 
     m = Mlp(
         io_sizes=(glb.SIZE_OBS_VEC, glb.SIZE_ACT_VEC),
@@ -43,7 +60,7 @@ def new(args):
         metrics=['accuracy'], **hypers, verbose=1)
     m.construct_model()
     m.train_model(
-        gen_tr, gen_va, n_epoch=n_epoch,
+        gen_tr, gen_va, n_epoch=n_epoch, callbacks=callbacks,
         verbose=True, workers=args.w, use_mp=True, max_q_size=args.q)
 
     with open('./ckpts/rainbow_history_{}.pkl'.format(n_epoch), 'wb') as f:
@@ -57,7 +74,9 @@ def main(args):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    msg_h = 'path/to/root/pickle/data/directory/'
+    msg_h = 'Name of the model. This will be used for directory naming.'
+    parser.add_argument('--name', type=str, help=msg_h)
+    msg_h = 'path/to/root/pickle/data/directory/ or path/to/data.hdf5'
     parser.add_argument('--p', type=str, help=msg_h)
     msg_h = ('Path to directory where the models are or will be saved. '
              'If the directory exists, trianing will continue from where it was'
