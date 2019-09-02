@@ -12,13 +12,17 @@ import h5py_cache
 
 def model_exists(path):
     """ Check if model exists or is corrupted.
-
-    Argument:
+    Arguments:
         - path: str
             Path to the directory containing the model.
-
-    Return: True if model exists and is not corrupted; False if @path is empty
-            or doesn't exist.
+    Returns:
+        - boolean
+            True if model exists and is not corrupted.
+            False if @path is empty or doesn't exist.
+        - int
+            What the initial epoch should be for training.
+            0 if no saved model found.
+            [latest epoch from saved] + 1 if found.
 
     Raise: ValueError if model directory is corrupted.
     """
@@ -28,7 +32,7 @@ def model_exists(path):
 
     # Directory does not exist or is empty
     if not os.path.exists(path) or len(os.listdir(path)) == 0:
-        return False
+        return False, 0
     else:
         # Missing any one of the files
         missing_files = (
@@ -68,11 +72,11 @@ def model_exists(path):
                    'that in /ckpts.')
             raise ValueError(msg)
 
-        return True
+        return True, int(epochs[-1]) + 1
 
 def main(args):
     # run this first to avoid failing after huge overhead
-    model_ok = model_exists(args.m)
+    model_ok, initial_epoch = model_exists(args.m)
 
     PATH_DIR_CKPT = os.path.join(args.m, 'ckpts')
 
@@ -134,8 +138,9 @@ def main(args):
         m.construct_model()
 
     m.train_model(
-        gen_tr, gen_va, n_epoch=n_epoch, callbacks=callbacks,
-        verbose=True, workers=args.w, use_mp=True, max_q_size=args.q)
+        gen_tr, gen_va, n_epoch=n_epoch, callbacks=callbacks, verbose=True,
+        workers=args.w, use_mp=True, max_q_size=args.q,
+        initial_epoch=initial_epoch)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
