@@ -136,7 +136,8 @@ class Mlp(object):
                            loss=self.loss, metrics=self.metrics)
 
     def train_model(self, gen_tr, gen_va, n_epoch=100, callbacks=None,
-                    verbose=False, workers=1, use_mp=False, max_q_size=4):
+                    verbose=False, workers=1, use_mp=False, max_q_size=4,
+                    initial_epoch=0):
         """
         Train self.model with dataset stored in attributes.
         Arguments:
@@ -174,4 +175,5 @@ class Mlp(object):
                                              use_multiprocessing=use_mp,
                                              workers=workers,
                                              callbacks=callbacks,
-                                             max_queue_size=max_q_size)
+                                             max_queue_size=max_q_size,
+                                             initial_epoch=initial_epoch)
