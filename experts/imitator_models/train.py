@@ -8,6 +8,17 @@ from tensorflow.keras.callbacks import ModelCheckpoint, CSVLogger
 from tensorflow.keras.layers import ReLU
 import h5py_cache
 
+class bc:
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
+    BOLD = "\033[1m"
+
 # multiprocessing.set_start_method('spawn', force=True)
 
 def model_exists(path):
@@ -123,22 +134,23 @@ def main(args):
         out_activation=Softmax, loss='categorical_crossentropy',
         metrics=['accuracy'], **hypers, verbose=1)
 
-
     if model_ok:
         # continue from previously saved
-        msg = "Saved model found. Resuming training".format(args.p)
-        print(msg)
-        saved_h5 = os.path.join(args.m, 'best.h5') # FIXME: TAKE LATEST
+        msg = "Saved model found. Resuming training.".format(args.p)
+        print(bc.OKGREEN + bc.BOLD + msg + bc.ENDC)
+        h5s = os.listdir(PATH_DIR_CKPT)
+        h5s.sort()
+        saved_h5 = os.path.join(PATH_DIR_CKPT, h5s[-1])
         m.construct_model(saved_h5, weights_only=True)
     else:
         # create new model
         msg = "{} doesn't exist or is empty. Creating new model.".format(args.p)
-        print(msg)
+        print(bc.WARNING + bc.BOLD + msg + bc.ENDC)
         os.makedirs(PATH_DIR_CKPT, exist_ok=True)
         m.construct_model()
 
     m.train_model(
-        gen_tr, gen_va, n_epoch=n_epoch, callbacks=callbacks, verbose=True,
+        gen_tr, gen_va, n_epoch=n_epoch, callbacks=callbacks, verbose=False,
         workers=args.w, use_mp=True, max_q_size=args.q,
         initial_epoch=initial_epoch)
 
