@@ -115,7 +115,7 @@ def main(args):
     PATH_DIR_SAVE = os.path.join(args.m, dir_agent)
     PATH_DIR_CKPT = os.path.join(PATH_DIR_SAVE, 'ckpts')
 
-    n_epoch = 50
+    n_epoch = args.epochs
     hypers = {'lr': 0.00015,
               'batch_size': 512,
               'hl_activations': [ReLU, ReLU, ReLU],
@@ -191,6 +191,8 @@ if __name__ == '__main__':
     parser.add_argument('--w', type=int, default=2, help=msg_h)
     msg_h = 'Size of queue of the pipline. Deefault 3.'
     parser.add_argument('--q', type=int, default=3, help=msg_h)
+    msg_h = 'Number of training epochs. Default 50'
+    parser.add_argument('--epochs', type=int, default=50, help=msg_h)
     args = parser.parse_args()
 
     main(args)
