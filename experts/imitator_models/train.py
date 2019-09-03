@@ -180,14 +180,12 @@ def main(args):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    msg_h = 'Name of the model. This will be used for directory naming.'
-    parser.add_argument('--name', type=str, help=msg_h)
     msg_h = 'path/to/root/pickle/data/directory/ or path/to/data.hdf5'
     parser.add_argument('--p', type=str, help=msg_h)
-    msg_h = ('Path to directory where the models are or will be saved. '
-             'If the directory exists, trianing will continue from where it was'
-             ' left off. Otherwise, a new directory will be created and a new'
-             ' training will begin.')
+    msg_h = ('Path to parent directory where the subdirs of models are or will '
+             'be saved. If the directory exists, trianing will continue from '
+             'where it was left off. Otherwise, a new directory will be created '
+             'and a new training will begin.')
     parser.add_argument('--m', type=str, help=msg_h)
     msg_h = 'Number of workers. Default 2.'
     parser.add_argument('--w', type=int, default=2, help=msg_h)
