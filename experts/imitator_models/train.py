@@ -21,11 +21,25 @@ class bc:
 
 # multiprocessing.set_start_method('spawn', force=True)
 
-def model_exists(path):
+def model_exists(path_m, dir_agent):
     """ Check if model exists or is corrupted.
+
+    Model Structure should look like this:
+
+    @path
+     ├── @dir_agent
+     │   ├── best.h5
+     │   ├── training.log
+     │   └── ckpts
+     │       ├── 01-0.42.h5
+     │       ├── 02-0.49.h5
+    ...     ...
+
     Arguments:
-        - path: str
-            Path to the directory containing the model.
+        - path_m: str
+            Path to the root directory containing the model subdirectories.
+        - dir_agent: str
+            Name of the subdirectory containing the saved model.
     Returns:
         - boolean
             True if model exists and is not corrupted.
@@ -37,12 +51,14 @@ def model_exists(path):
 
     Raise: ValueError if model directory is corrupted.
     """
-    PATH_DIR_CKPT = os.path.join(path, 'ckpts')
-    PATH_LOG = os.path.join(path, 'training.log')
-    PATH_BEST = os.path.join(path, 'best.h5')
+
+    PATH_DIR_SAVE = os.path.join(path_m, dir_agent)
+    PATH_DIR_CKPT = os.path.join(PATH_DIR_SAVE, 'ckpts')
+    PATH_LOG = os.path.join(PATH_DIR_SAVE, 'training.log')
+    PATH_BEST = os.path.join(PATH_DIR_SAVE, 'best.h5')
 
     # Directory does not exist or is empty
-    if not os.path.exists(path) or len(os.listdir(path)) == 0:
+    if not os.path.exists(PATH_DIR_SAVE) or len(os.listdir(PATH_DIR_SAVE)) == 0:
         return False, 0
     else:
         # Missing any one of the files
@@ -86,10 +102,18 @@ def model_exists(path):
         return True, int(epochs[-1]) + 1
 
 def main(args):
-    # run this first to avoid failing after huge overhead
-    model_ok, initial_epoch = model_exists(args.m)
+    # Get agent name
+    tokens = args.p.split('/')
+    if args.p[-1] == '/':
+        assert(tokens.pop() == '')
+    dir_agent = tokens[-1].split('_')[0] + '.save'
+    print(dir_agent)
 
-    PATH_DIR_CKPT = os.path.join(args.m, 'ckpts')
+    # run this first to avoid failing after huge overhead
+    model_ok, initial_epoch = model_exists(args.m, dir_agent)
+
+    PATH_DIR_SAVE = os.path.join(args.m, dir_agent)
+    PATH_DIR_CKPT = os.path.join(PATH_DIR_SAVE, 'ckpts')
 
     n_epoch = 50
     hypers = {'lr': 0.00015,
@@ -117,16 +141,16 @@ def main(args):
     # Callbacks: save best & latest models.
     callbacks = [
         ModelCheckpoint(
-            os.path.join(args.m, 'best.h5'), monitor='val_loss', verbose=1,
-            save_best_only=True,
-            save_weights_only=True, mode='auto', period=1
+            os.path.join(PATH_DIR_SAVE, 'best.h5'), monitor='val_loss',
+            verbose=1, save_best_only=True, save_weights_only=True,
+            mode='auto', period=1
         ),
         ModelCheckpoint(
             os.path.join(PATH_DIR_CKPT, '{epoch:02d}-{val_accuracy:.2f}.h5'),
             monitor='val_loss', verbose=1, save_best_only=False,
             save_weights_only=True, mode='auto', period=1
         ),
-        CSVLogger(os.path.join(args.m, 'training.log'), append=True)
+        CSVLogger(os.path.join(PATH_DIR_SAVE, 'training.log'), append=True)
         ]
 
     m = Mlp(
@@ -136,7 +160,7 @@ def main(args):
 
     if model_ok:
         # continue from previously saved
-        msg = "Saved model found. Resuming training.".format(args.p)
+        msg = "Saved model found. Resuming training."
         print(bc.OKGREEN + bc.BOLD + msg + bc.ENDC)
         h5s = os.listdir(PATH_DIR_CKPT)
         h5s.sort()
@@ -144,8 +168,8 @@ def main(args):
         m.construct_model(saved_h5, weights_only=True)
     else:
         # create new model
-        msg = "{} doesn't exist or is empty. Creating new model.".format(args.p)
-        print(bc.WARNING + bc.BOLD + msg + bc.ENDC)
+        msg = "{} doesn't exist or is empty. Creating new model."
+        print(bc.WARNING + bc.BOLD + msg.format(PATH_DIR_SAVE) + bc.ENDC)
         os.makedirs(PATH_DIR_CKPT, exist_ok=True)
         m.construct_model()
 
