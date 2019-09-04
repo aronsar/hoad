@@ -27,13 +27,13 @@ def model_exists(path_m, dir_agent):
     Model Structure should look like this:
 
     @path
-     ├── @dir_agent
-     │   ├── best.h5
-     │   ├── training.log
-     │   └── ckpts
-     │       ├── 01-0.42.h5
-     │       ├── 02-0.49.h5
-    ...     ...
+        |-- @dir_agent
+        |       |-- best.h5
+        |       |-- training.log
+        |       |__ ckpts
+        |           |-- 01-0.42.h5
+        |           |-- 02-0.49.h5
+       ...         ...
 
     Arguments:
         - path_m: str
