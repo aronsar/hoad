@@ -1,6 +1,7 @@
 import argparse
 import csv
 import os
+import tensorflow as tf
 # import multiprocessing
 from mlp import *
 from gen_hdf5 import *
@@ -102,6 +103,9 @@ def model_exists(path_m, dir_agent):
         return True, int(epochs[-1]) + 1
 
 def main(args):
+    if not tf.test.is_gpu_available():
+        print(bc.FAIL + bc.BOLD + '#' * 9 + 'NOT USING GPU' + '#' * 9 + bc.ENDC)
+
     # Get agent name
     tokens = args.p.split('/')
     if args.p[-1] == '/':
