@@ -2,6 +2,10 @@ import gin
 import os
 import pickle
 import random
+import multiprocessing as mp
+from datetime import datetime
+import shutil
+
 import subprocess
 from utils import parse_args
 
@@ -9,6 +13,138 @@ PATH_GANABI = os.path.dirname(os.path.abspath(__file__))
 PATH_HANABI_ENV = os.path.join(PATH_GANABI, "hanabi_env")
 PATH_EXPERTS = os.path.join(PATH_GANABI, 'experts')
 
+def multi_gen(create_fn, datapath, num_players, num_games_per_proc, num_proc):
+    """ Invoke multiple generation functions.
+    Arguments:
+        - create_fn: func
+            The `create_*_data` functions.
+        - datapath: str
+            Path to the directory including the file name to save the data
+            WITHOUT the .pkl extension.
+            Ex: 'output/rainbow_2_500000'
+        - num_players: int
+            Number of players in the game
+        - num_games_per_proc: int
+            Number of games for each process to geenrate.
+        - num_proc: int
+            Number of processes.
+            Note: the total number of games that will be generated is
+              (@num_games_per_proc * @num_games_per_proc)
+
+    Output:
+        A compressed file will be generated under @datapath. The compressed
+          file contains the data in the following format:
+
+        @datapath
+            |
+            |____ 0
+            |     |_____ [agent_name]_[@num_players]_[@num_games_per_proc].pkl
+            |
+            |____ 1
+            |     |_____ [agent_name]_[@num_players]_[@num_games_per_proc].pkl
+            |
+            |____ 2
+            |     |_____ [agent_name]_[@num_players]_[@num_games_per_proc].pkl
+           ...
+            |__ [num_proc - 1]
+                  |_____ [agent_name]_[@num_players]_[@num_games_per_proc].pkl
+    """
+    agent_name = create_fn.__name__.split('_')[1:-1]
+    agent_name = '-'.join(agent_name)
+
+
+    ts = hex(int((datetime.now()).timestamp()))[4:] # timestamp
+    PATH_TMP = '.{}_TMP_'.format(agent_name) + ts
+    os.mkdir(PATH_TMP)
+    pool = []
+    # Generate the data in parallel
+    for i in range(num_proc):
+        subdir = os.path.join(PATH_TMP, str(i))
+        os.mkdir(subdir)
+        path = '{}_{}_{}.pkl'.format(
+            agent_name, num_players, num_games_per_proc)
+        path = os.path.join(subdir, path)
+        p = mp.Process(
+            target=create_fn, args=(path, num_players, num_games_per_proc))
+        p.start()
+        pool.append(p)
+
+    for p in pool:
+        p.join()
+
+    for root, dirs, files in os.walk(PATH_TMP):
+        for file in files:
+            tokens = file.split('.')
+            if tokens[-1] == 'csv':
+                os.remove(os.path.join(root, file))
+
+    cmd = 'tar -czvf {}.tar.gz '.format(datapath)
+    cmd += '--transform s/{}/{}/ '.format(PATH_TMP, datapath.split('/')[-1])
+    cmd += '{}/*'.format(PATH_TMP)
+    process = subprocess.Popen(cmd, shell=True)
+    process.wait()
+
+    shutil.rmtree(PATH_TMP)
+
+# Sanity check
+def data_test(rDir, fn=None, N=20, G=10, T=2, n_total_games=500000,
+                 n_games_per_proc=25000):
+    """
+    Sanity check for the generated datasets.
+    Arguments
+        - rDir: str
+            Name prefix of the root directory of the data to be checked.
+            E.g.: 'quux_cheatbot'
+        - fn: str, default None
+            Name prefix of the individual pickle file.
+            @rDir is used if fn = None.
+        - N: int, default 10
+            The first N subdirectories in the extracted directory to check for.
+        - G: int, default 2
+            The first G games to check for.
+        - T: int, default 4
+            The first T turns to check for.
+            Note: some agents have lower number of turns, so a high value for T
+              results in an error in that case.
+        - n_total_games: int, default 500000
+            Total number of games generated.
+        - n_games_per_proc: int, default 25000
+            Number of games geenrated per process.
+    Outputs:
+        - Observations will be printed out for eyeballing. Look for repetitions
+            for observations as repetitions likely indicate an error.
+            Repetitions are also automatically checked by the script, and if no
+            repetition occurs, `[]` will be printed in the end.
+    """
+    if fn == None:
+        fn = rDir
+
+    pkls = []
+    obs = set()
+    repeats = []
+    # load
+    for i in range(N):
+        f = open('outdir/{}_data_2_{}/{}/{}_2_{}.pkl'.format(
+            rDir, n_total_games, i, fn, n_games_per_proc), 'rb')
+        pkl = pickle.load(f)
+        pkls.append(pkl)
+        print(len(pkl), end=' ', flush=True)
+    print()
+    # print turns
+    for g in range(G):
+        print('Number of turns')
+        for pkl in pkls:
+            print(len(pkl[g][0]))
+        for t in range(T):
+            print('Turn %d observations:' % t)
+            for pkl in pkls:
+                ob = pkl[g][0][t]
+                if ob in obs:
+                    print('#' * 20, 'REPETITION', '#' * 20)
+                    repeats.append((t, ob))
+                obs.add(ob)
+                print(ob)
+    print(repeats)
 
 def create_rainbow_data(datapath, num_players, num_games):
     '''Call the script responsible for creating gameplay data using the
@@ -35,11 +171,17 @@ def create_rainbow_data(datapath, num_players, num_games):
     process.communicate()  # solves issue where Popen hangs
 
 # Walton Agent Caller
-def create_walton_data(datapath, num_players, num_games, agent_name):
+def create_walton_data(datapath, num_players, num_games, agent_name,
+                       seed=None):
+    if seed == None:
+        seed = random.randint(0, 2**31-1)
+    print('Seed Used:', seed)
+
     args = ["python", "experts/create_walton_data.py",
             "--datapath", datapath,
             "--num_players", str(num_players),
             "--num_games", str(num_games),
+            "--seed", str(seed),
             "--agent_name", agent_name]
 
     process = subprocess.Popen(args)
@@ -133,11 +275,12 @@ def create_newcheatbot_data(datapath, num_players, num_games):
     create_quux_data(datapath, num_players, num_games, "quux_newcheatbot")
 
 
-def create_WTFWT_data(datapath, num_players, num_games):
+def create_WTFWT_data(datapath, num_players, num_games, workers=0):
     args = ["python3", PATH_EXPERTS + "/create_WTFWT_data.py", "-q",
             "--n", str(num_games),
             "--p", str(num_players),
-            "--P", datapath]
+            "--P", datapath,
+            "--m", str(workers)]
     print(args)
     process = subprocess.Popen(args)
     process.wait()
@@ -148,8 +291,8 @@ def create_fireflower_data(datapath, num_players, num_games):
                       "--datapath", datapath,
                       "--num_players", str(num_players),
                       "--num_games", str(num_games)]
-    subprocess.Popen(args)
-    subprocess.Popen.communicate()
+    process = subprocess.Popen(args)
+    process.communicate()
 
 
 def create_example_data():
@@ -203,7 +346,7 @@ class DataLoader(object):
             raw_data: a dictionary mapping agent names to a list of their games
 
         This function randomly picks an agent to be the test agent, and sets it aside
-        in self.test_data; this data is not to be trained or validated on. It splits the 
+        in self.test_data; this data is not to be trained or validated on. It splits the
         data of the remaining agents up so that 90% of the games of each agent are saved
         in self.train_data, and the rest in self.validation_data.
         '''

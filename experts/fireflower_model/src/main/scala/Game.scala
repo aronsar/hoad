@@ -61,9 +61,7 @@ object Game {
       numCardRemaining = numCardRemaining,
       revHistory = List(),
       debugPath = None,
-      currPlayerArray = ListBuffer[Int](),
       actions = ListBuffer[String](),
-      playersCard = ListBuffer[String](),
       initialDeck = ListBuffer[String]()
     )
   }
@@ -88,9 +86,7 @@ object Game {
       nextPlayable = that.nextPlayable.clone(),
       numCardRemaining = that.numCardRemaining.clone(),
       revHistory = that.revHistory,
-      currPlayerArray = that.currPlayerArray,
       actions = that.actions,
-      playersCard = that.playersCard,
       initialDeck = that.initialDeck,
       debugPath = that.debugPath
     )
@@ -109,7 +105,6 @@ class Game private (
   //Used by the HeuristicPlayer to track how many hints it has given where it hasn't simulated the particular
   //hint, so that it can account for the value that on average they are presumably worth later.
   var numUnknownHintsGiven: Int,
-  var currPlayerArray: ListBuffer[Int],
   var seenMap: SeenMap,
   var played: List[CardId],
   var discarded: List[CardId],
@@ -119,7 +114,6 @@ class Game private (
   //This is -1, except once the deck runs out, where it is the number of turns left in the game, with the
   //game ending when this hits 0.
   var finalTurnsLeft: Int,
-  var playersCard: ListBuffer[String],
   val hands: Array[Hand],
   //Indexed by ColorId, the next Number that is playable.
   val nextPlayable: Array[Number],
@@ -324,7 +318,6 @@ class Game private (
       hands(pid).toString(seenMap,useAnsiColors)
     }.mkString("|")
 
-    playersCard += savedHandsString
 
     val playedString = rules.colors().flatMap { color =>
       val next = nextPlayable(color.id)
