@@ -5,6 +5,7 @@ import pickle
 import numpy as np
 import random
 from datetime import datetime
+from tensorflow.keras.utils import Progbar
 
 # Set path TODO: remove the ones that won't be used in the end
 PATH_IMI = os.path.dirname(os.path.abspath(__file__))
@@ -87,15 +88,17 @@ def CV(path_dir=PATH_EX_DIR, size_train=0.9, seed=1234):
         print('.datalog found. Total number of turns:', n_rows)
     # If does not exist, count it and create one.
     except:
-        print('.datalog not found. Counting number of turns...',
-            end='', flush=True)
+        print('.datalog not found. Counting number of turns...')
+        prog = Progbar(len(path_pkls))
         # Number of rows == total number of turns across all games
         n_rows = 0
-        for path in path_pkls:
+        for idx, path in enumerate(path_pkls):
             with open(path, 'rb') as f:
                 pkl = pickle.load(f)
             for game in range(len(pkl)):
                 n_rows += len(pkl[game][0])
+            prog.update(idx)
+        print()
 
         with open(os.path.join(path_dir, '.datalog'), 'w+') as f:
             writer = csv.writer(f)
