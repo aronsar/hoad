@@ -115,7 +115,7 @@ def main(args):
     tokens = args.p.split('/')
     if args.p[-1] == '/':
         assert(tokens.pop() == '')
-    dir_agent = tokens[-1].split('_')[0] + '.save'
+    dir_agent = '-'.join(tokens[-1].split('_')[:-3]) + '.save'
     print(dir_agent)
 
     # run this first to avoid failing after huge overhead
