@@ -103,8 +103,10 @@ def model_exists(path_m, dir_agent):
         return True, int(epochs[-1]) + 1
 
 def main(args):
-    if not tf.test.is_gpu_available():
-        print(bc.FAIL + bc.BOLD + '#' * 9 + 'NOT USING GPU' + '#' * 9 + bc.ENDC)
+    if tf.test.is_gpu_available():
+        print(bc.OKGREEN + bc.BOLD + '#'*9 + ' USING GPU ' + '#'*9 + bc.ENDC)
+    else:
+        print(bc.FAIL + bc.BOLD + '#'*9 + ' NOT USING GPU ' + '#'*9 + bc.ENDC)
 
     # Get agent name
     tokens = args.p.split('/')
