@@ -17,6 +17,7 @@ hanabi_env_path = join(ganabi_path, "hanabi_env")
 sys.path.insert(0, ganabi_path)
 sys.path.insert(0, hanabi_env_path)
 
+from utils import binary_list_to_int as b2int
 import rl_env  # nopep8
 
 
@@ -182,8 +183,10 @@ def create_pkl_data(args, csv_data):
                     obs, agent_id, action)
 
                 # Append Obs and Action
-                raw_data[game_num][0].append(
-                    obs['player_observations'][agent_id]['vectorized'])
+                # raw_data[game_num][0].append(
+                #     obs['player_observations'][agent_id]['vectorized'])
+                raw_data[game_num][0].append(b2int.convert(
+                    obs['player_observations'][agent_id]['vectorized']))
                 raw_data[game_num][1].append(one_hot_action_vector)
 
                 # Step Through

@@ -6,6 +6,7 @@ import os, sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 
 from utils import dir_utils, parse_args
+from utils import binary_list_to_int as b2int
 from collections import defaultdict
 from experts.rainbow_models import rainbow_agent_wrapper as rainbow
 import pickle
@@ -64,7 +65,7 @@ class DataCreator(object):
         steps. A game can have a variable amount of rounds--you can lose early.
         '''
         raw_data = []
-        
+
         for game_num in range(self.num_games):
             raw_data.append([[],[]])
             observations = self.environment.reset()
@@ -77,8 +78,10 @@ class DataCreator(object):
                             self.agent_object,
                             self.environment.num_moves(),
                             observation)
+                    # raw_data[game_num][0].append(
+                    #         observation['vectorized'])
                     raw_data[game_num][0].append(
-                            observation['vectorized'])
+                            b2int.convert(observation['vectorized']))
                     raw_data[game_num][1].append(one_hot_action_vector)
 
                     if observation['current_player'] == agent_id:
@@ -99,17 +102,17 @@ def parse():
   parser = argparse.ArgumentParser()
   parser.add_argument('--agent_name',
                       default='rainbow1')
-                      
+
   parser.add_argument('--num_players',
                       type=int)
-                      
+
   parser.add_argument('--num_games',
                       type=int)
-  
+
   parser.add_argument('--datapath')
-  
+
   parser.add_argument('--rainbowdir') #FIXME
-  
+
   args = parser.parse_args()
   return args
 

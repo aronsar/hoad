@@ -5,13 +5,19 @@ import subprocess
 import random
 import pickle
 import os
+import shutil
+from datetime import datetime
 
 PATH_GANABI = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PATH_HANABI_ENV = os.path.join(PATH_GANABI, "hanabi_env")
 PATH_EXPERTS = os.path.join(PATH_GANABI, 'experts')
+PATH_UTILS = os.path.join(PATH_GANABI, 'utils')
 
 sys.path.insert(0, PATH_GANABI)
 sys.path.insert(0, PATH_HANABI_ENV)
+sys.path.insert(0, PATH_UTILS)
+
+import binary_list_to_int as b2int
 
 def run(cmd, suppress=True):
     """Print and run a command in shell. Exit only upon finishing.
@@ -140,6 +146,43 @@ def comp_test(env, row, obs, args):
             csv_card = dict(zip(['color', 'rank'], csv_card))
             assert(csv_card == env_card)
 
+def parallel_generation(args):
+    """ Generate the data in parallel.
+
+    Arguments:
+        - args: Namespace
+            Arguments taken from command line. To see details, run
+            python3 create_WTFWT_data.py --help
+    """
+    ts = hex(int((datetime.now()).timestamp()))[4:] # timestamp
+    PATH_TMP = '.WTFWT_TMP_' + ts
+    os.mkdir(PATH_TMP)
+    pool = []
+    # Generate the data in parallel
+    for i in range(args.m):
+        os.mkdir(os.path.join(PATH_TMP, str(i)))
+        cmd = '(cd {}/{} && '.format(PATH_TMP, i)
+        cmd += 'python3 {}/create_WTFWT_data.py '.format(PATH_EXPERTS)
+        cmd += '--n {} --p {} -q --m 1)'.format(args.n, args.p)
+        pool.append(subprocess.Popen(cmd, shell=True))
+
+    code = [p.wait() for p in pool]
+    print('Exit codes:', code)
+    # Combine the generated data
+    combined = []
+    for i in range(args.m):
+        filename = 'WTFWT_{}_{}.pkl'.format(args.p, args.n)
+        with open(os.path.join(PATH_TMP, str(i), filename), 'rb') as f:
+            combined += pickle.load(f)
+
+    name_tar = 'WTFWT_data_{}_{}'.format(args.p, args.m * args.n)
+    cmd = 'tar -czvf {}/{}.tar.gz '.format(args.P, name_tar)
+    cmd += '--transform s/.WTFWT_TMP_{}/{}/ '.format(ts, name_tar)
+    cmd += '.WTFWT_TMP_{}/*'.format(ts)
+    run(cmd)
+
+    shutil.rmtree(PATH_TMP)
+
 def main(args):
     """ Observations & actions generation.
 
@@ -178,8 +221,6 @@ def main(args):
         cmd = ('cargo run -q --manifest-path {}/WTFWT/Cargo.toml -- -n 1 -o 1 '
                '-s {} -p {} -g info').format(PATH_EXPERTS, s, args.p)
         debug = ['', ' -l debug'][args.debug]
-        print(cmd)
-        print(debug)
         run(cmd + debug, args.q)
 
         with open('dk_cards.csv') as f_dk, open('rust_agent.csv') as f_log:
@@ -207,7 +248,7 @@ def main(args):
                 cur_obs = obs['player_observations'][obs['current_player']]
                 vec_act = one_hot_vectorized_action(
                     action, env.num_moves(), cur_obs)
-                game_data[0].append(cur_obs['vectorized'])
+                game_data[0].append(b2int.convert(cur_obs['vectorized']))
                 game_data[1].append(vec_act)
                 # Advance the state
                 obs, reward, done, info = env.step(action)
@@ -231,4 +272,20 @@ if __name__ == '__main__':
     parser.add_argument('-q', action='store_true', help='Quiet mode')
     parser.add_argument('-debug', action='store_true',
         help='Run with debug mode for WTFWT and assertion tests.')
-    main(parser.parse_args())
+    parser.add_argument('--m', type=int, default=0,
+        help='Number of processes to run in parallel. M >= 0.')
+    args = parser.parse_args()
+
+    if args.m == 0: # Childless parent: single process, so make once
+        cmd = '(cd {}/ && cmake -Wno-dev . && make)'.format(PATH_HANABI_ENV)
+        run(cmd, args.q)
+        main(args)
+    elif args.m == 1: # Child: no need to make
+        main(args)
+    elif args.m > 1: # Parent: make once, so children don't have to make
+        cmd = '(cd {}/ && cmake -Wno-dev . && make)'.format(PATH_HANABI_ENV)
+        run(cmd, args.q)
+        parallel_generation(args)
+    else:
+        msg = 'M cannot be negative in --m. Use -h to see details.'
+        raise ValueError(msg)
