@@ -2,6 +2,21 @@
 
 A directory with everything related to constructing, training, and testing imitator models.
 
+## Training Workflow on local machine w/ required dependencies installed beforehand
+
+In this case, simply run the commands below
+
+```
+# Download & extract the data
+wget https://storage.googleapis.com/ganabi/iggi_data_2_500000.tar.gz
+tar -zxvf iggi_data_2_500000.tar.gz
+# Train the model for 50 epochs and save the models & training checkpoints under ~/saved_models
+# Training is resumed if saved files are found under ~/saved_models
+python3 ./ganabi/experts/imitator_models/train.py --p ./iggi_data_2_500000 --m ~/saved_models --epochs 50
+```
+
+Run `python3 ./ganabi/experts/imitator_models/train.py --h` for more details.
+
 ## Training Workflow w/ CSIF:
 
 ### Important things regarding CSIF
@@ -16,36 +31,34 @@ A directory with everything related to constructing, training, and testing imita
 8. Status of all machines can be checked [here](http://iceman.cs.ucdavis.edu/nagios3/cgi-bin/status.cgi?hostgroup=all).
 
 ### Setup
-For demonstration purposes, let's assume that our current working directory is at `~/`, the data we will be training on is `~/iggi_data_2_500000.tar.gz`, and the CUDA toolkit is `~/cudnn-10.0-linux-x64-v7.6.2.24.tgz` (Thanks to Aron's guide on how to setup CUDA on CSIF).
+For demonstration purposes, let's assume that our current working directory is inside this repository at `~/ganabi/experts/imitator_models/scripts`, the data we will be training on is `iggi_data_2_500000.tar.gz`. The CUDA's installation package and the training data are stored on Google Cloud at https://console.cloud.google.com/storage/browser/ganabi (Thanks to Aron's guide on how to setup CUDA on CSIF).
 
 1. Clone this repository with`git clone https://github.com/3tz/ganabi.git`.
 2. This step is optional, but it is strongly recommended for users to setup keyless login on CSIF. Otherwise, users will have to type passwords multiple times during the following steps.
 3. Clean up your disk on CSIF. A user only has a quota of 2GB, but TF 2.0 will take ~1.3GB. The remaining space will be used to save checkpoints during training.
-4. Once it's cleaned, install the required packages for training the models with `bash ganabi/experts/imitator_models/scripts/csif_install_pkgs.sh {username} {pc#}` where `username` is users' KERBROS login ID & `pc#`
+4. Once it's cleaned, install the required packages for training the models with `bash csif_install_pkgs.sh {username} {pc#}` where `username` is users' KERBROS login ID & `pc#`
  is an integer indicating the PC to use. Reminder: PC 1-20 do not have GPUs, so use others if possible, and whether a machine has GPU can be checked with `nvidia-smi`.
 
 ### Training for the first time
 
-1. Upload the data and CUDA toolkit to CSIF under `/tmp` with `bash ganabi/experts/imitator_models/scripts/csif_setup.sh {username} {pc#} {path/to/data.tar.gz} {path/to/CUDA.tgz}`.
-2. Now training can be started with `bash ganabi/experts/imitator_models/scripts/csif_train.sh {username} {pc#} {directory name of data}`. In our case,  {directory name of data} is `iggi_data_2_500000`. Checkpoints are saved under `~/saved_models/{agent_name}.save`
+1. Upload the data and CUDA toolkit to CSIF under `/tmp` with `bash csif_setup.sh {username} {pc#} {name-of-data-file.tar.gz}`.
+2. Now training can be started with `bash csif_train.sh {username} {pc#} {directory name of data}`. In our case,  {directory name of data} is `iggi_data_2_500000`. Checkpoints are saved under `~/saved_models/{agent_name}.save`
 
 ### Resuming Training
 1. `/tmp` is reset daily. Thus, `csif_setup.sh` has to be run if `/tmp` has been reset. Once making sure all the key files created by `csif_setup.sh` exist under `/tmp`, proceed to the next step.
-2. Training is automatically resumed if `~/saved_models/{agent_name}.save` is found and not corrupted (see `train.py` for details). Thus, simply run `bash ganabi/experts/imitator_models/scripts/csif_train.sh {username} {pc#} {directory name of data}` to continue training.
+2. Training is automatically resumed if `~/saved_models/{agent_name}.save` is found and not corrupted (see `train.py` for details about corrupted model). Thus, simply run `bash csif_train.sh {username} {pc#} {directory name of data}` to continue training.
 
 ### Sample code
 
 ```
-$ ls
-ganabi  iggi_data_2_500000.tar.gz  cudnn-10.0-linux-x64-v7.6.2.24.tgz
 # install packages. This only needs to be run once for each user.
-$ bash ganabi/experts/imitator_models/scripts/csif_install_pkgs.sh myID 50
+$ bash csif_install_pkgs.sh myID 48
 ...
 # upload dataset to /tmp/. This needs to be run daily after /tmp/ is cleaned.
-$ bash ganabi/experts/imitator_models/scripts/csif_setup.sh myID 50 iggi_data_2_500000.tar.gz cudnn-10.0-linux-x64-v7.6.2.24.tgz
+$ bash csif_setup.sh myID 48 iggi_data_2_500000
 ...
 # train (or resume training) the model with the uploaded data
-$ bash ganabi/experts/imitator_models/scripts/csif_train.sh myID 50 iggi_data_2_500000
+$ bash csif_train.sh myID 48 iggi_data_2_500000
 
 ```
 
@@ -65,4 +78,4 @@ There's an issue related to Keras's `fit_generator` where using multiprocessing 
 
 #### Quota error
 
-You have stored more than 2 gB under `~/`. Checkpoints are saved after every single epoch. For 50 epochs, the checkpoints should take ~270 mB. To avoid having checkpoint files filling up the disk on CSIF, consider manually removing some early epochs under `*.save/ckpts/` or moving finished models to your local machines. However, DO NOT REMOVE THE LATEST CHECKPOINT FILE or a ValueError will be raised.
+You have stored more than 2 gB under `~/`. Checkpoints are saved after every single epoch. For 50 epochs, the checkpoints should take ~270 mB. To avoid having checkpoint files filling up the disk on CSIF, consider manually moving some checkpoints from early epochs under `*.save/ckpts/` to your local machine. However, DO NOT REMOVE/MODIFY THE LATEST CHECKPOINT FILE or a ValueError will be raised.
