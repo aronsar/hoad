@@ -1,14 +1,24 @@
+.DS_Store
 CMakeCache.txt
-Makefile
 cmake_install.cmake
 *.so
-CMakeFiles
 *.swp
 *.swo
 *.pyc
+*.a
+*.o
+*.dylib
+experts/WTFWT/target
+.java-version
+.idea/
+*.vscode/*
+*__pycache__/*
 data
 output
-.DS_Store
-.java-version
-venv/
-.idea/
+
+# Quux Executables
+run_*Bot
+exp_*Bot
+
+# Walton Executables
+*/walton_rivers_agents/results
