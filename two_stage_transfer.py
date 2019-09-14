@@ -78,7 +78,7 @@ def calculate_optimal_weight(target, weighted_source, source, num_boosting_iter,
     max_err = 0
     max_err_ind = 0
     for boosting_iter in range(1, num_boosting_iter):
-        weight = (len(target) / (len(target) + len(source))) * (1 - (boosting_iter / (num_boosting_iter - 1))
+        weight = (len(target) / (len(target) + len(source))) * (1 - (boosting_iter / (num_boosting_iter - 1)))
         weights.append (weight)
     #find the index of the maximum error and return the weight at that index
         err = calculate_err(target, weighted_source, source * weight)#calculating error from k-fold cross validation on T using F and Swi as addtional training data
@@ -99,12 +99,12 @@ def main():
     args = parse()
     #loading data
     data = create_load_data(args)
-    #`1 game for target datasset
-    target = data.validation_data
-    # 9 games for source data set
-    source = data.train_data
+    #`10 games from 1 agent for target datasset, i.e: prior knowledge
+    target = data
+    # thousands of games from all other agents for source data set, ex: 1000 games from Quux, 1000 games from Walton,...
+    source = 
 
-    classifier = two_stage_transfer(transfer, source, m, 10, len(source))
+    classifier = two_stage_transfer(target, source, m, 10, len(source))
     # return classifier
 
 if __name__== '__main__':
