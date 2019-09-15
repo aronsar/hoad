@@ -107,21 +107,18 @@ class MAML:
 
             # Generate Data
             if META_VERBOSE or (meta_step % 100 == 0):
-                x_train_batch, y_train_batch, x_eval_batch, y_eval_batch = data_generator.sample_batch(
+                train_batch, eval_batch = data_generator.sample_batch(
                     is_train=True, is_eval=True)
             else:
-                x_train_batch, y_train_batch, _, _ = data_generator.sample_batch(
+                train_batch, _ = data_generator.sample_batch(
                     is_train=True, is_eval=False)
 
             # Update / Train tasks weight
             task_weights = []
             for task in range(self.TASK_NUM):
-                x_task, y_task = x_train_batch[task], y_train_batch[task]
-                x_task_train, y_task_train = x_task[:
-                                                    self.K_SHOTS_NUM], y_task[:self.K_SHOTS_NUM]
                 for task_step in range(self.TASK_TRAIN_STEPS):
-                    x_train, y_train = x_task_train[task_step], y_task_train[task_step]
-                    self.task_train_step(x_train, y_train)
+                    x_task_train, y_task_train = train_batch[task][0][task_step], train_batch[task][1][task_step]
+                    self.task_train_step(x_task_train, y_task_train)
                     if TASK_VERBOSE:
                         self.print_task_info(meta_step, task_step, task)
 
@@ -137,10 +134,7 @@ class MAML:
             # Prepare data to train meta
             x_meta_train, y_meta_train = [], []
             for task in range(self.TASK_NUM):
-                x_task_train, y_task_train = x_train_batch[task][
-                    self.K_SHOTS_NUM:], y_train_batch[task][self.K_SHOTS_NUM:]
-                x_task_train, y_task_train = np.squeeze(
-                    x_task_train, axis=0), np.squeeze(y_task_train, axis=0)
+                x_task_train, y_task_train = train_batch[task][0][-1], train_batch[task][1][-1]
                 x_meta_train.append(x_task_train)
                 y_meta_train.append(y_task_train)
 
@@ -150,9 +144,7 @@ class MAML:
 
             if META_VERBOSE or (meta_step % 100 == 0):
                 for task in range(self.TASK_NUM):
-                    x_task_eval, y_task_eval = x_eval_batch[task], y_eval_batch[task]
-                    x_task_eval, y_task_eval = np.squeeze(
-                        x_task_eval, axis=0), np.squeeze(y_task_eval, axis=0)
+                    x_task_eval, y_task_eval = eval_batch[task][0][0], eval_batch[task][1][0]
                     self.meta_eval_step(x_task_eval, y_task_eval)
                     self.print_meta_info(meta_step, start_time)
             else:
