@@ -22,12 +22,15 @@ def train(config):
 
 def main():
     NUM_CLASSES = 5        # K-way
-    NUM_SHOTS = 2          # N-shot
+    NUM_SHOTS = 1          # N-shot
     NUM_TASK = 32          # Number of task sampled per meta update
     NUM_TASK_TRAIN = 1     # Number of inner task update
     NUM_META_TRAIN = 1000  # Number of total meta update count
     # Number of processors used for batching, use 1 unless batching is a heavy task
     NUM_PROCESS = 1
+    NUM_VERBOSE_INTERVAL = 50
+    META_LR = 1e-4
+    TASK_LR = META_LR
 
     config = {
         "num_classes": NUM_CLASSES,
@@ -35,9 +38,13 @@ def main():
         "num_tasks": NUM_TASK,
         "num_task_train": NUM_TASK_TRAIN,
         "num_meta_train": NUM_META_TRAIN,
-        'num_process': NUM_PROCESS
+        'num_process': NUM_PROCESS,
+        "num_verbose_interval": NUM_VERBOSE_INTERVAL,
+        "meta_lr": META_LR,
+        "task_lr": TASK_LR
     }
 
+    print(OmniglotDataGenerator.train_labels_len)
     train(config)
 
 

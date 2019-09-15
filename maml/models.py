@@ -21,10 +21,10 @@ def build_simple_model(output_shape):
     # Note: Calling this function creates an "unique" model
     ins = tk.Input(shape=(28, 28, 1))
 
-    out = mutils.conv_block(ins, 64, 3, [2, 2], 'SAME', conv_name="conv1")
-    out = mutils.conv_block(out, 64, 3, [2, 2], 'SAME', conv_name="conv2")
-    out = mutils.conv_block(out, 64, 3, [2, 2], 'SAME', conv_name="conv3")
-    out = mutils.conv_block(out, 64, 3, [2, 2], 'SAME', conv_name="conv4")
+    out = mutils.conv_block(ins, 64, 3, [1, 1], 'SAME', conv_name="conv1")
+    out = mutils.conv_block(out, 64, 3, [1, 1], 'SAME', conv_name="conv2")
+    out = mutils.conv_block(out, 64, 3, [1, 1], 'SAME', conv_name="conv3")
+    out = mutils.conv_block(out, 64, 3, [1, 1], 'SAME', conv_name="conv4")
 
     out = tf.math.reduce_mean(out, [1, 2])  # According to Paper
     out = tk.layers.Dense(output_shape, activation='softmax')(out)
