@@ -79,12 +79,6 @@ class MAML:
         Low Level Overview of
             1. Update meta network.
         """
-        # tf.print(original_weights[1])
-        # for task in range(self.TASK_NUM):
-        #     task_weights = task_models[task]
-        #     tf.print(task)
-        #     tf.print(task_weights[1])
-
         with tf.GradientTape() as tape:
             meta_loss = []
             for task in range(self.TASK_NUM):
@@ -119,8 +113,6 @@ class MAML:
             predictions = self.model(images)
             loss = self.meta_loss_op(labels, predictions)
 
-        # tf.print(predictions)
-        # tf.print(labels)
         self.meta_train_loss(loss)
         self.meta_train_accuracy(labels, predictions)
 
@@ -200,10 +192,10 @@ class MAML:
         start_time = time.time()
         for meta_step in range(self.META_TRAIN_STEPS):
             if meta_step % self.VERBOSE_INTERVAL == 0:
-                train_task_batch, train_meta_batch, eval_task_batch, eval_meta_batch = data_generator.sample_batch(
+                train_task_batch, train_meta_batch, eval_task_batch, eval_meta_batch = data_generator.new_sample_batch(
                     is_train=True, is_eval=True)
             else:
-                train_task_batch, train_meta_batch, _, _ = data_generator.sample_batch(
+                train_task_batch, train_meta_batch, _, _ = data_generator.new_sample_batch(
                     is_train=True, is_eval=False)
 
             self.train(train_task_batch, train_meta_batch)

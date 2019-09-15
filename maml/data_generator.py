@@ -11,56 +11,10 @@ import numpy as np
 import os
 import random
 import time
-import threading
 import multiprocessing as mp
-from queue import Queue
+from itertools import repeat
 
-
-def get_omniglot_labels():
-    current_path = os.getcwd()
-
-    train_path = os.path.join(current_path, 'data/omniglot/images_background')
-    train_languages = os.listdir(train_path)
-    train_labels = []
-    for language in train_languages:
-        char_path = os.path.join(train_path, language)
-        chars = os.listdir(char_path)
-        label = [os.path.join(language, char) for char in chars]
-        train_labels.extend(label)
-
-    test_path = os.path.join(current_path, 'data/omniglot/images_evaluation')
-    test_languages = os.listdir(test_path)
-    test_labels = []
-    for language in test_languages:
-        char_path = os.path.join(test_path, language)
-        chars = os.listdir(char_path)
-        label = [os.path.join(language, char) for char in chars]
-        test_labels.extend(label)
-
-    return train_path, test_path, train_labels, test_labels
-
-
-def read_imgs_in_directory(img_path):
-    """
-    Definition:
-        Reads Images within the given directory / path.
-        Convert the image into grayscale and resize to (28 * 28)
-
-    Returns:
-        List: [img1, img2 ....]
-    """
-
-    imgs = os.listdir(img_path)
-    imgs_in_dir = []
-    for img in imgs:
-        img_name = os.path.join(img_path, img)
-        img_obj = tk.preprocessing.image.load_img(img_name,
-                                                  color_mode="grayscale",
-                                                  target_size=(28, 28))
-        img_arr = tk.preprocessing.image.img_to_array(img_obj)
-        imgs_in_dir.append(img_arr)
-
-    return imgs_in_dir
+import dataset as d
 
 
 def sample_task_batch(labels, config):
@@ -74,17 +28,19 @@ def sample_task_batch(labels, config):
 
     # N-Way K-shot Sampling
     # First Sample first by N (num classes) then by K (num instances per class)
+    n_way_labels = random.sample(range(len(labels)), len(labels))
     for i in range(num_classes):
-        label_id = labels[i]
+        raw_label_id = labels[i]
+        true_label = n_way_labels[i]
         # Set train batch
         sampled_imgs_id = random.sample(
-            range(len(OmniglotDataGenerator.x_train[label_id])), num_shots)
+            range(len(DataGenerator.x_train[raw_label_id])), num_shots)
         task_imgs, task_labels = [], []
         for j, img_id in enumerate(sampled_imgs_id):
             sampled_img = np.array(
-                OmniglotDataGenerator.x_train[label_id][img_id])
+                DataGenerator.x_train[raw_label_id][img_id])
             task_imgs.append(sampled_img)
-            task_labels.append(i)  # y is 0 ~ self.num_classes
+            task_labels.append(true_label)  # y is 0 ~ self.num_classes
             # x_task_batch.append(sampled_imgs)
             # y_task_batch.append(i) # y is 0 ~ self.num_classes
 
@@ -107,13 +63,12 @@ def sample_task_batch(labels, config):
     return x_task_batch, y_task_batch
 
 
-class OmniglotDataGenerator(object):
+class DataGenerator(object):
     # Static Variables for Multi-Processing Support
-    train_path, test_path, raw_train_labels, raw_test_labels = get_omniglot_labels()
-    train_labels_len = len(raw_train_labels)
-    test_labels_len = len(raw_test_labels)
-    x_train = []
-    x_test = []
+    x_train, x_test = [], []
+    raw_train_labels, raw_test_labels = [], []
+    train_labels_len, test_labels_len = 0, 0
+    train_path, test_path = "", ""
 
     def __init__(self, config):
         # num_classes = K way
@@ -123,11 +78,22 @@ class OmniglotDataGenerator(object):
         self.num_process = config.get("num_process")
         self.batch_size = self.num_classes * self.num_shots
 
+        self.dataset = config.get("dataset")
+        self.data_dir = config.get("data_dir")
+
         # self._read_data()
-        OmniglotDataGenerator.read_data(4)  # 4 is good for IO task
+        self.read_data(4)  # 4 is good for IO task
 
     @staticmethod
-    def read_data(process_count):
+    def update_static_vars(train_path, test_path, raw_train_labels, raw_test_labels):
+        DataGenerator.train_path = train_path
+        DataGenerator.test_path = test_path
+        DataGenerator.raw_train_labels = raw_train_labels
+        DataGenerator.raw_test_labels = raw_test_labels
+        DataGenerator.train_labels_len = len(raw_train_labels)
+        DataGenerator.test_labels_len = len(raw_test_labels)
+
+    def read_data(self, process_count):
         """
         Definition:
             Reads the training data, testing data with multi-processing support
@@ -135,147 +101,26 @@ class OmniglotDataGenerator(object):
         Returns:
             None
         """
-        train_img_paths = [os.path.join(OmniglotDataGenerator.train_path, label_name)
-                           for label_name in OmniglotDataGenerator.raw_train_labels]
 
-        test_img_paths = [os.path.join(OmniglotDataGenerator.test_path, label_name)
-                          for label_name in OmniglotDataGenerator.raw_test_labels]
+        if self.dataset == 'omniglot':
+            omniglot_obj = d.Omniglot(self.data_dir)
+            mp_func, mp_train_args, mp_test_args = omniglot_obj.read_wrapper()
+        else:
+            raise("Unknown Dataset")
 
-        with mp.Pool(process_count) as pool:
-            OmniglotDataGenerator.x_train = pool.map(
-                read_imgs_in_directory, train_img_paths)
+        with mp.Pool(process_count) as p:
+            DataGenerator.x_train = p.starmap(mp_func, mp_train_args)
 
-        with mp.Pool(process_count) as pool:
-            OmniglotDataGenerator.x_test = pool.map(
-                read_imgs_in_directory, test_img_paths)
+        with mp.Pool(process_count) as p:
+            DataGenerator.x_test = p.starmap(mp_func, mp_test_args)
 
     def get_raw_label_by_id(self, id, label_type=None):
         if label_type == 'train':
-            return OmniglotDataGenerator.raw_train_labels[id]
+            return DataGenerator.raw_train_labels[id]
         elif label_type == 'test':
-            return OmniglotDataGenerator.raw_test_label[id]
+            return DataGenerator.raw_test_label[id]
         else:
             raise("Reading Unknown label type {}".format(label_type))
-
-    def sample_batch(self, is_train=True, is_eval=False):
-        """
-        Definition:
-            Retrieve a train batch and task batch
-
-            T - Task_num, K - K-ways, N - N-shot
-
-            Train batch: (T, 2, N+1, K, 28, 28, 1)
-                First N are used for update task (N-Shots)
-                Last 1 is used for update meta network
-
-                For each shot, we will have K items to train on (no repitition)
-
-                2 => index 0 are imgs (x), index 1 are labels (y)
-
-            Eval batch: (T, 2, 1, K)
-                Used for evaluation of meta
-        Return:
-            train_batch, eval_batch
-        """
-
-        def _multiprocess_batching(task_ids_list):
-            """
-            Definition:
-                Multi-Proceesing support for batching
-            Return:
-                train_batch, eval_batch
-            """
-            # start_time = time.time()
-            train_task_batch = []
-            train_meta_batch = []
-            eval_task_batch = []
-            eval_meta_batch = []
-
-            t_config = [(self.num_shots, self.num_classes)] * self.num_tasks
-            m_config = [(self.num_shots, self.num_classes)] * self.num_tasks
-
-            if is_train:
-                with mp.Pool(self.num_process) as p:
-                    train_task_batch = p.starmap(sample_task_batch,
-                                                 zip(task_ids_list, t_config))
-
-                with mp.Pool(self.num_process) as p:
-                    train_meta_batch = p.starmap(sample_task_batch,
-                                                 zip(task_ids_list, m_config))
-
-            if is_eval:
-                with mp.Pool(self.num_process) as p:
-                    eval_task_batch = p.starmap(sample_task_batch,
-                                                zip(task_ids_list, t_config))
-
-                with mp.Pool(self.num_process) as p:
-                    eval_meta_batch = p.starmap(sample_task_batch,
-                                                zip(task_ids_list, m_config))
-
-            if is_train:
-                train_meta_batch = self._process_single_img_batch(
-                    train_meta_batch)
-            if is_eval:
-                eval_meta_batch = self._process_single_img_batch(
-                    eval_meta_batch)
-            # print("MultiProcess Batch_Time: {:.3f}".format(
-            #    time.time() - start_time))
-            return train_task_batch, train_meta_batch, eval_task_batch, eval_meta_batch
-
-        def _loop_batching(task_ids_list):
-            """
-            Definition:
-                Loop batching. Faster when batching is a light task
-            Return:
-                train_batch, eval_batch
-            """
-            # start_time = time.time()
-            train_task_batch = []
-            train_meta_batch = []
-            eval_task_batch = []
-            eval_meta_batch = []
-            for task in range(self.num_tasks):
-                task_ids = task_ids_list[task]
-
-                if is_train:
-                    x_train_task_batch, y_train_task_batch = sample_task_batch(
-                        task_ids, (self.num_shots, self.num_classes))
-                    train_task_batch.append((x_train_task_batch,
-                                             y_train_task_batch))
-
-                    x_train_meta_batch, y_train_meta_batch = sample_task_batch(
-                        task_ids, (1, 1))
-                    train_meta_batch.append((x_train_meta_batch,
-                                             y_train_meta_batch))
-
-                if is_eval:
-                    x_eval_task_batch, y_eval_task_batch = sample_task_batch(
-                        task_ids, (self.num_shots, self.num_classes))
-                    eval_task_batch.append((x_eval_task_batch,
-                                            y_eval_task_batch))
-
-                    x_eval_meta_batch, y_eval_meta_batch = sample_task_batch(
-                        task_ids, (1, 1))
-                    eval_meta_batch.append((x_eval_meta_batch,
-                                            y_eval_meta_batch))
-
-            if is_train:
-                train_meta_batch = self._process_single_img_batch(
-                    train_meta_batch)
-            if is_eval:
-                eval_meta_batch = self._process_single_img_batch(
-                    eval_meta_batch)
-
-            # print("Loop Batch_Time: {:.3f}".format(time.time() - start_time))
-            return train_task_batch, train_meta_batch, eval_task_batch, eval_meta_batch
-
-        task_ids_list = [self.sample_task() for _ in range(self.num_tasks)]
-        if self.num_process > 1:
-            return _multiprocess_batching(task_ids_list)
-        elif self.num_process == 1:
-            return _loop_batching(task_ids_list)
-        else:
-            raise("Incorrect Number of Processes used")
 
     def new_sample_batch(self, is_train=True, is_eval=False):
         """
@@ -309,16 +154,16 @@ class OmniglotDataGenerator(object):
             task_batch = []
             meta_batch = []
 
-            t_config = [(self.num_shots, self.num_classes)] * self.num_tasks
-            m_config = [(self.num_shots, self.num_classes)] * self.num_tasks
+            t_config = (self.num_shots, self.num_classes)
+            m_config = (1, 1)
 
             with mp.Pool(self.num_process) as p:
                 task_batch = p.starmap(sample_task_batch,
-                                       zip(task_ids_list, t_config))
+                                       zip(task_ids_list, repeat(t_config)))
 
             with mp.Pool(self.num_process) as p:
                 meta_batch = p.starmap(sample_task_batch,
-                                       zip(task_ids_list, m_config))
+                                       zip(task_ids_list, repeat(m_config)))
 
             meta_batch = self._process_single_img_batch(meta_batch)
 
@@ -337,8 +182,8 @@ class OmniglotDataGenerator(object):
             task_batch = []
             meta_batch = []
 
-            t_config = [(self.num_shots, self.num_classes)]
-            m_config = [(self.num_shots, self.num_classes)]
+            t_config = (self.num_shots, self.num_classes)
+            m_config = (1, 1)
 
             for task in range(self.num_tasks):
                 task_ids = task_ids_list[task]
@@ -364,7 +209,7 @@ class OmniglotDataGenerator(object):
         eval_task_ids_list = [self.sample_task()
                               for _ in range(self.num_tasks)]
 
-        train_task_batch, train_meta_batch,  = [], []
+        train_task_batch, train_meta_batch, = [], []
         eval_task_batch, eval_meta_batch = [], []
         if self.num_process > 1:
             if is_train:
@@ -393,7 +238,7 @@ class OmniglotDataGenerator(object):
         Return:
             List: [label_1, label_2 ....]
         """
-        return random.sample(range(OmniglotDataGenerator.train_labels_len), self.num_classes)
+        return random.sample(range(DataGenerator.train_labels_len), self.num_classes)
 
     def _process_single_img_batch(self, batch):
         x_batch = np.array([batch[task][0][-1]
