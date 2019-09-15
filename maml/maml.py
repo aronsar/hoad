@@ -46,9 +46,20 @@ class MAML:
 
         # Build model
         self.model = models.build_simple_model(self.N_WAYS_NUM)
+        self.original_weights = [weight.numpy()
+                                 for weight in self.model.trainable_variables]
+
+    def reset_model_weights(self, new_weights):
+        for model_weight, new_weight in zip(self.model.trainable_variables,
+                                            new_weights):
+            model_weight.assign(new_weight)
 
     @tf.function
     def task_train_step(self, images, labels):
+        """
+        Low Level Overview of
+            1. Update task network.
+        """
         with tf.GradientTape() as tape:
             predictions = self.model(images)
             loss = self.task_loss_op(labels, predictions)
@@ -63,7 +74,11 @@ class MAML:
             zip(gradients, self.model.trainable_variables))
 
     @tf.function
-    def meta_train_step(self, images, labels, task_models, original_weights):
+    def meta_train_step(self, images, labels, task_models):
+        """
+        Low Level Overview of
+            1. Update meta network.
+        """
         # tf.print(original_weights[1])
         # for task in range(self.TASK_NUM):
         #     task_weights = task_models[task]
@@ -73,10 +88,9 @@ class MAML:
         with tf.GradientTape() as tape:
             meta_loss = []
             for task in range(self.TASK_NUM):
-                task_weights = task_models[task]
                 # Set original meta weights to task weight
-                for i, (new, old) in enumerate(zip(self.model.trainable_variables, task_weights)):
-                    new.assign(old)
+                task_weights = task_models[task]
+                self.reset_model_weights(task_weights)
 
                 predictions = self.model(images[task])
                 task_loss = self.task_loss_op(labels[task], predictions)
@@ -87,17 +101,19 @@ class MAML:
                                                                 dtype=tf.float32)
 
         # Reset to original meta weights before apply gradients
-        for i, (new, old) in enumerate(zip(self.model.trainable_variables, original_weights)):
-            new.assign(old)
+        self.reset_model_weights(self.original_weights)
 
         gradients = tape.gradient(meta_loss, self.model.trainable_variables)
-        gradients = [tf.clip_by_value(
-            grads, -10, 10) for grads in gradients]
+        gradients = [tf.clip_by_value(grads, -10, 10) for grads in gradients]
         self.meta_optimizer.apply_gradients(
             zip(gradients, self.model.trainable_variables))
 
     @tf.function
-    def eval_step(self, images, labels):
+    def meta_eval_step(self, images, labels):
+        """
+        Low Level Overview of
+            1. Evaluating MAML using meta model.
+        """
         # After update - pure eval, no gradient update
         with tf.GradientTape() as tape:
             predictions = self.model(images)
@@ -108,94 +124,97 @@ class MAML:
         self.meta_train_loss(loss)
         self.meta_train_accuracy(labels, predictions)
 
-    def train(self, data_generator):
-        start_time = time.time()
-        for meta_step in range(self.META_TRAIN_STEPS):
+    def train(self, train_task_batch, train_meta_batch):
+        """
+        High Level Overview of
+            1. Training MAML.
+            2. A gradient update made in meta model
+        """
 
-            # Save original meta weights
-            original_weights = [weight.numpy() for weight in
-                                self.model.trainable_variables]
-
-            # print("Original###################################")
-            # print(original_weights[-1])
-            # print("New ########################################")
-            # Generate Data
-            if meta_step % self.VERBOSE_INTERVAL == 0:
-                train_batch, eval_batch = data_generator.sample_batch(
-                    is_train=True, is_eval=True)
-            else:
-                train_batch, _ = data_generator.sample_batch(
-                    is_train=True, is_eval=False)
-
-            # Update / Train tasks weight
-            task_weights = []
-            for task in range(self.TASK_NUM):
-                for task_step in range(self.TASK_TRAIN_STEPS):
-                    for shot in range(self.K_SHOTS_NUM):
-                        x_task_train, y_task_train = train_batch[task][
-                            0][shot], train_batch[task][1][shot]
-                        self.task_train_step(x_task_train, y_task_train)
-                    # if meta_step % self.VERBOSE_INTERVAL == 0:
-                    #     self.print_task_info(meta_step, task_step, task)
-
-                # Save task weights
-                task_weight = [weight.numpy() for weight in
-                               self.model.trainable_variables]
-                task_weights.append(task_weight)
-
-                # Reset to original weights
-                for new, old in zip(self.model.trainable_variables, original_weights):
-                    new.assign(old)
-
-            # Prepare data to train meta
-            x_meta_train, y_meta_train = [], []
-            for task in range(self.TASK_NUM):
-                x_task_train, y_task_train = train_batch[task][0][-1], train_batch[task][1][-1]
-                # Select only one image for meta update ?
-                x_task_train = x_task_train[0]
-                y_task_train = y_task_train[0]
-                x_meta_train.append(x_task_train)
-                y_meta_train.append(y_task_train)
-
-            # Select only one image for meta update
-            x_meta_train = np.array(x_meta_train)
-            y_meta_train = np.array(y_meta_train)
-            x_meta_train = np.expand_dims(x_meta_train, axis=1)
-            y_meta_train = np.expand_dims(y_meta_train, axis=1)
-
-            # print(y_meta_train.shape, x_meta_train.shape)
-
-            # Update meta weight
-            self.meta_train_step(x_meta_train, y_meta_train,
-                                 task_weights, original_weights)
-
-            if meta_step % self.VERBOSE_INTERVAL == 0:
-                self.eval(eval_batch, meta_step, start_time)
-                start_time = time.time()  # Restart time after printing
-
-    def eval(self, eval_batch, meta_step, start_time):
-        avg_acc, avg_loss = 0, 0
+        # Update / Train tasks weight
+        task_weights = []
         for task in range(self.TASK_NUM):
-            x_task_eval, y_task_eval = eval_batch[task][0][0], eval_batch[task][1][0]
+            for task_step in range(self.TASK_TRAIN_STEPS):
+                for shot in range(self.K_SHOTS_NUM):
+                    x_task_train = train_task_batch[task][0][shot]
+                    y_task_train = train_task_batch[task][1][shot]
+                    self.task_train_step(x_task_train, y_task_train)
 
-            # Select only image for eval
-            x_task_eval, y_task_eval = x_task_eval[0], y_task_eval[0]
-            x_task_eval = np.expand_dims(x_task_eval, axis=0)
-            y_task_eval = np.expand_dims(y_task_eval, axis=0)
+            # Save task weights
+            task_weight = [weight.numpy() for weight in
+                           self.model.trainable_variables]
+            task_weights.append(task_weight)
 
-            self.eval_step(x_task_eval, y_task_eval)
+            # Reset to original weights
+            self.reset_model_weights(self.original_weights)
+
+        # Prepare data to train meta
+        x_meta_train, y_meta_train = train_meta_batch[0], train_meta_batch[1]
+
+        # Update meta weight
+        self.meta_train_step(x_meta_train, y_meta_train, task_weights)
+
+    def eval(self, eval_task_batch, eval_meta_batch, meta_step, start_time):
+        """
+        High Level Overview of
+            1. Evaluating MAML.
+        """
+        avg_acc, avg_loss = 0, 0
+        for eval_task in range(self.TASK_NUM):
+            # First PreTrain K_SHOTS
+            for task_step in range(self.TASK_TRAIN_STEPS):
+                for shot in range(self.K_SHOTS_NUM):
+                    x_task_eval = eval_task_batch[eval_task][0][shot]
+                    y_task_eval = eval_task_batch[eval_task][1][shot]
+                    self.task_train_step(x_task_eval, y_task_eval)
+
+            # Select only image for eval from the last shot
+            x_meta_eval = eval_meta_batch[0][eval_task]
+            y_meta_eval = eval_meta_batch[1][eval_task]
+
+            # Run Eval Result
+            self.meta_eval_step(x_meta_eval, y_meta_eval)
 
             avg_loss += self.meta_train_loss.result()
             avg_acc += self.meta_train_accuracy.result() * 100
             self.meta_train_loss.reset_states()
             self.meta_train_accuracy.reset_states()
 
-        avg_acc, avg_loss = avg_acc / self.TASK_NUM, avg_loss / self.TASK_NUM
+            # Reset to original weights
+            self.reset_model_weights(self.original_weights)
+
+        avg_acc /= self.TASK_NUM
+        avg_loss /= self.TASK_NUM
+
+        # Print Result
         template = 'Meta  : Iteration {}, Loss: {:.3f}, Accuracy: {:.3f}, Time: {:.3f}'
         print(template.format(meta_step,
                               avg_loss,
                               avg_acc,
                               (time.time() - start_time)))
+
+    def train_manager(self, data_generator):
+        """
+        High Level Overview of training MAML, including generating data & weight changing
+        """
+        start_time = time.time()
+        for meta_step in range(self.META_TRAIN_STEPS):
+            if meta_step % self.VERBOSE_INTERVAL == 0:
+                train_task_batch, train_meta_batch, eval_task_batch, eval_meta_batch = data_generator.sample_batch(
+                    is_train=True, is_eval=True)
+            else:
+                train_task_batch, train_meta_batch, _, _ = data_generator.sample_batch(
+                    is_train=True, is_eval=False)
+
+            self.train(train_task_batch, train_meta_batch)
+
+            self.original_weights = [weight.numpy() for weight in
+                                     self.model.trainable_variables]
+
+            if meta_step % self.VERBOSE_INTERVAL == 0:
+                self.eval(eval_task_batch, eval_meta_batch,
+                          meta_step, start_time)
+                start_time = time.time()
 
     def print_task_info(self, meta_step, task_step, task):
         template = 'Task {}: Iteration {}, Step {}, Loss: {:.3f}, Accuracy: {:.3f}'

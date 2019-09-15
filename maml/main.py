@@ -17,7 +17,7 @@ from maml import MAML
 def train(config):
     data_generator = OmniglotDataGenerator(config)
     maml = MAML(config)
-    maml.train(data_generator)
+    maml.train_manager(data_generator)
 
 
 def main():
@@ -25,11 +25,11 @@ def main():
     NUM_SHOTS = 1          # N-shot
     NUM_TASK = 32          # Number of task sampled per meta update
     NUM_TASK_TRAIN = 1     # Number of inner task update
-    NUM_META_TRAIN = 1000  # Number of total meta update count
+    NUM_META_TRAIN = 20000  # Number of total meta update count
     # Number of processors used for batching, use 1 unless batching is a heavy task
     NUM_PROCESS = 1
     NUM_VERBOSE_INTERVAL = 50
-    META_LR = 1e-4
+    META_LR = 1e-5
     TASK_LR = META_LR
 
     config = {
