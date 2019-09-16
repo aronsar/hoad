@@ -192,10 +192,10 @@ class MAML:
         start_time = time.time()
         for meta_step in range(self.META_TRAIN_STEPS):
             if meta_step % self.VERBOSE_INTERVAL == 0:
-                train_task_batch, train_meta_batch, eval_task_batch, eval_meta_batch = data_generator.new_sample_batch(
+                train_task_batch, train_meta_batch, eval_task_batch, eval_meta_batch = data_generator.next_batch(
                     is_train=True, is_eval=True)
             else:
-                train_task_batch, train_meta_batch, _, _ = data_generator.new_sample_batch(
+                train_task_batch, train_meta_batch, _, _ = data_generator.next_batch(
                     is_train=True, is_eval=False)
 
             self.train(train_task_batch, train_meta_batch)

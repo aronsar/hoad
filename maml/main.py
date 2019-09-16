@@ -16,8 +16,8 @@ from maml import MAML
 
 def train(config):
     data_generator = DataGenerator(config)
-    print(DataGenerator.train_labels_len)
-    print(DataGenerator.test_labels_len)
+    print(DataGenerator.dataset_obj.train_labels_len)
+    print(DataGenerator.dataset_obj.test_labels_len)
     maml = MAML(config)
     maml.train_manager(data_generator)
 
@@ -35,7 +35,6 @@ def main():
     TASK_LR = META_LR
     DATASET = "omniglot"
     DATA_DIR = os.path.join(os.getcwd(), "data")
-    print(DATA_DIR)
 
     config = {
         "num_classes": NUM_CLASSES,
@@ -51,8 +50,6 @@ def main():
         "data_dir": DATA_DIR
     }
 
-    print(DataGenerator.train_labels_len)
-    print(DataGenerator.test_labels_len)
     train(config)
 
 

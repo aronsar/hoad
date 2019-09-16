@@ -1,5 +1,7 @@
 
 import os
+import numpy as np
+import multiprocessing as mp
 from itertools import repeat
 
 
@@ -14,50 +16,52 @@ class Omniglot(object):
         self.train_path = os.path.join(data_dir, 'omniglot/images_background')
         self.test_path = os.path.join(data_dir, 'omniglot/images_evaluation')
 
+        self.raw_train_labels = self._get_omniglot_raw_labels(self.train_path)
+        self.raw_test_labels = self._get_omniglot_raw_labels(self.test_path)
+        self.train_labels_len = len(self.raw_train_labels)
+        self.test_labels_len = len(self.raw_test_labels)
+
         # Define multi-process function name, can be reused
         self.mp_func = d_utils.read_imgs_in_directory
 
-    def _get_omniglot_raw_labels(self):
-        train_languages = os.listdir(self.train_path)
-        train_labels = []
-        for language in train_languages:
-            char_path = os.path.join(self.train_path, language)
+        self.x_train = self._read_img_data(self.train_path,
+                                           self.raw_train_labels)
+        self.x_test = self._read_img_data(self.test_path,
+                                          self.raw_test_labels)
+
+    def _get_omniglot_raw_labels(self, path):
+        languages = os.listdir(path)
+        labels = []
+        for language in languages:
+            char_path = os.path.join(path, language)
             chars = os.listdir(char_path)
             label = [os.path.join(language, char) for char in chars]
-            train_labels.extend(label)
+            labels.extend(label)
 
-        test_languages = os.listdir(self.test_path)
-        test_labels = []
-        for language in test_languages:
-            char_path = os.path.join(self.test_path, language)
-            chars = os.listdir(char_path)
-            label = [os.path.join(language, char) for char in chars]
-            test_labels.extend(label)
+        return labels
 
-        return train_labels, test_labels
-
-    def read_wrapper(self):
-        """
-        Dataset specific reading function for omniglot
-        """
-
-        raw_train_labels, raw_test_labels = self._get_omniglot_raw_labels()
-
-        # Update static vars for data generator
-        dg.DataGenerator.update_static_vars(self.train_path, self.test_path,
-                                            raw_train_labels, raw_test_labels)
-
+    def _read_img_data(self, path, labels, process_count=4):
         # Define multi-process function arguments
-        train_img_paths = [os.path.join(self.train_path, label_name)
-                           for label_name in raw_train_labels]
-
-        test_img_paths = [os.path.join(self.test_path, label_name)
-                          for label_name in raw_test_labels]
+        img_paths = [os.path.join(path, label_name)
+                     for label_name in labels]
 
         # Argument wrapper
-        mp_train_args = zip(train_img_paths,
-                            repeat((self.color_mode, self.target_size)))
-        mp_test_args = zip(test_img_paths,
-                           repeat((self.color_mode, self.target_size)))
+        mp_args = zip(img_paths,
+                      repeat((self.color_mode, self.target_size)))
 
-        return self.mp_func, mp_train_args, mp_test_args
+        with mp.Pool(process_count) as p:
+            img_data = p.starmap(self.mp_func, mp_args)
+
+        return img_data
+
+    def get_image(self, raw_label_id, img_id, train=True):
+        if train:
+            return np.array(self.x_train[raw_label_id][img_id])
+        else:
+            return np.array(self.x_test[raw_label_id][img_id])
+
+    def get_image_count_by_label(self, raw_label_id, train=True):
+        if train:
+            return len(self.x_train[raw_label_id])
+        else:
+            return len(self.x_test[raw_label_id])
