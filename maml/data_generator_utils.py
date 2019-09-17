@@ -88,14 +88,3 @@ def _loop_batching(func, task_ids_list, config):
         batch.append((x_batch, y_batch))
 
     return batch
-
-
-def _post_meta(batch):
-    """
-    Used for post processing meta batch, where config=(1,1) # 1-way, 1-shot
-    """
-    x_batch = np.array([batch[task][0][-1]
-                        for task in range(len(batch))])
-    y_batch = np.array([batch[task][1][-1]
-                        for task in range(len(batch))])
-    return [x_batch, y_batch]

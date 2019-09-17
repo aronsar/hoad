@@ -29,8 +29,7 @@ class DataGenerator(object):
         self.num_process = config.get("num_process")
 
         self.batch_size = self.num_classes * self.num_shots
-        self.task_config = [self.num_shots, self.num_classes]
-        self.meta_config = (1, 1)
+        self.config = (self.num_shots+1, self.num_classes)
         self.mp_func = dg_utils.sample_task_batch
 
         # Retrieve a dataset used for setting static variables
@@ -71,58 +70,34 @@ class DataGenerator(object):
         eval_task_ids_list = [self.sample_task()
                               for _ in range(self.num_tasks)]
 
-        train_task_batch, train_meta_batch, = [], []
-        eval_task_batch, eval_meta_batch = [], []
+        train_batch, eval_batch = [], []
         if self.num_process > 1:
             if is_train:
-                train_task_batch = dg_utils._mp_batching(self.mp_func,
-                                                         train_task_ids_list,
-                                                         self.task_config,
-                                                         self.num_process)
-
-                train_meta_batch = dg_utils._mp_batching(self.mp_func,
-                                                         train_task_ids_list,
-                                                         self.meta_config,
-                                                         self.num_process)
-                train_meta_batch = dg_utils._post_meta(train_meta_batch)
+                train_batch = dg_utils._mp_batching(self.mp_func,
+                                                    train_task_ids_list,
+                                                    self.config,
+                                                    self.num_process)
 
             if is_eval:
-                eval_task_batch = dg_utils._mp_batching(self.mp_func,
-                                                        eval_task_ids_list,
-                                                        self.task_config,
-                                                        self.num_process)
-
-                eval_meta_batch = dg_utils._mp_batching(self.mp_func,
-                                                        eval_task_ids_list,
-                                                        self.meta_config,
-                                                        self.num_process)
-                eval_meta_batch = dg_utils._post_meta(eval_meta_batch)
+                eval_batch = dg_utils._mp_batching(self.mp_func,
+                                                   eval_task_ids_list,
+                                                   self.config,
+                                                   self.num_process)
 
         elif self.num_process == 1:
             if is_train:
-                train_task_batch = dg_utils._loop_batching(self.mp_func,
-                                                           eval_task_ids_list,
-                                                           self.task_config)
-
-                train_meta_batch = dg_utils._loop_batching(self.mp_func,
-                                                           eval_task_ids_list,
-                                                           self.meta_config)
-                train_meta_batch = dg_utils._post_meta(train_meta_batch)
-
+                train_batch = dg_utils._loop_batching(self.mp_func,
+                                                      eval_task_ids_list,
+                                                      self.config)
             if is_eval:
-                eval_task_batch = dg_utils._loop_batching(self.mp_func,
-                                                          eval_task_ids_list,
-                                                          self.task_config)
-
-                eval_meta_batch = dg_utils._loop_batching(self.mp_func,
-                                                          eval_task_ids_list,
-                                                          self.meta_config)
-                eval_meta_batch = dg_utils._post_meta(eval_meta_batch)
+                eval_batch = dg_utils._loop_batching(self.mp_func,
+                                                     eval_task_ids_list,
+                                                     self.config)
 
         else:
             raise("Incorrect Number of Processes used")
 
-        return train_task_batch, train_meta_batch, eval_task_batch, eval_meta_batch
+        return train_batch, eval_batch
 
     def sample_task(self):
         """
