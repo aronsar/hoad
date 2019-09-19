@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # pseudo-code to implement two stage transfer learning
 import sys
 import os
@@ -6,9 +7,9 @@ import os
 
 import gin
 import numpy as np
-from utils.parse_args import parse
+from utils import parse_args
 from create_load_data import create_load_data
-from sklearn.model_selection import tree, cross_val_score, cross_validate, KFold
+#from sklearn.model_selection import tree, cross_val_score, cross_validate, KFold
 
 '''
 - algorithm from Stone and Rosenfeld 2013
@@ -96,13 +97,23 @@ def sort_data_by_weight(weight_sourcedata_dict):
                                                                 
                                                                 
 def main():
-    args = parse()
+    args = parse_args.parse()
+    args = parse_args.resolve_configpath(args)
+
     #loading data
     data = create_load_data(args)
+    '''
+    DATA FORMAT:
+    - In this example, I created 10 games. The result will be a list of 10 games    - For each game list, there will be 2 elements:
+    + Observations (a list): observations encoded in integers from 0-9
+    + Actions (a list): one hot encoded vector 
+    '''
+    print(data.train_data)
+
     #`10 games from 1 agent for target datasset, i.e: prior knowledge
-    target = data
+    #target = data
     # thousands of games from all other agents for source data set, ex: 1000 games from Quux, 1000 games from Walton,...
-    source = 
+    #source = 
 
     classifier = two_stage_transfer(target, source, m, 10, len(source))
     # return classifier
