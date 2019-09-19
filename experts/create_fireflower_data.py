@@ -1,7 +1,8 @@
-# this script creates data using python 2 and rainbow agents
-
 # here we add the repo's root directory to the path variable; everything
 # is imported relative to that to avoid problems
+import os, sys
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
+
 from os.path import dirname, abspath, join
 from utils import binary_list_to_int as b2int
 

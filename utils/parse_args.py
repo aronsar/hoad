@@ -98,7 +98,7 @@ def resolve_datapath(
 def resolve_configpath(args):
     if args.config_path == None:
         config_filename = args.mode + ".config.gin"
-        args.config_path = os.path.join(args.modedir, config_filename)
+        args.config_path = os.path.join(os.getcwd(), config_filename)
 
     return args
 
