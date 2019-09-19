@@ -38,7 +38,6 @@ object Sim {
       }
 
       val player = players(game.curPlayer)
-      game.currPlayerArray += game.curPlayer
       val ga = player.getAction(game.hiddenFor(game.curPlayer))
       if (!game.isLegal(ga)) {
         throw new Exception("Illegal action: " + game.giveActionToString(ga))

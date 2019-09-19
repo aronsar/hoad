@@ -7,6 +7,7 @@ from os.path import dirname, abspath, join
 ganabi_path = dirname(dirname(abspath(__file__)))
 hanabi_env_path = join(ganabi_path, "hanabi_env")
 import sys
+import random
 
 sys.path.insert(0, ganabi_path)
 sys.path.insert(0, hanabi_env_path)
@@ -19,6 +20,8 @@ import os
 import pandas as pd
 import numpy as np
 import pickle
+from utils import binary_list_to_int as b2int
+import random
 
 RUN_SCRIPT_MAP = {
     'quux_blindbot': "InfoBot",
@@ -175,7 +178,8 @@ def create_pkl_data(args, csv_data):
                 one_hot_action_vector = [0] * 20  # FIXME: hard coded action length
                 one_hot_action_vector[action_idx] = 1
 
-                raw_data[game_num][0].append(obs['player_observations'][agent_id]['vectorized'])
+                raw_data[game_num][0].append(b2int.convert(
+                    obs['player_observations'][agent_id]['vectorized']))
                 raw_data[game_num][1].append(one_hot_action_vector)
 
                 # Step Through
@@ -190,7 +194,13 @@ def create_pkl_data(args, csv_data):
 
 def act_based_pipeline(args):
     # Sort Params
-    seed = 1
+
+    seed = random.randint(0, 2**31-1)
+    print("Create quux data. seed:", seed)
+
+    OLD_STDOUT = sys.stdout
+    sys.stdout = open(os.devnull, 'w')
+
     csv_filename, pkl_filename, quux_bot_script_path = create_data_filenames(args)
 
     # Create csv on Disk by using Java code
@@ -210,12 +220,12 @@ def act_based_pipeline(args):
     if (remove_csv):
         os.remove(csv_filename)
 
+    sys.stdout = OLD_STDOUT
 
 def main(args):
     act_based_pipeline(args)
 
 
 if __name__ == '__main__':
-    print("Create quux data")
     args = parse()
     main(args)

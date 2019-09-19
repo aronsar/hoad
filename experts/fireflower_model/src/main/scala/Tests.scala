@@ -3,7 +3,6 @@ import java.io.{BufferedWriter, FileWriter}
 import scala.collection.JavaConversions._
 import scala.collection.mutable.ListBuffer
 import au.com.bytecode.opencsv.CSVWriter
-import util.control.Breaks._
 
 object PlayerTests {
 
@@ -12,7 +11,7 @@ object PlayerTests {
       if (args.length >= 1)
         args(0).toInt
       else
-        100
+        5
     }
 
     val numPlayers = {
@@ -21,9 +20,21 @@ object PlayerTests {
       else
         2
     }
-    println("NumGames=" + numGames)
+    //println("NumGames=" + numGames)
+    var salt: String = generate_salt()
+    runTests(prefix = "", salt = salt, numGames = numGames, numPlayers = numPlayers)
+  }
 
-    runTests(prefix = "", salt = "g", numGames = numGames, numPlayers = numPlayers)
+  def generate_salt(): String= {
+    val alphabet = ('a' to 'z').toList
+    val r = scala.util.Random
+    var salt: String = ""
+
+    for (i <- 0 to 4) {
+      salt = salt + alphabet(r.nextInt(25))
+    }
+
+    salt
   }
 
   def makeRunSeed(name: String, salt: String): Long = {
@@ -51,9 +62,9 @@ object PlayerTests {
 
     val end = System.nanoTime()
 
-    println("Done!")
-    println("")
-    println("Time: " + (end - start).toDouble / 1.0e9)
+    //println("Done!")
+    //println("")
+    //println("Time: " + (end - start).toDouble / 1.0e9)
   }
 
   def play_game2p(prefix: String, numGames: Int, salt: String): List[fireflower.Game] = {
@@ -198,8 +209,6 @@ object PlayerTests {
 
     for (gameNum <- 0 to games.length - 1) {
       var actionsArray = games(gameNum).actions
-//      var cardsArray = games(gameNum).playersCard
-//      var currPlayerArray = games(gameNum).currPlayerArray
       var initialDeck = games(gameNum).initialDeck
 
       for (gameStep <- 0 to actionsArray.length - 1) {
@@ -209,25 +218,22 @@ object PlayerTests {
         - component(0): moveType
         - component(1): Card Color/Rank/Position
         */
-        if (component(0) != "Bomb") {
-          filledInLine = ListBuffer(gameNum.toString, "50", component(0), component(1)(0).toString)
+        filledInLine = ListBuffer(gameNum.toString, "50", component(0), component(1)(0).toString)
 
           //fill in the rank
-          if (component(0) == "REVEAL_COLOR") {
-            filledInLine += "-1"
-          }
-          else {
-            filledInLine += component(1)(1).toString
-          }
-
-          //fill in initial deck
-          for (i <-0 to initialDeck.length-1) {
-            filledInLine += initialDeck(i)
-          }
-
-          listOfRecords += filledInLine.toArray
+        if (component(0) == "REVEAL_COLOR") {
+          filledInLine += "-1"
+        }
+        else {
+          filledInLine += component(1)(1).toString
         }
 
+        //fill in initial deck
+        for (i <-0 to initialDeck.length-1) {
+          filledInLine += initialDeck(i)
+        }
+
+        listOfRecords += filledInLine.toArray
       }
 
     }
