@@ -29,7 +29,7 @@ def parse():
                         type=int, default=2)
 
     parser.add_argument('--num_games',
-                        type=int, default=10)
+                        type=int, default=100)
 
     parser.add_argument('--datapath')
 
