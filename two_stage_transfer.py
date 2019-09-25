@@ -5,14 +5,29 @@ import os
 #FIXME: add ganabi path to sys
 #FIXME: add data path to sys
 
-import gin
+import gin, os
 import numpy as np
 from utils import parse_args
-from create_load_data import create_load_data
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.model_selection import KFold
 from sklearn.metrics import mean_squared_error
 
+'''
+DATA LOADER FOR TWO STAGE TRANSFER
+'''
+class DataLoader(object):
+    def __init__(self,
+            datapath):
+        self.datapath = datapath
+        self.all_agents = []
+        self.target = {}
+        self.source = {}
+    
+    def get_all_agents(self):
+        self.all_agents = ["_".join(name.split("_")[:-3]) for name in os.listdir(self.datapath)])
+
+    def get_target_data(self):
+        
 '''
 TwoStageTransfer (T, S, m, k, b)
     for all S_i in S: do
@@ -118,11 +133,9 @@ def sort_data_by_weight(weight_sourcedata_dict):
                                                                 
                                                                 
 def main():
-    args = parse_args.parse()
-    args = parse_args.resolve_configpath(args)
-
     #loading data
-    data_loader = create_load_data(args)
+    data_loader = DataLoader("./data/agent_data")
+    data_loader.get_all_agents()
     '''
     DATA FORMAT:
     - In this example, I created 10 games. The result will be a list of 10 games    - For each game list, there will be 2 elements:
