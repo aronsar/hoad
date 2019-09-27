@@ -37,7 +37,9 @@ class DataLoader(object):
         target_agent_name = "_".join(target_agent_dir.split("_")[:-3])
         data = self.__get_25k_data(os.path.join(self.datapath,target_agent_dir))
         print("Getting target data for ", target_agent_name)
-        self.target[target_agent_name] = data[:10]
+        #self.target[target_agent_name] = data[:10]
+        self.target[target_agent_name] = self.__format_data(data[:10])
+        #print(self.target[target_agent_name])
    
     def get_source_data(self):
         target_agent = list(self.target.keys())[0]
@@ -46,7 +48,8 @@ class DataLoader(object):
             agent_name = "_".join(agent_dir.split("_")[:-3])
             if agent_name != target_agent:
                 print("Getting source data for ", agent_name)
-                self.source[agent_name] = self.__get_25k_data(os.path.join(self.datapath, agent_dir))
+                data = self.__get_25k_data(os.path.join(self.datapath, agent_dir))
+                self.source[agent_name] = self.__format_data(data[:100])
 
     def __get_all_agents(self):
         self.all_agents_datadir = [name for name in os.listdir(self.datapath)]
@@ -57,6 +60,27 @@ class DataLoader(object):
         file_name = os.listdir(first_dir)[0]
         path_to_file = os.path.join(first_dir, file_name)
         return pickle.load(open(path_to_file, "rb"), encoding='latin1')
+
+    def __format_data(self, games):
+        #print(games)
+        '''
+        Input data is a list of all games of 1 agent:
+            For each game:
+                + A list contains 2 list:  obs and acts of the whole game
+                    + In obs list: [12345, 67890,...]
+                    + In acts list: [[0,0,0,1,0,0],[1,0,0,0,0],...]
+        Output data format is a list with 2 lists:
+            + List 1: Obs of all games combined in 1 list
+            + List 2: Acts of all games combined in 1 list
+        '''
+        obs = []
+        acts = []
+        for game in games:
+            obs.append(game[0])
+            acts.append(games[1])
+
+        return [obs, acts]
+
 '''
 TwoStageTransfer (T, S, m, k, b)
     for all S_i in S: do
@@ -71,8 +95,8 @@ TwoStageTransfer (T, S, m, k, b)
 '''
 class TwoStageTransfer:
     def __init__(self,
-            target = [],
-            source = [],
+            target = {},
+            source = {},
             boosting_iter = 5,
             fold = 10,
             max_source_dataset = 1):
@@ -88,7 +112,7 @@ class TwoStageTransfer:
         '''
         self.target = target
         self.source = source
-        self.boosting_iter = boosting_iter,
+        self.boosting_iter = boosting_iter
         self.fold = fold
         self.max_souce_dataset = max_source_dataset
 
@@ -114,7 +138,6 @@ class TwoStageTransfer:
 
             #preparing training and testing data
             source = w_source + source
-            print(source)
             
         if err > max_err:
             max_err = err
@@ -173,9 +196,9 @@ def main():
     '''
     #print(data.train_data)
     #`10 games from 1 agent for target datasset, i.e: prior knowledge
-    target = data_loader.raw_data["fireflower"]
+    target = data_loader.target
     # thousands of games from all other agents for source data set, except the target data set agent,  ex: 1000 games from Quux, 1000 games from Walton,...
-    source = data_loader.raw_data
+    source = data_loader.source
     
     print("============ len ", len(source), "============")
     classifier = TwoStageTransfer(target,
