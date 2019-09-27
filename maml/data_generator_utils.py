@@ -27,7 +27,6 @@ def sample_task_batch(labels, config):
         img_count = dg.DataGenerator.dataset_obj.get_image_count_by_label(
             raw_label_id)
         sampled_imgs_id = random.sample(range(img_count), num_shots)
-
         task_imgs, task_labels = [], []
         for j, img_id in enumerate(sampled_imgs_id):
             # sampled_img = np.array(

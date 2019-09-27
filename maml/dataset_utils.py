@@ -1,5 +1,6 @@
 import os
 import tensorflow.keras as tk
+import tensorflow as tf
 
 
 def read_imgs_in_directory(img_path, config):
@@ -20,6 +21,8 @@ def read_imgs_in_directory(img_path, config):
                                                   color_mode=color_mode,
                                                   target_size=target_size)
         img_arr = tk.preprocessing.image.img_to_array(img_obj)
+        img_arr = tf.cast(img_arr, tf.float32) / 255.0
+        img_arr = 1 - img_arr
         imgs_in_dir.append(img_arr)
 
     return imgs_in_dir

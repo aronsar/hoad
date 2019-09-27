@@ -65,6 +65,13 @@ class DataGenerator(object):
             train_batch, eval_batch
         """
 
+        # Sample from same characters
+        # rand_train_task = self.sample_task()
+        # train_task_ids_list = [rand_train_task for _ in range(self.num_tasks)]
+        # rand_train_task = self.sample_task()
+        # eval_task_ids_list = [rand_train_task for _ in range(self.num_tasks)]
+
+        # Sample from different characters
         train_task_ids_list = [self.sample_task()
                                for _ in range(self.num_tasks)]
         eval_task_ids_list = [self.sample_task()

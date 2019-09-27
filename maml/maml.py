@@ -33,8 +33,9 @@ class MAML:
         # Task specific
         # FIXME: Bugged in TF2.0rc1
         self.task_loss_op = tk.losses.SparseCategoricalCrossentropy()
-        self.task_optimizer = tk.optimizers.Adam(self.task_lr)
+        self.task_optimizer = tk.optimizers.SGD(self.task_lr)
 
+        # tk.metrics are cumulative until calling reset (Tested)
         self.task_train_loss = tk.metrics.Mean(name='task_train_loss')
         self.task_train_accuracy = tk.metrics.SparseCategoricalAccuracy(
             name='task_train_accuracy')
@@ -48,13 +49,13 @@ class MAML:
             name='meta_train_accuracy')
 
         # Build model
-        self.model = models.build_simple_model(self.N_WAYS_NUM)
+        self.model = models.SimpleModel(self.N_WAYS_NUM)
         # 32 models
-        self.task_models = [models.build_simple_model(self.N_WAYS_NUM)
+        self.task_models = [models.SimpleModel(self.N_WAYS_NUM)
                             for _ in range(self.TASK_NUM)]
 
     @tf.function
-    def train_fomaml(self, train_batch):
+    def train_fomaml_v2(self, train_batch):
         """
         Low Level Overview of
             1. Update meta network.
@@ -62,34 +63,30 @@ class MAML:
 
         tasks_gradients = []
         for task in range(self.TASK_NUM):
-            for shot in range(0, self.K_SHOTS_NUM):
+            for shot in range(0, self.K_SHOTS_NUM + 1):
                 images = train_batch[task][0][shot]
                 labels = train_batch[task][1][shot]
+                for _ in range(self.TASK_TRAIN_STEPS):
+                    # Step 1: Forward Pass
+                    with tf.GradientTape() as task_tape:
+                        predictions = self.task_models[task](images)
+                        loss = self.task_loss_op(labels, predictions)
 
-                with tf.GradientTape() as task_tape:
-                    predictions = self.task_models[task](images)
-                    loss = self.task_loss_op(labels, predictions)
+                    task_gradients = task_tape.gradient(
+                        loss, self.task_models[task].trainable_variables)
+                    task_gradients = [tf.clip_by_value(grads, -10, 10)
+                                      for grads in task_gradients]
 
-                task_gradients = task_tape.gradient(
-                    loss, self.task_models[task].trainable_variables)
-                task_gradients = [tf.clip_by_value(grads, -10, 10)
-                                  for grads in task_gradients]
-                self.task_optimizer.apply_gradients(
-                    zip(task_gradients, self.task_models[task].trainable_variables))
+                    # Step 2: Update params
+                    if shot < self.K_SHOTS_NUM:
+                        self.task_optimizer.apply_gradients(
+                            zip(task_gradients,
+                                self.task_models[task].trainable_variables))
+                    else:
+                        tasks_gradients.append(task_gradients)
+                        break
 
-            images = train_batch[task][0][-1]
-            labels = train_batch[task][1][-1]
-            with tf.GradientTape() as task_tape:
-                predictions = self.task_models[task](images)
-                task_loss = self.task_loss_op(labels, predictions)
-
-            task_gradients = task_tape.gradient(
-                task_loss, self.task_models[task].trainable_variables)
-            task_gradients = [tf.clip_by_value(grads, -10, 10)
-                              for grads in task_gradients]
-
-            tasks_gradients.append(task_gradients)
-
+        # Step 3 : get gFOMAML
         meta_gradients = []
         for i in range(len(tasks_gradients[0])):
             meta_grads = []
@@ -100,39 +97,38 @@ class MAML:
             meta_grads = tf.math.reduce_mean(meta_grads, axis=0)
             meta_gradients.append(meta_grads)
 
+        tf.print(meta_gradients[-1])
         self.meta_optimizer.apply_gradients(zip(meta_gradients,
                                                 self.model.trainable_variables))
 
-    def eval_fomaml(self, eval_batch):
+    @tf.function
+    def eval_fomaml_v2(self, eval_batch):
         """
         High Level Overview of
             1. Evaluating MAML.
         """
+
         for task in range(self.TASK_NUM):
-            for shot in range(0, self.K_SHOTS_NUM):
+            for shot in range(0, self.K_SHOTS_NUM + 1):
                 images = eval_batch[task][0][shot]
                 labels = eval_batch[task][1][shot]
+                for _ in range(self.TASK_TRAIN_STEPS):
+                    with tf.GradientTape() as task_tape:
+                        predictions = self.task_models[task](images)
+                        loss = self.task_loss_op(labels, predictions)
 
-                with tf.GradientTape() as task_tape:
-                    predictions = self.task_models[task](images)
-                    loss = self.task_loss_op(labels, predictions)
+                    task_gradients = task_tape.gradient(
+                        loss, self.task_models[task].trainable_variables)
+                    task_gradients = [tf.clip_by_value(grads, -10, 10)
+                                      for grads in task_gradients]
 
-                task_gradients = task_tape.gradient(
-                    loss, self.task_models[task].trainable_variables)
-                task_gradients = [tf.clip_by_value(grads, -10, 10)
-                                  for grads in task_gradients]
-
-                self.task_optimizer.apply_gradients(
-                    zip(task_gradients, self.task_models[task].trainable_variables))
-
-            images = eval_batch[task][0][-1]
-            labels = eval_batch[task][1][-1]
-            with tf.GradientTape() as task_tape:
-                predictions = self.task_models[task](images)
-                task_loss = self.task_loss_op(labels, predictions)
-
-            self.meta_train_loss(task_loss)
-            self.meta_train_accuracy(labels, predictions)
+                    if shot < self.K_SHOTS_NUM:
+                        self.task_optimizer.apply_gradients(
+                            zip(task_gradients, self.task_models[task].trainable_variables))
+                    else:
+                        self.meta_train_loss(loss)
+                        self.meta_train_accuracy(labels, predictions)
+                        break
 
     @tf.function
     def train(self, train_batch):
@@ -262,6 +258,12 @@ class MAML:
         """
         High Level Overview of training MAML, including generating data & weight changing
         """
+        # Build(Init) Models
+        input_dim = (self.N_WAYS_NUM, 28, 28, 1)
+        self.model.build(input_dim)
+        for model in self.task_models:
+            model.build(input_dim)
+
         start_time = time.time()
         for meta_step in range(self.META_TRAIN_STEPS):
             if meta_step % self.VERBOSE_INTERVAL == 0:
@@ -271,16 +273,16 @@ class MAML:
                 train_batch, _ = data_generator.next_batch(
                     is_train=True, is_eval=False)
 
-            for model in self.task_models:
+            for i, model in enumerate(self.task_models):
                 model.set_weights(self.model.get_weights())
 
-            self.train(train_batch)
+            self.train_fomaml_v2(train_batch)
 
             if meta_step % self.VERBOSE_INTERVAL == 0:
                 for model in self.task_models:
                     model.set_weights(self.model.get_weights())
 
-                self.eval(eval_batch)
+                self.eval_fomaml_v2(eval_batch)
 
                 template = 'Meta  : Iteration {}, Loss: {:.3f}, Accuracy: {:.3f}, Time: {:.3f}'
                 print(template.format(meta_step,
