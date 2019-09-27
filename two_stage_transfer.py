@@ -78,6 +78,7 @@ class DataLoader(object):
         for i in range (1, len(games)):
             obs += games[i][0]
             acts += games[i][1]
+        print(obs)
         return [obs, acts]
 
 '''
@@ -136,19 +137,26 @@ class TwoStageTransfer:
             if len(w_source)!=0:
                 print("w_source is not empty")
                 #concatenate
-            target_obs = target[0]
-            target_act = target[1]
-            source_obs = source[0]
-            source_act = source[1]
+            target_obs = np.array([[obs*0.00000001] for obs in target[0]])
+            target_act = np.array(target[1])
+            source_obs = np.array([[obs*0.00000001] for obs in source[0]])
+            source_act = np.array(source[1])
+            #kFold cross validation
             kf = KFold(n_splits = self.fold)
+            err = []
+
             for train,test in kf.split(target_obs):
                 #define a model
                 model = DecisionTreeClassifier()
                 obs_train = np.concatenate((source_obs,target_obs[train]))
-                act_train = np.concatenate((source_act),target_act[train])
+                act_train = np.concatenate((source_act,target_act[train]))
                 obs_test = target_obs[test]
                 act_test = target_act[test]
-                model.fit(obs_train,act_train, weight)
+                
+                model.fit(obs_train,act_train, sample_weight=weight)
+                act_predict = model.predict(obs_test)
+                err.append(mean_squared_error(act_predict, act_test))
+
         if err > max_err:
             max_err = err
             max_err_ind = boosting_iter-1
