@@ -73,12 +73,11 @@ class DataLoader(object):
             + List 1: Obs of all games combined in 1 list
             + List 2: Acts of all games combined in 1 list
         '''
-        obs = []
-        acts = []
-        for game in games:
-            obs.append(game[0])
-            acts.append(games[1])
-
+        obs = games[0][0]
+        acts = games[0][1]
+        for i in range (1, len(games)):
+            obs += games[i][0]
+            acts += games[i][1]
         return [obs, acts]
 
 '''
@@ -129,16 +128,27 @@ class TwoStageTransfer:
         max_err_ind = 0
         
         for i in range(1, boosting_iter+1):
-            #define a model
-            model = DecisionTreeClassifier()
-
             #calculate the weight
             weight = (len(target) / (len(target) + len(source))) * (1 - (i / (boosting_iter - 1)))
             weights.append (weight)
 
             #preparing training and testing data
-            source = w_source + source
-            
+            if len(w_source)!=0:
+                print("w_source is not empty")
+                #concatenate
+            target_obs = target[0]
+            target_act = target[1]
+            source_obs = source[0]
+            source_act = source[1]
+            kf = KFold(n_splits = self.fold)
+            for train,test in kf.split(target_obs):
+                #define a model
+                model = DecisionTreeClassifier()
+                obs_train = np.concatenate((source_obs,target_obs[train]))
+                act_train = np.concatenate((source_act),target_act[train])
+                obs_test = target_obs[test]
+                act_test = target_act[test]
+                model.fit(obs_train,act_train, weight)
         if err > max_err:
             max_err = err
             max_err_ind = boosting_iter-1
@@ -147,9 +157,11 @@ class TwoStageTransfer:
     def first_stage(self):
         #weights = []
         weight_sourcedata_dict = {}
+        target_agent_name = list(self.target.keys())[0]
         for agent in self.source:
             #phi is an empty set
-            weight = self.calculate_optimal_weight(self.target,
+            
+            weight = self.calculate_optimal_weight(self.target[target_agent_name],
                 [],
                 self.source[agent],
                 self.boosting_iter,
@@ -157,7 +169,7 @@ class TwoStageTransfer:
         sortedS = sort_data_by_weight(weight_sourcedata_dict)
     
         weighted_source = []
-        
+       
         for i in range(max_source_dataset):
             weight = calculate_optimal_weight(self.target, weighted_source, source[i], self.boosting_iter, self.fold)
             weighted_source = weighted_source.append(source[i] * weight)
