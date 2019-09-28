@@ -1,6 +1,5 @@
 import random
 import numpy as np
-import multiprocessing as mp
 from itertools import repeat
 import data_generator as dg
 
@@ -64,6 +63,8 @@ def _mp_batching(mp_func, task_ids_list, config, process_count=4):
     Return:
         train_batch, eval_batch
     """
+    import multiprocessing as mp
+
     batch = []
     mp_args = zip(task_ids_list, repeat(config))
     with mp.Pool(process_count) as p:

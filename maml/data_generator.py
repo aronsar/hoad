@@ -78,28 +78,28 @@ class DataGenerator(object):
                               for _ in range(self.num_tasks)]
 
         train_batch, eval_batch = [], []
-        if self.num_process > 1:
-            if is_train:
-                train_batch = dg_utils._mp_batching(self.mp_func,
-                                                    train_task_ids_list,
-                                                    self.config,
-                                                    self.num_process)
+        # if self.num_process > 1:
+        #     if is_train:
+        #         train_batch = dg_utils._mp_batching(self.mp_func,
+        #                                             train_task_ids_list,
+        #                                             self.config,
+        #                                             self.num_process)
 
-            if is_eval:
-                eval_batch = dg_utils._mp_batching(self.mp_func,
-                                                   eval_task_ids_list,
-                                                   self.config,
-                                                   self.num_process)
+        #     if is_eval:
+        #         eval_batch = dg_utils._mp_batching(self.mp_func,
+        #                                            eval_task_ids_list,
+        #                                            self.config,
+        #                                            self.num_process)
 
-        elif self.num_process == 1:
-            if is_train:
-                train_batch = dg_utils._loop_batching(self.mp_func,
-                                                      eval_task_ids_list,
-                                                      self.config)
-            if is_eval:
-                eval_batch = dg_utils._loop_batching(self.mp_func,
-                                                     eval_task_ids_list,
-                                                     self.config)
+        # elif self.num_process == 1:
+        if is_train:
+            train_batch = dg_utils._loop_batching(self.mp_func,
+                                                  eval_task_ids_list,
+                                                  self.config)
+        if is_eval:
+            eval_batch = dg_utils._loop_batching(self.mp_func,
+                                                 eval_task_ids_list,
+                                                 self.config)
 
         else:
             raise("Incorrect Number of Processes used")

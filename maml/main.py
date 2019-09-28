@@ -25,7 +25,7 @@ def train(config):
 def main():
     NUM_CLASSES = 5        # K-way
     NUM_SHOTS = 2          # N-shot
-    NUM_TASK = 4           # Number of task sampled per meta update
+    NUM_TASK = 16           # Number of task sampled per meta update
     NUM_TASK_TRAIN = 1     # Number of inner task update
     NUM_META_TRAIN = 20000  # Number of total meta update count
     # Number of processors used for batching, use 1 unless batching is a heavy task
@@ -55,8 +55,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
--0.00656271
--0.002832748
-0.00866711885
-0.0305219144

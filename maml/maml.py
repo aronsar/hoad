@@ -97,7 +97,7 @@ class MAML:
             meta_grads = tf.math.reduce_mean(meta_grads, axis=0)
             meta_gradients.append(meta_grads)
 
-        tf.print(meta_gradients[-1])
+        # tf.print(meta_gradients[-1])
         self.meta_optimizer.apply_gradients(zip(meta_gradients,
                                                 self.model.trainable_variables))
 
