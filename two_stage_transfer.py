@@ -78,7 +78,6 @@ class DataLoader(object):
         for i in range (1, len(games)):
             obs += games[i][0]
             acts += games[i][1]
-        print(obs)
         return [obs, acts]
 
 '''
@@ -137,9 +136,23 @@ class TwoStageTransfer:
             if len(w_source)!=0:
                 print("w_source is not empty")
                 #concatenate
-            target_obs = np.array([[obs*0.00000001] for obs in target[0]])
+            target_obs = np.array([])
+            for obs in np.array(target[0]):
+                temp=np.array(list('{0:b}'.format(obs)), dtype=int)
+                #print (temp)
+                print (len(temp))
+                if(len(target_obs)==0):
+                    target_obs=[temp]
+                else:
+                    target_obs = np.append(target_obs,[temp],axis=0)
+            #what's the size of a obs vector? the 0's in the front has to be filled in, throwing error msg for not matching dimensions
+            #target_obs = np.array(target[0])
+
+            if i==1:
+                print(len(target_obs))
+
             target_act = np.array(target[1])
-            source_obs = np.array([[obs*0.00000001] for obs in source[0]])
+            source_obs = np.array(source[0])
             source_act = np.array(source[1])
             #kFold cross validation
             kf = KFold(n_splits = self.fold)
