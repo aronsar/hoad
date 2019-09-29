@@ -11,7 +11,7 @@ import numpy as np
 from utils import parse_args
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.model_selection import KFold
-from sklearn.metrics import mean_squared_error
+from sklearn import metrics
 
 '''
 DATA LOADER FOR TWO STAGE TRANSFER
@@ -166,12 +166,12 @@ class TwoStageTransfer:
             for train,test in kf.split(target_obs):
                 #define a model
                 model = DecisionTreeClassifier()
-                obs_train = np.concatenate((source_obs,target_obs[train]))
+                obs_train = np.concatenate((weight * source_obs,target_obs[train]))
                 act_train = np.concatenate((source_act,target_act[train]))
                 obs_test = target_obs[test]
                 act_test = target_act[test]
                 
-                model.fit(obs_train,act_train, sample_weight=weight)
+                model.fit(obs_train,act_train)
                 act_predict = model.predict(obs_test)
                 err.append(1-metrics.accuracy_score(target_act[test], act_predict))
         max_err_ind = self.__max_val_ind(err)
