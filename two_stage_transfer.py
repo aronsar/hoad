@@ -115,6 +115,19 @@ class TwoStageTransfer:
         self.fold = fold
         self.max_souce_dataset = max_source_dataset
 
+    def int_to_bool(self, intvec):
+        boolvec = np.array([])
+        for num in np.array(intvec):
+            temp=np.array(list('{0:b}'.format(num)), dtype=int)
+            #print (temp)
+            print (len(temp))
+            if(len(boolvec)==0):
+                boolvec=[np.pad(temp, ((658-len(temp)),0), 'constant', constant_values=(0,0 ))]
+            else:
+                boolvec = np.append(boolvec,[np.pad(temp, ((658-len(temp)),0), 'constant', constant_values=(0,0 ))],axis=0)
+        return boolvec
+
+
     def calculate_optimal_weight(self, target, w_source, source, boosting_iter, fold):
         '''
         CalculateOptimalWeight(T, F, S, m, k):
@@ -136,23 +149,15 @@ class TwoStageTransfer:
             if len(w_source)!=0:
                 print("w_source is not empty")
                 #concatenate
-            target_obs = np.array([])
-            for obs in np.array(target[0]):
-                temp=np.array(list('{0:b}'.format(obs)), dtype=int)
-                #print (temp)
-                print (len(temp))
-                if(len(target_obs)==0):
-                    target_obs=[temp]
-                else:
-                    target_obs = np.append(target_obs,[temp],axis=0)
-            #what's the size of a obs vector? the 0's in the front has to be filled in, throwing error msg for not matching dimensions
-            #target_obs = np.array(target[0])
+
+            target_obs = self.int_to_bool(target[0])
+
 
             if i==1:
                 print(len(target_obs))
 
             target_act = np.array(target[1])
-            source_obs = np.array(source[0])
+            source_obs = self.int_to_bool(source[0])
             source_act = np.array(source[1])
             #kFold cross validation
             kf = KFold(n_splits = self.fold)
