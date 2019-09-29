@@ -173,32 +173,42 @@ class TwoStageTransfer:
                 
                 model.fit(obs_train,act_train, sample_weight=weight)
                 act_predict = model.predict(obs_test)
-                err.append(mean_squared_error(act_predict, act_test))
-
-        if err > max_err:
-            max_err = err
-            max_err_ind = boosting_iter-1
+                err.append(1-metrics.accuracy_score(target_act[test], act_predict))
+        max_err_ind = self.__max_val_ind(err)
         return weights[max_err_ind]
     
+    def __max_val_ind(self, num_arr):
+        if len(num_arr)==0:
+            assert("Empty")
+        
+        max_val = num_arr[0]
+        max_ind = 0
+        for i in range(1,len(num_arr)):
+            if num_arr[i] > max_val:
+                max_val = num_arr[i]
+                max_ind = i
+
+        return max_ind
+
     def first_stage(self):
         #weights = []
         weight_sourcedata_dict = {}
         target_agent_name = list(self.target.keys())[0]
         for agent in self.source:
             #phi is an empty set
-            
             weight = self.calculate_optimal_weight(self.target[target_agent_name],
                 [],
                 self.source[agent],
                 self.boosting_iter,
                 self.fold)
+
+            weight_sourcedata_dict[weight] = agent
         sortedS = sort_data_by_weight(weight_sourcedata_dict)
     
-        weighted_source = []
-       
+        F = []
         for i in range(max_source_dataset):
-            weight = calculate_optimal_weight(self.target, weighted_source, source[i], self.boosting_iter, self.fold)
-            weighted_source = weighted_source.append(source[i] * weight)
+            weight = calculate_optimal_weight(self.target, F, self.source[sortedS[i]], self.boosting_iter, self.fold)
+            F += self.source[sortedS[i]] * weight
         training_data = target + weighted_source
         return train_classifier(training_data)
 
