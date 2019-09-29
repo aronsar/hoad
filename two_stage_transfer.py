@@ -119,14 +119,18 @@ class TwoStageTransfer:
         boolvec = np.array([])
         for num in np.array(intvec):
             temp=np.array(list('{0:b}'.format(num)), dtype=int)
-            #print (temp)
-            print (len(temp))
+            #print (len(temp))
             if(len(boolvec)==0):
                 boolvec=[np.pad(temp, ((658-len(temp)),0), 'constant', constant_values=(0,0 ))]
             else:
                 boolvec = np.append(boolvec,[np.pad(temp, ((658-len(temp)),0), 'constant', constant_values=(0,0 ))],axis=0)
         return boolvec
 
+    def bool_to_int(self, onehot):
+        intvec = np.array([])
+        for num in np.array(onehot):
+            intvec = np.append(intvec, np.argmax(num))
+        return intvec
 
     def calculate_optimal_weight(self, target, w_source, source, boosting_iter, fold):
         '''
@@ -151,14 +155,10 @@ class TwoStageTransfer:
                 #concatenate
 
             target_obs = self.int_to_bool(target[0])
-
-
-            if i==1:
-                print(len(target_obs))
-
-            target_act = np.array(target[1])
+            target_act = self.bool_to_int(target[1])
             source_obs = self.int_to_bool(source[0])
-            source_act = np.array(source[1])
+            source_act = self.bool_to_int(source[1])
+            print(target_act)
             #kFold cross validation
             kf = KFold(n_splits = self.fold)
             err = []
