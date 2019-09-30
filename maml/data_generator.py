@@ -29,7 +29,8 @@ class DataGenerator(object):
         self.num_process = config.get("num_process")
 
         self.batch_size = self.num_classes * self.num_shots
-        self.config = (self.num_shots+1, self.num_classes)
+        self.train_config = (self.num_shots+1, self.num_classes, True)
+        self.eval_config = (self.num_shots+1, self.num_classes, False)
         self.mp_func = dg_utils.sample_task_batch
 
         # Retrieve a dataset used for setting static variables
@@ -64,49 +65,42 @@ class DataGenerator(object):
         Return:
             train_batch, eval_batch
         """
-
-        # Sample from same characters
-        # rand_train_task = self.sample_task()
-        # train_task_ids_list = [rand_train_task for _ in range(self.num_tasks)]
-        # rand_train_task = self.sample_task()
-        # eval_task_ids_list = [rand_train_task for _ in range(self.num_tasks)]
-
         # Sample from different characters
-        train_task_ids_list = [self.sample_task()
+        train_task_ids_list = [self.sample_task(True)
                                for _ in range(self.num_tasks)]
-        eval_task_ids_list = [self.sample_task()
+        eval_task_ids_list = [self.sample_task(False)
                               for _ in range(self.num_tasks)]
 
         train_batch, eval_batch = [], []
-        # if self.num_process > 1:
-        #     if is_train:
-        #         train_batch = dg_utils._mp_batching(self.mp_func,
-        #                                             train_task_ids_list,
-        #                                             self.config,
-        #                                             self.num_process)
+        if self.num_process > 1:
+            if is_train:
+                train_batch = dg_utils._mp_batching(self.mp_func,
+                                                    train_task_ids_list,
+                                                    self.train_config,
+                                                    self.num_process)
 
-        #     if is_eval:
-        #         eval_batch = dg_utils._mp_batching(self.mp_func,
-        #                                            eval_task_ids_list,
-        #                                            self.config,
-        #                                            self.num_process)
+            if is_eval:
+                eval_batch = dg_utils._mp_batching(self.mp_func,
+                                                   eval_task_ids_list,
+                                                   self.eval_config,
+                                                   self.num_process)
 
-        # elif self.num_process == 1:
-        if is_train:
-            train_batch = dg_utils._loop_batching(self.mp_func,
-                                                  eval_task_ids_list,
-                                                  self.config)
-        if is_eval:
-            eval_batch = dg_utils._loop_batching(self.mp_func,
-                                                 eval_task_ids_list,
-                                                 self.config)
+        elif self.num_process == 1:
+            if is_train:
+                train_batch = dg_utils._loop_batching(self.mp_func,
+                                                      train_task_ids_list,
+                                                      self.train_config)
+            if is_eval:
+                eval_batch = dg_utils._loop_batching(self.mp_func,
+                                                     eval_task_ids_list,
+                                                     self.eval_config)
 
         else:
             raise("Incorrect Number of Processes used")
 
         return train_batch, eval_batch
 
-    def sample_task(self):
+    def sample_task(self, train=True):
         """
         Definition:
             Sample a task of a K-way of label/class/category combination.
@@ -114,5 +108,10 @@ class DataGenerator(object):
         Return:
             List: [label_1, label_2 ....]
         """
-        return random.sample(range(DataGenerator.dataset_obj.train_labels_len),
-                             self.num_classes)
+
+        if train:
+            return random.sample(range(DataGenerator.dataset_obj.train_labels_len),
+                                 self.num_classes)
+        else:
+            return random.sample(range(DataGenerator.dataset_obj.test_labels_len),
+                                 self.num_classes)

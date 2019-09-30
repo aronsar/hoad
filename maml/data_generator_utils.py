@@ -10,7 +10,7 @@ def sample_task_batch(labels, config):
     Shape: x_task (batch_size, height width, channel)
            y_task (batch_size, 1)
     """
-    num_shots, num_classes = config[0], config[1]
+    num_shots, num_classes, is_train = config[0], config[1], config[2]
     x_task_batch, y_task_batch = [], []
 
     # N-Way K-shot Sampling
@@ -24,14 +24,15 @@ def sample_task_batch(labels, config):
         # sampled_imgs_id = random.sample(
         #     range(len(DataGenerator.x_train[raw_label_id])), num_shots)
         img_count = dg.DataGenerator.dataset_obj.get_image_count_by_label(
-            raw_label_id)
+            raw_label_id, is_train)
         sampled_imgs_id = random.sample(range(img_count), num_shots)
         task_imgs, task_labels = [], []
         for j, img_id in enumerate(sampled_imgs_id):
             # sampled_img = np.array(
             #     DataGenerator.x_train[raw_label_id][img_id])
             sampled_img = dg.DataGenerator.dataset_obj.get_image(raw_label_id,
-                                                                 img_id)
+                                                                 img_id,
+                                                                 is_train)
 
             task_imgs.append(sampled_img)
             task_labels.append(true_label)  # y is 0 ~ self.num_classes

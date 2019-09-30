@@ -25,13 +25,13 @@ def train(config):
 def main():
     NUM_CLASSES = 5        # K-way
     NUM_SHOTS = 2          # N-shot
-    NUM_TASK = 16           # Number of task sampled per meta update
+    NUM_TASK = 32           # Number of task sampled per meta update
     NUM_TASK_TRAIN = 1     # Number of inner task update
-    NUM_META_TRAIN = 20000  # Number of total meta update count
+    NUM_META_TRAIN = 50000  # Number of total meta update count
     # Number of processors used for batching, use 1 unless batching is a heavy task
     NUM_PROCESS = 1
-    NUM_VERBOSE_INTERVAL = 1
-    META_LR = 1e-4
+    NUM_VERBOSE_INTERVAL = 100
+    META_LR = 1e-3
     TASK_LR = 0.4
     DATASET = "omniglot"
     DATA_DIR = os.path.join(os.getcwd(), "data")
