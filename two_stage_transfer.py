@@ -11,7 +11,7 @@ import numpy as np
 from utils import parse_args
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.model_selection import KFold
-from sklearn import metrics
+from sklearn.metrics import accuracy_score
 
 '''
 DATA LOADER FOR TWO STAGE TRANSFER
@@ -98,7 +98,8 @@ class TwoStageTransfer:
             source = {},
             boosting_iter = 5,
             fold = 10,
-            max_source_dataset = 1):
+            max_source_dataset = 1,
+            model = DecisionTreeClassifier()):
         '''
         - target is target data set (10 adhoc games from same agent)
         - S is set of source data sets S = {S_1, S_2, ..., S_n} (games from previously observed teammates,
@@ -109,11 +110,12 @@ class TwoStageTransfer:
         - S^w means data set S taken with weight w spread over instances
         - F is weighted source data
         '''
+        self.model = model
         self.target = target
         self.source = source
         self.boosting_iter = boosting_iter
         self.fold = fold
-        self.max_souce_dataset = max_source_dataset
+        self.max_source_dataset = max_source_dataset
 
     def int_to_bool(self, intvec):
         boolvec = np.array([])
@@ -150,34 +152,37 @@ class TwoStageTransfer:
             weights.append (weight)
 
             #preparing training and testing data
-            if len(w_source)!=0:
-                print("w_source is not empty")
-                #concatenate
-
             target_obs = self.int_to_bool(target[0])
             target_act = self.bool_to_int(target[1])
             source_obs = self.int_to_bool(source[0])
             source_act = self.bool_to_int(source[1])
             
+            #Applying weight to S->Sw
+            source_obs = weight * source_obs
+
+            #concatenate F and Sw
+            if len(w_source)!=0 and len(w_source[0])!=0:
+                print("Appending w_source and source")
+                source_obs += w_source[0]
+                source_act += w_source[1]
+
             #kFold cross validation
             kf = KFold(n_splits = self.fold)
             error = 0
             for train,test in kf.split(target_obs):
                 #define a model
                 model = DecisionTreeClassifier()
-                obs_train = np.concatenate((weight * source_obs,target_obs[train]))
+                obs_train = np.concatenate((source_obs,target_obs[train]))
                 act_train = np.concatenate((source_act,target_act[train]))
                 obs_test = target_obs[test]
                 act_test = target_act[test]
                 
                 model.fit(obs_train,act_train)
                 act_predict = model.predict(obs_test)
-                error += 1-metrics.accuracy_score(target_act[test], act_predict)
-                print(error)
+                error += 1-accuracy_score(target_act[test], act_predict)
             err.append(error/self.fold)
-        print(err)
+        print("Error: ", err)
         max_err_ind = self.__max_val_ind(err)
-        print(weights[max_err_ind])
 
         return weights[max_err_ind]
     
@@ -209,42 +214,47 @@ class TwoStageTransfer:
                 [])
 
             weight_sourcedata_dict[weight] = agent
-        sortedS = sort_data_by_weight(weight_sourcedata_dict)
+        print(weight_sourcedata_dict)
+        sortedS = self.sort_data_by_weight(weight_sourcedata_dict)
+        print(sortedS)
     
-        F = []
+        F = [[],[]]
         for i in range(self.max_source_dataset):
-            weight = calculate_optimal_weight(self.target,
+            weight = self.calculate_optimal_weight(self.target[target_agent_name],
                     F,
                     self.source[sortedS[i]],
                     self.boosting_iter,
                     self.fold,
                     [])
-            F += self.source[sortedS[i]] * weight
-        training_data = target + weighted_source
-        return train_classifier(training_data)
+            F[0] += self.source[sortedS[i]][0] * weight
+            F[1] += self.source[sortedS[i]][1]
+        training_data = [F[0]+self.target[target_agent_name][0],
+                F[1]+self.target[target_agent_name][1]]
+
+        return training_data
 
 
-# train decision tree with data of prev games using scikitlearn lib
-def second_stage(training_data):
-    clf = DecisionTreeClassifier()
-    obs = [data[0] for data in training_data]
-    act = [data[1] for data in training_data]
+    # train decision tree with data of prev games using scikitlearn lib
+    def fit(self):
+        training_data = self.first_stage()
 
-    classifier = clf.fit(obs, act)
-    return classifier
+        obs = training_data[0]
+        act = training_data[1]
 
+        classifier = self.model.fit(obs, act)
+        return classifier
 
-# FIXME: aclculate error
-def calculate_err(target, weighted_source, S):
-    return err
-
-def sort_data_by_weight(weight_sourcedata_dict):
-    return [weight_sourcedata_dict[key] for key in sorted(weight_sourcedata_dict.keys(), reverse=True)]
+    def sort_data_by_weight(self, weight_sourcedata_dict):
+        return [weight_sourcedata_dict[key] for key in sorted(weight_sourcedata_dict.keys(), reverse=True)]
 
                                                                 
                                                                 
 def main():
     #loading data
+    print("**************************************************")
+    print("*                 LOADING DATA                   *")
+    print("**************************************************")
+
     data_loader = DataLoader("./data/agent_data")
     data_loader.load_target_source_data()
     '''
@@ -259,15 +269,16 @@ def main():
     # thousands of games from all other agents for source data set, except the target data set agent,  ex: 1000 games from Quux, 1000 games from Walton,...
     source = data_loader.source
     
-    print("============ len ", len(source), "============")
+    print("**************************************************")
+    print("*                 TRAINING                       *")
+    print("**************************************************")
+    
     classifier = TwoStageTransfer(target,
             source,
             boosting_iter=10,
             fold=10,
             max_source_dataset=len(source))
-    
-    classifier.first_stage()
-    # return classifier
+    model = classifier.fit()
 
 if __name__== '__main__':
     main()
