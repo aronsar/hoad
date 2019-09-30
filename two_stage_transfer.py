@@ -132,7 +132,7 @@ class TwoStageTransfer:
             intvec = np.append(intvec, np.argmax(num))
         return intvec
 
-    def calculate_optimal_weight(self, target, w_source, source, boosting_iter, fold):
+    def calculate_optimal_weight(self, target, w_source, source, boosting_iter, fold, err):
         '''
         CalculateOptimalWeight(T, F, S, m, k):
         for i from 1 to m do
@@ -158,11 +158,10 @@ class TwoStageTransfer:
             target_act = self.bool_to_int(target[1])
             source_obs = self.int_to_bool(source[0])
             source_act = self.bool_to_int(source[1])
-            print(target_act)
+            
             #kFold cross validation
             kf = KFold(n_splits = self.fold)
-            err = []
-
+            error = 0
             for train,test in kf.split(target_obs):
                 #define a model
                 model = DecisionTreeClassifier()
@@ -173,8 +172,13 @@ class TwoStageTransfer:
                 
                 model.fit(obs_train,act_train)
                 act_predict = model.predict(obs_test)
-                err.append(1-metrics.accuracy_score(target_act[test], act_predict))
+                error += 1-metrics.accuracy_score(target_act[test], act_predict)
+                print(error)
+            err.append(error/self.fold)
+        print(err)
         max_err_ind = self.__max_val_ind(err)
+        print(weights[max_err_ind])
+
         return weights[max_err_ind]
     
     def __max_val_ind(self, num_arr):
@@ -195,19 +199,26 @@ class TwoStageTransfer:
         weight_sourcedata_dict = {}
         target_agent_name = list(self.target.keys())[0]
         for agent in self.source:
+            print(agent, " in training")
             #phi is an empty set
             weight = self.calculate_optimal_weight(self.target[target_agent_name],
                 [],
                 self.source[agent],
                 self.boosting_iter,
-                self.fold)
+                self.fold,
+                [])
 
             weight_sourcedata_dict[weight] = agent
         sortedS = sort_data_by_weight(weight_sourcedata_dict)
     
         F = []
-        for i in range(max_source_dataset):
-            weight = calculate_optimal_weight(self.target, F, self.source[sortedS[i]], self.boosting_iter, self.fold)
+        for i in range(self.max_source_dataset):
+            weight = calculate_optimal_weight(self.target,
+                    F,
+                    self.source[sortedS[i]],
+                    self.boosting_iter,
+                    self.fold,
+                    [])
             F += self.source[sortedS[i]] * weight
         training_data = target + weighted_source
         return train_classifier(training_data)
