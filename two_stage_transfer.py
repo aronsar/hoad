@@ -49,7 +49,7 @@ class DataLoader(object):
             if agent_name != target_agent:
                 print("Getting source data for ", agent_name)
                 data = self.__get_25k_data(os.path.join(self.datapath, agent_dir))
-                self.source[agent_name] = self.__format_data(data[:100])
+                self.source[agent_name] = self.__format_data(data[:10])
 
     def __get_all_agents(self):
         self.all_agents_datadir = [name for name in os.listdir(self.datapath)]
@@ -163,8 +163,10 @@ class TwoStageTransfer:
             #concatenate F and Sw
             if len(w_source)!=0 and len(w_source[0])!=0:
                 print("Appending w_source and source")
-                source_obs += w_source[0]
-                source_act += w_source[1]
+                w_source_obs = self.int_to_bool(w_source[0])
+                w_source_act = self.bool_to_int(w_source[1])
+                source_obs += w_source_obs
+                source_act += w_source_act
 
             #kFold cross validation
             kf = KFold(n_splits = self.fold)
@@ -215,8 +217,8 @@ class TwoStageTransfer:
 
             weight_agent.append((weight, agent))
         print(weight_agent)
-        sortedS = self.sort_data_by_weight(weight_sourcedata_dict)
-    
+        sortedS = self.sort_data_by_weight(weight_agent)
+        print(sortedS)
         F = [[],[]]
         for i in range(self.max_source_dataset):
             weight = self.calculate_optimal_weight(self.target[target_agent_name],
@@ -225,7 +227,7 @@ class TwoStageTransfer:
                     self.boosting_iter,
                     self.fold,
                     [])
-            F[0] += float(self.source[sortedS[i]][0]) * weight
+            F[0] += list(np.array(self.source[sortedS[i]][0]) * weight)
             F[1] += self.source[sortedS[i]][1]
         training_data = [F[0]+self.target[target_agent_name][0],
                 F[1]+self.target[target_agent_name][1]]
@@ -244,7 +246,7 @@ class TwoStageTransfer:
         return classifier
 
     def sort_data_by_weight(self, weight_agent):
-        weight_agent = sort(weight_agent, reverse=True)
+        weight_agent = sorted(weight_agent, reverse=True)
         sorted_agent_by_weight = [elem[1] for elem in weight_agent]
 
         return sorted_agent_by_weight
