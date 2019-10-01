@@ -181,7 +181,7 @@ class TwoStageTransfer:
                 act_predict = model.predict(obs_test)
                 error += 1-accuracy_score(target_act[test], act_predict)
             err.append(error/self.fold)
-        print("Error: ", err)
+        
         max_err_ind = self.__max_val_ind(err)
 
         return weights[max_err_ind]
@@ -201,7 +201,7 @@ class TwoStageTransfer:
 
     def first_stage(self):
         #weights = []
-        weight_sourcedata_dict = {}
+        weight_agent = []
         target_agent_name = list(self.target.keys())[0]
         for agent in self.source:
             print(agent, " in training")
@@ -213,10 +213,9 @@ class TwoStageTransfer:
                 self.fold,
                 [])
 
-            weight_sourcedata_dict[weight] = agent
-        print(weight_sourcedata_dict)
+            weight_agent.append((weight, agent))
+        print(weight_agent)
         sortedS = self.sort_data_by_weight(weight_sourcedata_dict)
-        print(sortedS)
     
         F = [[],[]]
         for i in range(self.max_source_dataset):
@@ -226,7 +225,7 @@ class TwoStageTransfer:
                     self.boosting_iter,
                     self.fold,
                     [])
-            F[0] += self.source[sortedS[i]][0] * weight
+            F[0] += float(self.source[sortedS[i]][0]) * weight
             F[1] += self.source[sortedS[i]][1]
         training_data = [F[0]+self.target[target_agent_name][0],
                 F[1]+self.target[target_agent_name][1]]
@@ -244,9 +243,11 @@ class TwoStageTransfer:
         classifier = self.model.fit(obs, act)
         return classifier
 
-    def sort_data_by_weight(self, weight_sourcedata_dict):
-        return [weight_sourcedata_dict[key] for key in sorted(weight_sourcedata_dict.keys(), reverse=True)]
+    def sort_data_by_weight(self, weight_agent):
+        weight_agent = sort(weight_agent, reverse=True)
+        sorted_agent_by_weight = [elem[1] for elem in weight_agent]
 
+        return sorted_agent_by_weight
                                                                 
                                                                 
 def main():
