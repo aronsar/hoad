@@ -84,10 +84,46 @@ class SimpleModel(tk.Model):
         x = self.pool2(self.act2(self.bn2(self.conv2(x))))
         x = self.pool3(self.act3(self.bn3(self.conv3(x))))
         x = self.pool4(self.act4(self.bn4(self.conv4(x))))
-        # x = self.pool1(self.act1(self.conv1(x)))
-        # x = self.pool2(self.act2(self.conv2(x)))
-        # x = self.pool3(self.act3(self.conv3(x)))
-        # x = self.pool4(self.act4(self.conv4(x)))
         x = tf.math.reduce_mean(x, [1, 2])
         x = self.dense1(x)
+        return x
+
+
+class SimpleGanabiModel(tk.Model):
+    def __init__(self, output_shape):
+        super().__init__()
+        self.dense1 = tk.layers.Dense(256, activation=None)
+        self.bn1 = tk.layers.BatchNormalization()
+        self.act1 = tk.activations.relu
+
+        self.dense2 = tk.layers.Dense(128, activation=None)
+        self.bn2 = tk.layers.BatchNormalization()
+        self.act2 = tk.activations.relu
+
+        self.dense3 = tk.layers.Dense(64, activation=None)
+        self.bn3 = tk.layers.BatchNormalization()
+        self.act3 = tk.activations.relu
+
+        self.dense4 = tk.layers.Dense(32, activation=None)
+        self.bn4 = tk.layers.BatchNormalization()
+        self.act4 = tk.activations.relu
+
+        self.dense5 = tk.layers.Dense(32, activation=None)
+        self.bn5 = tk.layers.BatchNormalization()
+        self.act5 = tk.activations.relu
+
+        self.out = tk.layers.Dense(output_shape, activation='softmax')
+
+    def call(self, x):
+        return self.forward(x)
+
+    def forward(self, x):
+        x = self.act1(self.bn1(self.dense1(x)))
+        x = self.act2(self.bn2(self.dense2(x)))
+        x = self.act3(self.bn3(self.dense3(x)))
+        x = self.act4(self.bn4(self.dense4(x)))
+        x = self.act5(self.bn5(self.dense5(x)))
+
+        x = self.out(x)
+
         return x
