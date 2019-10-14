@@ -96,13 +96,13 @@ class DataGenerator(object):
         elif self.dataset_name == 'ganabi':
             DataGenerator.dataset_obj = Ganabi.Dataset(data_dir)
             self.batch_size = config.get("batch_size")
-            self.train_config = (self.num_shots, self.batch_size, True)
-            self.eval_config = (self.num_shots, self.batch_size, False)
-            self.mp_func = Ganabi.sample_task_batch_v2
+            self.train_config = (True)
+            self.eval_config = (False)
+            self.mp_func = Ganabi.sample_task_batch
         else:
             raise("Unknown Dataset")
 
-    def next_batch_v2(self, is_train=True):
+    def next_batch(self, is_train=True):
         """
         Definition:
             Retrieve a train batch and task batch
