@@ -104,69 +104,6 @@ class MAML:
             self.task_models[i].build(input_dim)
 
     @tf.function
-    def train_fomaml(self, train_batch):
-        """
-        Low Level Overview of Training FOMAML.
-        """
-
-        tasks_gradients = []
-        for task in range(self.TASK_NUM):
-            for shot in range(0, self.K_SHOTS_NUM + 1):
-                images = train_batch[task][0][shot]
-                labels = train_batch[task][1][shot]
-                for _ in range(self.TASK_TRAIN_STEPS):
-                    # Step 1: Forward Pass
-                    loss, predictions, grads = self.compute_gradients(
-                        images, labels, self.task_models[task])
-
-                    # Step 2: Update params
-                    if shot < self.K_SHOTS_NUM:
-                        self.task_optimizer.apply_gradients(
-                            zip(grads, self.task_models[task].trainable_variables))
-                    else:
-                        self.task_train_loss(loss)
-                        self.task_train_accuracy(labels, predictions)
-                        tasks_gradients.append(grads)
-                        break
-
-        # Step 3 : get gFOMAML
-        meta_gradients = []
-        for i in range(len(tasks_gradients[0])):
-            meta_grads = []
-            for task in range(0, self.TASK_NUM):
-                meta_grads.append(tasks_gradients[task][i])
-
-            tf.stack(meta_grads)
-            meta_grads = tf.math.reduce_mean(meta_grads, axis=0)
-            meta_gradients.append(meta_grads)
-
-        # Apply Gradient on meta model
-        self.meta_optimizer.apply_gradients(zip(meta_gradients,
-                                                self.model.trainable_variables))
-
-    @tf.function
-    def eval_fomaml(self, eval_batch):
-        """
-        Low Level Overview of Evaluating FOMAML.
-        """
-
-        for task in range(self.TASK_NUM):
-            for shot in range(0, self.K_SHOTS_NUM + 1):
-                images = eval_batch[task][0][shot]
-                labels = eval_batch[task][1][shot]
-                for _ in range(self.TASK_TRAIN_STEPS):
-                    loss, predictions, grads = self.compute_gradients(
-                        images, labels, self.task_models[task])
-
-                    if shot < self.K_SHOTS_NUM:
-                        self.task_optimizer.apply_gradients(
-                            zip(grads, self.task_models[task].trainable_variables))
-                    else:
-                        self.meta_train_loss(loss)
-                        self.meta_train_accuracy(labels, predictions)
-                        break
-
-    @tf.function
     def train_fomaml_omniglot(self, train_batch):
         """
         Low Level Overview of Training FOMAML.
@@ -266,70 +203,72 @@ class MAML:
                 self.meta_train_loss(loss)
                 self.meta_train_accuracy(y_query[j], predictions)
 
+    def train_fomaml_omniglot_v2(self, train_batch):
+        tasks_gradients = []
+        for task in range(self.TASK_NUM):
+            x_support = train_batch[task][0]
+            y_support = train_batch[task][1]
+            x_query = train_batch[task][2]
+            y_query = train_batch[task][3]
+
+            grads = self.train_task(x_support,
+                                    y_support,
+                                    x_query,
+                                    y_query,
+                                    task,
+                                    self.task_models[task])
+            tasks_gradients.append(grads)
+
+        meta_grads = self.train_meta(tasks_gradients)
+
+    def eval_fomaml_omniglot_v2(self, eval_batch):
+        for task in range(self.TASK_NUM):
+            x_support = eval_batch[task][0]
+            y_support = eval_batch[task][1]
+            x_query = eval_batch[task][2]
+            y_query = eval_batch[task][3]
+
+            self.eval_task(x_support,
+                           y_support,
+                           x_query,
+                           y_query,
+                           task,
+                           self.task_models[task])
+
     @tf.function
-    def compute_gradients(self, images, labels, model):
-        '''
-        Compute Gradients
+    def train_task(self, x_support, y_support, x_query, y_query, task, model):
+        # Retrace Makes the code 20 times slower
+        print("######################### Retrace Train Task {} #########################".format(task))
 
-        Return:
-            loss
-            predictions
-            grads
-        '''
-        with tf.GradientTape() as task_tape:
-            predictions = model(images)
-            loss = self.task_loss_op(labels, predictions)
-
-        grads = task_tape.gradient(loss, model.trainable_variables)
-        # clipped at optimizer for now
-        # clipped_grads = [tf.clip_by_value(g, -10, 10) for g in grads]
-
-        return loss, predictions, grads
-
-    @tf.function
-    def update_meta(self, grads):
-        # Apply Gradient on meta model
-        self.meta_optimizer.apply_gradients(zip(grads,
-                                                self.model.trainable_variables))
-
-    @tf.function
-    def update_task(self, grads, task):
-        # Apply Gradient on task model
-        self.task_optimizer.apply_gradients(zip(grads,
-                                                self.task_models[task].trainable_variables))
-
-    @tf.function
-    def train_task(self, x_support, y_support, x_query, y_query):
-        # Support Set
-        for s_game in range(x_support.shape[0]):
+        for s_shot in range(x_support.shape[0]):
             # convert ragged tensor to normal tensor
-            X = x_support[s_game]
-            Y = y_support[s_game]
+            X = x_support[s_shot]
+            Y = y_support[s_shot]
 
             # Step 1: Forward Pass
             with tf.GradientTape() as task_tape:
-                predictions = self.task_models[task](X)
+                predictions = model(X)
                 loss = self.task_loss_op(Y, predictions)
 
             grads = task_tape.gradient(
-                loss, self.task_models[task].trainable_variables)
+                loss, model.trainable_variables)
 
             # Step 2: Update params
             self.task_optimizer.apply_gradients(
-                zip(grads, self.task_models[task].trainable_variables))
+                zip(grads, model.trainable_variables))
 
         # Query Set
-        for q_game in range(x_query.shape[0]):
-            X = x_query[q_game]
-            Y = y_query[q_game]
+        for q_shot in range(x_query.shape[0]):
+            X = x_query[q_shot]
+            Y = y_query[q_shot]
 
             # Step 1: Forward Pass
             with tf.GradientTape() as task_tape:
-                predictions = self.task_models[task](X)
+                predictions = model(X)
                 loss = self.task_loss_op(Y, predictions)
 
             grads = task_tape.gradient(
-                loss, self.task_models[task].trainable_variables)
+                loss, model.trainable_variables)
 
             # Step 2: Record Gradients for Meta Gradients
             self.task_train_loss(loss)
@@ -337,6 +276,95 @@ class MAML:
 
         return grads
 
+    @tf.function
+    def train_meta(self, tasks_gradients):
+        print("######################### Retrace Train Meta #########################")
+
+        # Step 3 : get gFOMAML
+        meta_gradients = []
+        for i in range(len(tasks_gradients[0])):
+            meta_grads = []
+            for task in range(0, self.TASK_NUM):
+                meta_grads.append(tasks_gradients[task][i])
+
+            tf.stack(meta_grads)
+            meta_grads = tf.math.reduce_mean(meta_grads, axis=0)
+            meta_gradients.append(meta_grads)
+
+        # Apply Gradient on meta model
+        self.meta_optimizer.apply_gradients(zip(meta_gradients,
+                                                self.model.trainable_variables))
+        return meta_gradients
+
+    @tf.function
+    def eval_task(self, x_support, y_support, x_query, y_query, task, model):
+        # Retrace Makes the code 20 times slower
+        print("######################### Retrace Eval Task {} #########################".format(task))
+
+        for s_shot in range(x_support.shape[0]):
+            # convert ragged tensor to normal tensor
+            X = x_support[s_shot]
+            Y = y_support[s_shot]
+
+            # Step 1: Forward Pass
+            with tf.GradientTape() as task_tape:
+                predictions = model(X)
+                loss = self.task_loss_op(Y, predictions)
+
+            grads = task_tape.gradient(
+                loss, model.trainable_variables)
+
+            # Step 2: Update params
+            self.task_optimizer.apply_gradients(
+                zip(grads, model.trainable_variables))
+
+        # Query Set
+        for q_shot in range(x_query.shape[0]):
+            X = x_query[q_shot]
+            Y = y_query[q_shot]
+
+            # Step 1: Forward Pass
+            with tf.GradientTape() as task_tape:
+                predictions = model(X)
+                loss = self.task_loss_op(Y, predictions)
+
+            # Step 2: Record Gradients for Meta Gradients
+            self.meta_train_loss(loss)
+            self.meta_train_accuracy(Y, predictions)
+
+    def train_fomaml_ganabi_v2(self, train_batch):
+        tasks_gradients = []
+        for task in range(self.TASK_NUM):
+            x_support = train_batch[task][0]
+            y_support = train_batch[task][1]
+            x_query = train_batch[task][2]
+            y_query = train_batch[task][3]
+
+            grads = self.train_task(x_support,
+                                    y_support,
+                                    x_query,
+                                    y_query,
+                                    task,
+                                    self.task_models[task])
+            tasks_gradients.append(grads)
+
+        meta_grads = self.train_meta(tasks_gradients)
+
+    def eval_fomaml_ganabi_v2(self, eval_batch):
+        for task in range(1):
+            x_support = eval_batch[task][0]
+            y_support = eval_batch[task][1]
+            x_query = eval_batch[task][2]
+            y_query = eval_batch[task][3]
+
+            self.eval_task(x_support,
+                           y_support,
+                           x_query,
+                           y_query,
+                           task,
+                           self.task_models[task])
+
+    @tf.function
     def train_fomaml_ganabi(self, train_batch):
         """
         Low Level Overview of Training FOMAML.
@@ -399,6 +427,7 @@ class MAML:
         self.meta_optimizer.apply_gradients(zip(meta_gradients,
                                                 self.model.trainable_variables))
 
+    @tf.function
     def eval_fomaml_ganabi(self, eval_batch):
         """
         Low Level Overview of Evaluating FOMAML.
@@ -495,14 +524,13 @@ class MAML:
             train_batch = data_generator.next_batch_v2(is_train=True)
             self.reset_task_weights()
 
-            # import pdb
-            # pdb.set_trace()
-            # self.train_fomaml_v2(train_batch)
-
             if self.dataset == 'omniglot':
-                self.train_fomaml_omniglot(train_batch)
+                # self.train_fomaml_omniglot(train_batch)
+                self.train_fomaml_omniglot_v2(train_batch)
             elif self.dataset == 'ganabi':
-                self.train_fomaml_ganabi(train_batch)
+                # self.train_fomaml_ganabi(train_batch)
+                self.train_fomaml_ganabi_v2(train_batch)
+
             _, _ = self.record_metrics(meta_step, is_train=True)
 
             # Eval
@@ -512,9 +540,11 @@ class MAML:
                 self.reset_task_weights()
 
                 if self.dataset == 'omniglot':
-                    self.eval_fomaml_omniglot(eval_batch)
+                    # self.eval_fomaml_omniglot(eval_batch)
+                    self.eval_fomaml_omniglot_v2(eval_batch)
                 elif self.dataset == 'ganabi':
-                    self.eval_fomaml_ganabi(eval_batch)
+                    # self.eval_fomaml_ganabi(eval_batch)
+                    self.eval_fomaml_ganabi_v2(eval_batch)
 
                 eval_loss, eval_acc = self.record_metrics(
                     meta_step, is_train=False)

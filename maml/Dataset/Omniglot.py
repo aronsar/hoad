@@ -118,7 +118,7 @@ def sample_task_batch_v2(labels, config):
         x_query[i] = x_query[i][shuffled_id]
         y_query[i] = y_query[i][shuffled_id]
 
-    return x_support, y_support, x_query, y_query
+    return (x_support, y_support, x_query, y_query)
 
 
 def read_imgs_in_directory(img_path, config):

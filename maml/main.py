@@ -8,6 +8,7 @@ import time
 import numpy as np
 import os
 import random
+from pprint import pprint
 
 from DataGenerator import DataGenerator
 from maml import MAML
@@ -16,7 +17,7 @@ from maml import MAML
 def get_Omniglot_config():
     NUM_CLASSES = 5        # K-way
     NUM_SHOTS = 2          # N-shot
-    NUM_TASK = 8           # Number of task sampled per meta update
+    NUM_TASK = 32           # Number of task sampled per meta update
     NUM_TASK_TRAIN = 1     # Number of inner task update
     NUM_META_TRAIN = 50000  # Number of total meta update count
     # Number of processors used for batching, use 1 unless batching is a heavy task
@@ -45,27 +46,31 @@ def get_Omniglot_config():
         "reduce_lr_rate": REDUCE_LR_RATE
     }
 
+    pprint(config)
+
     return config
 
 
 def get_Ganabi_config():
     NUM_CLASSES = 4        # N-way: Agent Class for ganabi
     NUM_SHOTS = 10          # K-shot: 10 games
-    NUM_TASK = 5           # Number of task sampled per meta update
+    NUM_TASK = 4           # Number of task sampled per meta update
     NUM_TASK_TRAIN = 1     # Number of inner task update
     NUM_META_TRAIN = 50000  # Number of total meta update count
     # Number of processors used for batching, use 1 unless batching is a heavy task
     NUM_PROCESS = 1
     NUM_VERBOSE_INTERVAL = 100
-    META_LR = 1e-4
-    TASK_LR = 0.4
+    META_LR = 1e-3
+    # TASK_LR 0.1 seems to be too big
+    TASK_LR = 3e-3
     DATASET = "ganabi"
     DATA_DIR = os.path.join(os.getcwd(), "data")
-    PATIENCE = 5000
-    REDUCE_LR_RATE = 0.1
+    PATIENCE = 2500
+    REDUCE_LR_RATE = 0.3
 
     if DATASET == "ganabi":
         NUM_CLASSES = NUM_TASK
+        BATCH_SIZE = 64  # Number of (obs, act) pair per shot
 
     config = {
         "num_classes": NUM_CLASSES,
@@ -80,8 +85,11 @@ def get_Ganabi_config():
         "dataset": DATASET,
         "data_dir": DATA_DIR,
         "num_patience": PATIENCE,
-        "reduce_lr_rate": REDUCE_LR_RATE
+        "reduce_lr_rate": REDUCE_LR_RATE,
+        "batch_size": BATCH_SIZE
     }
+
+    pprint(config)
 
     return config
 

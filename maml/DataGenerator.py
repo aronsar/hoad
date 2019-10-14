@@ -44,8 +44,8 @@ def _loop_batching(func, task_ids_list, config):
     for task in range(len(task_ids_list)):
         task_ids = task_ids_list[task]
 
-        x_support, y_support, x_query, y_query = func(task_ids, config)
-        batch.append((x_support, y_support, x_query, y_query))
+        data = func(task_ids, config)
+        batch.append(data)
 
     return batch
 
@@ -84,18 +84,20 @@ class DataGenerator(object):
         self.num_tasks = config.get("num_tasks")
         self.num_process = config.get("num_process")
 
-        self.train_config = (self.num_shots, self.num_classes, True)
-        self.eval_config = (self.num_shots, self.num_classes, False)
-
         # Retrieve a dataset used for setting static variables
         data_dir = config.get("data_dir")
         self.dataset_name = config.get("dataset")
 
         if self.dataset_name == 'omniglot':
             DataGenerator.dataset_obj = Omniglot.Dataset(data_dir)
+            self.train_config = (self.num_shots, self.num_classes, True)
+            self.eval_config = (self.num_shots, self.num_classes, False)
             self.mp_func = Omniglot.sample_task_batch_v2
         elif self.dataset_name == 'ganabi':
             DataGenerator.dataset_obj = Ganabi.Dataset(data_dir)
+            self.batch_size = config.get("batch_size")
+            self.train_config = (self.num_shots, self.batch_size, True)
+            self.eval_config = (self.num_shots, self.batch_size, False)
             self.mp_func = Ganabi.sample_task_batch_v2
         else:
             raise("Unknown Dataset")
