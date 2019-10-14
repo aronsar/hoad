@@ -101,6 +101,35 @@ class DataGenerator(object):
             self.mp_func = Ganabi.sample_task_batch
         else:
             raise("Unknown Dataset")
+    
+    def new_init(self):
+        if self.dataset == 'omniglot':
+            DataGenerator.dataset_obj = Omniglot.Dataset(data_dir)
+            self.train_config = (self.num_shots, self.num_classes, True)
+            self.eval_config = (self.num_shots, self.num_classes, False)
+            self.mp_func = Omniglot.sample_task_batch_v2
+
+        elif self.dataset == 'ganabi':
+            # self.num_classes = 
+            DataGenerator.dataset_obj = Ganabi.Dataset(data_dir)
+            self.batch_size = config.get("batch_size")
+            self.train_config = (True)
+            self.eval_config = (False)
+            self.mp_func = Ganabi.sample_task_batch
+        else:
+            raise("Unknown Dataset")
+
+    def get_task_ids(self, is_train=True):
+        # For ganabi, self.num_classes should be 10 games
+        if self.dataset_name == 'omniglot':
+            return [_sample_task(self.num_classes, is_train=is_train)
+                    for _ in range(self.num_tasks)]
+        elif self.dataset_name == 'ganabi':
+            num_classes = self.num_classes if is_train else 1  # Only one test agent availble
+            return [[t] for t in _sample_task(num_classes, is_train=is_train)]
+        else:
+            raise("Unknown Dataset")
+       
 
     def next_batch(self, is_train=True):
         """
@@ -118,14 +147,7 @@ class DataGenerator(object):
         Return:
             batch
         """
-        # For ganabi, self.num_classes should be 10 games
-        if self.dataset_name == 'omniglot':
-            task_ids_list = [_sample_task(self.num_classes, is_train=is_train)
-                             for _ in range(self.num_tasks)]
-        elif self.dataset_name == 'ganabi':
-            num_classes = self.num_classes if is_train else 1  # Only one test agent availble
-            task_ids_list = [[t]
-                             for t in _sample_task(num_classes, is_train=is_train)]
+        task_ids_list = self.get_task_ids(is_train)
 
         batch = []
         if self.num_process > 1:

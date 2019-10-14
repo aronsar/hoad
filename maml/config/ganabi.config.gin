@@ -1,0 +1,21 @@
+import TrainConfig
+
+TrainConfig.TrainConfig.dataset = "ganabi"
+
+TrainConfig.TrainConfig.num_task = 4
+TrainConfig.TrainConfig.num_classes = 4
+TrainConfig.TrainConfig.num_support_shots = 10
+TrainConfig.TrainConfig.num_query_shots = 1
+TrainConfig.TrainConfig.num_shots = 10
+TrainConfig.TrainConfig.batch_size = 64
+
+TrainConfig.TrainConfig.num_meta_train = 50000
+TrainConfig.TrainConfig.num_task_train = 1
+
+TrainConfig.TrainConfig.meta_lr = 1e-3
+TrainConfig.TrainConfig.task_lr = 3e-3
+TrainConfig.TrainConfig.reduce_lr_rate = 0.3
+TrainConfig.TrainConfig.patience = 2500
+
+TrainConfig.TrainConfig.num_process = 1
+TrainConfig.TrainConfig.num_verbose_interval = 100

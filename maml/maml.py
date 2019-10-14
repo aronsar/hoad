@@ -15,9 +15,13 @@ import models
 import time
 import datetime
 import os
+import sys
 
+sys.append('..')
 
-class MAML:
+# from TrainConfig import TrainConfig
+
+class MAML(object):
     def __init__(self, config):
         self.TASK_NUM = config.get("num_tasks")
         self.N_WAYS_NUM = config.get("num_classes")

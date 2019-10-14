@@ -8,8 +8,10 @@ import time
 import numpy as np
 import os
 import random
+import gin
 from pprint import pprint
 
+from TrainConfig import TrainConfig
 from DataGenerator import DataGenerator
 from maml import MAML
 
@@ -107,14 +109,27 @@ def train_ganabi():
     maml = MAML(config)
     maml.train_manager(data_generator)
 
+def train_ganabi_v2():
+    config_file = './config/ganabi.config.gin'
+    gin.parse_config_file(config_path)
+    config_obj = TrainConfig()
+    config = config_obj.get_config()
 
+
+    data_generator = DataGenerator(config)
+    maml = MAML(config)
+    # maml.train_manager(data_generator)
+
+# Demo Metrics at ~/Coding/ganabi/james_ganabi/maml/logs/DeleteMe-20191014-000256/20191014-000256
 def main():
     # Set Memory growth
     physical_devices = tf.config.experimental.list_physical_devices('GPU')
     tf.config.experimental.set_memory_growth(physical_devices[0], True)
 
     # train_omniglot()
-    train_ganabi()
+    # train_ganabi()
+
+
 
 
 if __name__ == "__main__":
