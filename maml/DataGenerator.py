@@ -6,6 +6,7 @@ Usage:
 
 Author: Chu-Hung Cheng
 """
+import multiprocessing as mp
 import tensorflow.keras as tk
 import numpy as np
 import os
@@ -23,12 +24,14 @@ def _mp_batching(mp_func, task_ids_list, config, process_count=4):
     Return:
         train_batch, eval_batch
     """
-    import multiprocessing as mp
-
     batch = []
     mp_args = zip(task_ids_list, repeat(config))
+    # start = time.time()
+    # print("Start Mp : {}".format(start))
     with mp.Pool(process_count) as p:
         batch = p.starmap(mp_func, mp_args)
+    # end = time.time()
+    # print("End Mp : {} Diff : {}".format(end, end - start))
 
     return batch
 
@@ -77,16 +80,16 @@ class DataGenerator(object):
     # Static Variables for Multi-Processing Support
     dataset_obj = None
 
-    def __init__(self, config):
+    def __init__(self, config_obj):
         # num_classes = K way
-        self.num_classes = config.get("num_classes")
-        self.num_shots = config.get("num_shots")
-        self.num_tasks = config.get("num_tasks")
-        self.num_process = config.get("num_process")
+        self.num_classes = config_obj.get("num_classes")
+        self.num_shots = config_obj.get("train_support")
+        self.num_tasks = config_obj.get("num_tasks")
+        self.num_process = config_obj.get("num_process")
 
         # Retrieve a dataset used for setting static variables
-        data_dir = config.get("data_dir")
-        self.dataset_name = config.get("dataset")
+        data_dir = config_obj.get("data_dir")
+        self.dataset_name = config_obj.get("dataset")
 
         if self.dataset_name == 'omniglot':
             DataGenerator.dataset_obj = Omniglot.Dataset(data_dir)
@@ -94,27 +97,10 @@ class DataGenerator(object):
             self.eval_config = (self.num_shots, self.num_classes, False)
             self.mp_func = Omniglot.sample_task_batch_v2
         elif self.dataset_name == 'ganabi':
-            DataGenerator.dataset_obj = Ganabi.Dataset(data_dir)
-            self.batch_size = config.get("batch_size")
-            self.train_config = (True)
-            self.eval_config = (False)
-            self.mp_func = Ganabi.sample_task_batch
-        else:
-            raise("Unknown Dataset")
-    
-    def new_init(self):
-        if self.dataset == 'omniglot':
-            DataGenerator.dataset_obj = Omniglot.Dataset(data_dir)
-            self.train_config = (self.num_shots, self.num_classes, True)
-            self.eval_config = (self.num_shots, self.num_classes, False)
-            self.mp_func = Omniglot.sample_task_batch_v2
-
-        elif self.dataset == 'ganabi':
-            # self.num_classes = 
-            DataGenerator.dataset_obj = Ganabi.Dataset(data_dir)
-            self.batch_size = config.get("batch_size")
-            self.train_config = (True)
-            self.eval_config = (False)
+            DataGenerator.dataset_obj = Ganabi.Dataset(config_obj, data_dir)
+            self.batch_size = config_obj.get("batch_size")
+            self.train_config = (True, 1)
+            self.eval_config = (False, 1)
             self.mp_func = Ganabi.sample_task_batch
         else:
             raise("Unknown Dataset")
@@ -129,7 +115,6 @@ class DataGenerator(object):
             return [[t] for t in _sample_task(num_classes, is_train=is_train)]
         else:
             raise("Unknown Dataset")
-       
 
     def next_batch(self, is_train=True):
         """

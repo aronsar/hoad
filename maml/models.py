@@ -12,10 +12,11 @@ Author: Chu-Hung Cheng
 import tensorflow as tf
 import tensorflow.keras as tk
 import model_utils as m_utils
-
+import gin
 
 # MAML is model agnostic, so its better to have a util function that allows user to feed in any type of model
 # Ideally, we can have as many model in this function
+
 
 def build_simple_model(output_shape):
     # Note: Calling this function creates an "unique" model
@@ -129,6 +130,57 @@ class SimpleGanabiModel(tk.Model):
         x = self.act3(self.dense3(x))
         x = self.act4(self.dense4(x))
         x = self.act5(self.dense5(x))
+
+        x = self.out(x)
+
+        return x
+
+
+@gin.configurable
+class NewGanabiModel(tk.Model):
+    def __init__(self,
+                 model_name,
+                 hidden_sizes,
+                 output_shape,
+                 act_fn,
+                 bNorm,
+                 dropout_rate):
+
+        super().__init__()
+
+        self.model_name = model_name
+        self.act_fn = act_fn
+        self.bNorm = bNorm
+        self.dropout_rate = dropout_rate
+
+        model_layers = []
+        for i, h_size in enumerate(hidden_sizes):
+            layer = tk.layers.Dense(h_size,
+                                    activation=act_fn,
+                                    name="{}-dense-{}".format(self.model_name, i))
+            model_layers.append(layer)
+
+            if self.bNorm:
+                bn_layer = tk.layers.BatchNormalization(
+                    name="{}-bn-{}".format(self.model_name, i))
+                model_layers.append(bn_layer)
+
+            if self.dropout_rate > 0.0:
+                dropout_layer = tk.layers.Dropout(
+                    rate=self.dropout_rate,
+                    name="{}-dropout-{}".format(self.model_name, i))
+                model_layers.append(dropout_layer)
+
+        self.model_layers = model_layers
+        self.out = tk.layers.Dense(output_shape, activation='softmax')
+
+    def call(self, x):
+        return self.forward(x)
+
+    def forward(self, x):
+
+        for i in range(len(self.model_layers)):
+            x = self.model_layers[i](x)
 
         x = self.out(x)
 
