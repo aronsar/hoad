@@ -12,10 +12,11 @@ Author: Chu-Hung Cheng
 import tensorflow as tf
 import tensorflow.keras as tk
 import model_utils as m_utils
-
+import gin
 
 # MAML is model agnostic, so its better to have a util function that allows user to feed in any type of model
 # Ideally, we can have as many model in this function
+
 
 def build_simple_model(output_shape):
     # Note: Calling this function creates an "unique" model
@@ -84,10 +85,103 @@ class SimpleModel(tk.Model):
         x = self.pool2(self.act2(self.bn2(self.conv2(x))))
         x = self.pool3(self.act3(self.bn3(self.conv3(x))))
         x = self.pool4(self.act4(self.bn4(self.conv4(x))))
-        # x = self.pool1(self.act1(self.conv1(x)))
-        # x = self.pool2(self.act2(self.conv2(x)))
-        # x = self.pool3(self.act3(self.conv3(x)))
-        # x = self.pool4(self.act4(self.conv4(x)))
         x = tf.math.reduce_mean(x, [1, 2])
         x = self.dense1(x)
+        return x
+
+
+class SimpleGanabiModel(tk.Model):
+    def __init__(self, output_shape):
+        super().__init__()
+        self.dense1 = tk.layers.Dense(512, activation=None)
+        # self.bn1 = tk.layers.BatchNormalization()
+        self.act1 = tk.activations.relu
+
+        self.dense2 = tk.layers.Dense(256, activation=None)
+        # self.bn2 = tk.layers.BatchNormalization()
+        self.act2 = tk.activations.relu
+
+        self.dense3 = tk.layers.Dense(128, activation=None)
+        # self.bn3 = tk.layers.BatchNormalization()
+        self.act3 = tk.activations.relu
+
+        self.dense4 = tk.layers.Dense(64, activation=None)
+        # self.bn4 = tk.layers.BatchNormalization()
+        self.act4 = tk.activations.relu
+
+        self.dense5 = tk.layers.Dense(32, activation=None)
+        # self.bn5 = tk.layers.BatchNormalization()
+        self.act5 = tk.activations.relu
+
+        self.out = tk.layers.Dense(output_shape, activation='softmax')
+
+    def call(self, x):
+        return self.forward(x)
+
+    def forward(self, x):
+        # x = self.act1(self.bn1(self.dense1(x)))
+        # x = self.act2(self.bn2(self.dense2(x)))
+        # x = self.act3(self.bn3(self.dense3(x)))
+        # x = self.act4(self.bn4(self.dense4(x)))
+        # x = self.act5(self.bn5(self.dense5(x)))
+
+        x = self.act1(self.dense1(x))
+        x = self.act2(self.dense2(x))
+        x = self.act3(self.dense3(x))
+        x = self.act4(self.dense4(x))
+        x = self.act5(self.dense5(x))
+
+        x = self.out(x)
+
+        return x
+
+
+@gin.configurable
+class NewGanabiModel(tk.Model):
+    def __init__(self,
+                 model_name,
+                 hidden_sizes,
+                 output_shape,
+                 act_fn,
+                 bNorm,
+                 dropout_rate):
+
+        super().__init__()
+
+        self.model_name = model_name
+        self.act_fn = act_fn
+        self.bNorm = bNorm
+        self.dropout_rate = dropout_rate
+
+        model_layers = []
+        for i, h_size in enumerate(hidden_sizes):
+            layer = tk.layers.Dense(h_size,
+                                    activation=act_fn,
+                                    name="{}-dense-{}".format(self.model_name, i))
+            model_layers.append(layer)
+
+            if self.bNorm:
+                bn_layer = tk.layers.BatchNormalization(
+                    name="{}-bn-{}".format(self.model_name, i))
+                model_layers.append(bn_layer)
+
+            if self.dropout_rate > 0.0:
+                dropout_layer = tk.layers.Dropout(
+                    rate=self.dropout_rate,
+                    name="{}-dropout-{}".format(self.model_name, i))
+                model_layers.append(dropout_layer)
+
+        self.model_layers = model_layers
+        self.out = tk.layers.Dense(output_shape, activation='softmax')
+
+    def call(self, x):
+        return self.forward(x)
+
+    def forward(self, x):
+
+        for i in range(len(self.model_layers)):
+            x = self.model_layers[i](x)
+
+        x = self.out(x)
+
         return x
