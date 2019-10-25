@@ -8,6 +8,7 @@ import os
 import gin, os
 import random, pickle
 import numpy as np
+import math
 import weka.core.jvm as jvm
 from utils import parse_args
 from sklearn.tree import DecisionTreeClassifier
@@ -128,7 +129,7 @@ class TwoStageTransfer:
         self.targetpath = targetpath
         self.sourcepath = sourcepath
         self.source = []
-        self.target = []
+        self.target = ""
         self.boosting_iter = boosting_iter
         self.fold = fold
         self.max_source_dataset = max_source_dataset
@@ -142,9 +143,8 @@ class TwoStageTransfer:
         
         #target dataset
         print("Get instance of target data set")
-        target = loader.load_file(self.targetpath + os.listdir(self.targetpath)[0])
-        target.class_is_last()
-        self.target.append(target)
+        self.target = loader.load_file(self.targetpath + os.listdir(self.targetpath)[0])
+        self.target.class_is_last()
 
         #source dataset
         print("Get instance of source data set")
@@ -153,149 +153,101 @@ class TwoStageTransfer:
             source.class_is_last()
             self.source.append(source)
 
-    def calculate_weights(self, t):
-        n = self.getNumInstances(self.source)
-        m = self.getNumInstances(self.target)
+    def calculate_weights(self, t, source):
+        #for i from 1 to m do
+        # w_i = (len(T) / (len(T) + len(S))) *  (1 − i /(m − 1))
+        n = source.num_instances
+        m = self.target.num_instances
 
         fracSourceWeight = (m/(n+m)) * (1 - (t/(self.boosting_iter)))
         fracTargetWeight = 1 - fracSourceWeight
 
-        totalWeight = n / fracSourceWeight
-        targetWeight = fracTargetWeight * totalWeight / m
-        sourceWeight = fracSourceWeight * totalWeight / n
-
-        return targetWeight, sourceWeight
+        #calculate for each instance
+        #totalWeight = n / fracSourceWeight
+        #targetWeight = fracTargetWeight * totalWeight / m
+        #sourceWeight = fracSourceWeight * totalWeight / n
+        
+        print("taret", fracTargetWeight)
+        print("source", fracSourceWeight)
+        return fracTargetWeight, fracSourceWeight
 
 
     def getNumInstances(self, data_array):
         '''Return the number of instances from all games of the agents inside data_array'''
         numInstances = 0
-        for agent_games in data_array:
-            numInstances += len(agent_games)
+        for agent in data_array:
+            numInstances += agent.num_instances()
             
         return numInstances
 
     def calcError(self, newModel, test_data_of_kfold):
         '''Return the error from the model with test data from k fold cross validation'''
         error = 0.0
-        for index, inst in enumerate(test_data_of_kfold):
-            pred = newModel.classify_instance(inst)
+        evl = Evaluation(test_data_of_kfold)
+        evl.test_model(newModel, test_data_of_kfold)
 
+        print("The percent incorrect is: ", 100 - evl.percent_correct)
 
-
-
-
-
-
-
-
-
-
-
+        return 100 - evl.percent_correct
 
 
     def train_internal(self):
         '''
-        CalculateOptimalWeight(T, F, S, m, k):
-        for i from 1 to m do
-         w_i = (len(T) / (len(T) + len(S))) *  (1 − i /(m − 1))
-        Calculate erri from k-fold cross validation on T using F and S wi as additional training data
-        return wj such that j = argmaxi(erri)
+        for all Si in S do:
+            wi <- CalculateOptimalWeight(T,∅,Si,m,k)
+        Sort S in decreasing order of wi’s
         '''
+        for source in self.source:
+            bestT, bestError = self.process_source(source)
+            print("BestT: ", bestT, " Best Error ", bestError)
 
-        weights = []
-        max_err = 0
-        max_err_ind = 0
-        
-        for i in range(1, boosting_iter+1):
-            #calculate the weight
-            weight = (len(target) / (len(target) + len(source))) * (1 - (i / (boosting_iter - 1)))
-            weights.append (weight)
+    def process_source(self, source):
+        '''
+        for i from 1 to m do
+               cal wi based on formula
+        Calculate erri from k-fold cross validation on T using F
+        and Swi as additional training data return wj such that j = argmax(erri)
+        '''
+        bestT = 0
+        bestError = math.inf
+        for i in range(1, self.boosting_iter+1):
+            print ("Process with boosting iteration:", i)
+            target_w, source_w = self.calculate_weights(i, source)
+            error = self.evaluateWeighting(i, source, target_w, source_w)
+            print("The error of this boosing iteration is:", error)
+            if error < bestError:
+                bestError = error
+                bestT = i
+            print()
 
-            #preparing training and testing data
-            target_obs = target[0]
-            target_act = target[1]
-            source_obs = source[0]
-            source_act = source[1]
+        return bestT, bestError
+
+    def evaluateWeighting(self, t, source, target_w, source_w):
+        '''Calculate erri from k-fold cross validation on T using F'''
+        classifier = Classifier(classname="weka.classifiers.trees.REPTree")
+        for inst in source:
+            inst.weight = source_w
+        target = self.target
+        for inst in target:
+            inst.weight = target_w
+
+        error = 0.0 
+        for i in range(self.fold):
+            train = target.train_cv(self.fold, i)
+            test = target.test_cv(self.fold, i)
             
-            #Applying weight to S->Sw
-            source_obs = weight * source_obs
-            #concatenate F and Sw
-            if len(w_source)!=0 and len(w_source[0])!=0:
-                w_source_obs = np.array(w_source[0][0])
-                w_source_act = np.array(w_source[1])
-                print("w source obs ", w_source_obs.shape)
-                print("source act ", source_obs.shape)
-                source_obs = np.concatenate((source_obs,  w_source_obs))
-                source_act = np.concatenate((source_obs,  w_source_act))
-
-            #kFold cross validation
-            kf = KFold(n_splits = self.fold)
-            error = 0
-            for train,test in kf.split(target_obs):
-                #define a model
-                model = DecisionTreeClassifier()
-                obs_train = np.concatenate((source_obs,target_obs[train]))
-                act_train = np.concatenate((source_act,target_act[train]))
-                obs_test = target_obs[test]
-                act_test = target_act[test]
-                
-                model.fit(obs_train,act_train)
-                act_predict = model.predict(obs_test)
-                error += 1-accuracy_score(target_act[test], act_predict)
+            #append train target set to source set
+            trainDataSet = source
+            for instance in train:
+                trainDataSet.add_instance(instance)
             
-            err.append(error/self.fold)
-            print("Error: ", error)
-        max_err_ind = self.__max_val_ind(err)
+            #train classifier
+            classifier.build_classifier(trainDataSet)
 
-        return weights[max_err_ind]
-    
-    def __max_val_ind(self, num_arr):
-        if len(num_arr)==0:
-            assert("Empty")
-        
-        max_val = num_arr[0]
-        max_ind = 0
-        for i in range(1,len(num_arr)):
-            if num_arr[i] > max_val:
-                max_val = num_arr[i]
-                max_ind = i
+            #calculate error
+            error += self.calcError(classifier, test)
 
-        return max_ind
-
-    def first_stage(self):
-        #weights = []
-        weight_agent = []
-        
-        for agent in self.source:
-            print(agent, " in training")
-            #phi is an empty set
-            self.source[agent][0] = self.int_to_bool(self.source[agent][0])
-            self.source[agent][1] = self.bool_to_int(self.source[agent][1])
-            weight = self.calculate_optimal_weight(self.target[target_agent_name],
-                [],
-                self.source[agent],
-                self.boosting_iter,
-                self.fold,
-                [])
-
-            weight_agent.append((weight, agent))
-        sortedS = self.sort_data_by_weight(weight_agent)
-        print(sortedS)
-        F = [[], []]
-        for i in range(self.max_source_dataset):
-            weight = self.calculate_optimal_weight(self.target[target_agent_name],
-                    F,
-                    self.source[sortedS[i]],
-                    self.boosting_iter,
-                    self.fold,
-                    [])
-            F[0].append(list(weight * self.source[sortedS[i]][0]))
-            F[1].append(list(self.source[sortedS[i]][1]))
-        training_data = [np.concatenate((F[0],self.target[target_agent_name][0])),
-                np.concatenate((F[1],self.target[target_agent_name][1]))]
-
-        return training_data
+        return error
 
 
     # train decision tree with data of prev games using scikitlearn lib
@@ -332,7 +284,7 @@ def main():
             max_source_dataset=15,
             model = model)
     classifier.load_data_from_arff()
-    model = classifier.train()
+    classifier.train_internal()
 
 if __name__== '__main__':
     main()
