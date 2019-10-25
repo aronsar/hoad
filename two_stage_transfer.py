@@ -17,6 +17,7 @@ from sklearn.metrics import accuracy_score
 jvm.start()
 from weka.classifiers import Classifier
 from weka.core.converters import Loader
+from weka.classifiers import Evaluation
 '''
 DATA LOADER FOR TWO STAGE TRANSFER
 '''
@@ -126,20 +127,74 @@ class TwoStageTransfer:
         self.model = model
         self.targetpath = targetpath
         self.sourcepath = sourcepath
-        self.source = ""
-        self.target = ""
+        self.source = []
+        self.target = []
         self.boosting_iter = boosting_iter
         self.fold = fold
         self.max_source_dataset = max_source_dataset
     
     def load_data_from_arff(self):
+        print("Load data from target and source folder")
+        if self.targetpath=="" or self.sourcepath=="":
+            assert "No path specify, please create data first"
+
         loader = Loader(classname="weka.core.converters.ArffLoader")
-        data = loader.load_file(self.targetpath + os.listdir(self.targetpath)[0])
+        
+        #target dataset
+        print("Get instance of target data set")
+        target = loader.load_file(self.targetpath + os.listdir(self.targetpath)[0])
+        target.class_is_last()
+        self.target.append(target)
 
-        print(data)
-        return
+        #source dataset
+        print("Get instance of source data set")
+        for filename in os.listdir(self.sourcepath):
+            source = loader.load_file(self.sourcepath + filename)
+            source.class_is_last()
+            self.source.append(source)
 
-    def calculate_optimal_weight(self, target, w_source, source, boosting_iter, fold, err):
+    def calculate_weights(self, t):
+        n = self.getNumInstances(self.source)
+        m = self.getNumInstances(self.target)
+
+        fracSourceWeight = (m/(n+m)) * (1 - (t/(self.boosting_iter)))
+        fracTargetWeight = 1 - fracSourceWeight
+
+        totalWeight = n / fracSourceWeight
+        targetWeight = fracTargetWeight * totalWeight / m
+        sourceWeight = fracSourceWeight * totalWeight / n
+
+        return targetWeight, sourceWeight
+
+
+    def getNumInstances(self, data_array):
+        '''Return the number of instances from all games of the agents inside data_array'''
+        numInstances = 0
+        for agent_games in data_array:
+            numInstances += len(agent_games)
+            
+        return numInstances
+
+    def calcError(self, newModel, test_data_of_kfold):
+        '''Return the error from the model with test data from k fold cross validation'''
+        error = 0.0
+        for index, inst in enumerate(test_data_of_kfold):
+            pred = newModel.classify_instance(inst)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    def train_internal(self):
         '''
         CalculateOptimalWeight(T, F, S, m, k):
         for i from 1 to m do
@@ -147,6 +202,7 @@ class TwoStageTransfer:
         Calculate erri from k-fold cross validation on T using F and S wi as additional training data
         return wj such that j = argmaxi(erri)
         '''
+
         weights = []
         max_err = 0
         max_err_ind = 0
@@ -210,9 +266,7 @@ class TwoStageTransfer:
     def first_stage(self):
         #weights = []
         weight_agent = []
-        target_agent_name = list(self.target.keys())[0]
-        self.target[target_agent_name][0] = self.int_to_bool(self.target[target_agent_name][0])
-        self.target[target_agent_name][1] = self.bool_to_int(self.target[target_agent_name][1])
+        
         for agent in self.source:
             print(agent, " in training")
             #phi is an empty set
@@ -248,10 +302,7 @@ class TwoStageTransfer:
     def train(self):
         training_data = self.first_stage()
 
-        obs = training_data[0]
-        act = training_data[1]
-
-        classifier = self.model.fit(obs, act)
+        classifier = self.model.build_classifier(self.target)
         return classifier
 
     def sort_data_by_weight(self, weight_agent):
@@ -267,17 +318,8 @@ def main():
     print("*                 LOADING DATA                   *")
     print("**************************************************")
 
-    data_loader = DataLoader("/data1/shared/agent_data/")
-    data_loader.load_target_source_data()
-    '''
-    DATA FORMAT:
-    - In this example, I created 10 games. The result will be a list of 10 games    - For each game list, there will be 2 elements:
-    + Observations (a list): observations encoded in integers from 0-9
-    + Actions (a list): one hot encoded vector 
-    '''
-    #print(data.train_data)
-    #`10 games from 1 agent for target datasset, i.e: prior knowledge
-    # thousands of games from all other agents for source data set, except the target data set agent,  ex: 1000 games from Quux, 1000 games from Walton,...
+    #data_loader = DataLoader("/data1/shared/agent_data/")
+    #data_loader.load_target_source_data()
     
     print("**************************************************")
     print("*                 TRAINING                       *")
