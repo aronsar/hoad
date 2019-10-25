@@ -16,6 +16,7 @@ from sklearn.metrics import accuracy_score
 
 jvm.start()
 from weka.classifiers import Classifier
+from weka.core.converters import Loader
 '''
 DATA LOADER FOR TWO STAGE TRANSFER
 '''
@@ -65,15 +66,12 @@ class DataLoader(object):
 
     def write_data_to_arff(self, games, agent_name, datapath):
         filename = os.path.join(datapath, agent_name + ".arff")
-        header = """@RELATION ObsActs
-@ATTRIBUTE obs NUMERIC
-@ATTRIBUTE agentName STRING
-@ATTRIBUTE weight NUMERIC
-@ATTRIBUTE class {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19}
+        header = "@RELATION ObsActs\n"
         
-@DATA
-"""
-        weight = 1
+        for i in range(658):
+            header += "@ATTRIBUTE obs%d NUMERIC\n" % i
+        header += "@ATTRIBUTE class {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19}\n"
+        header += "@DATA\n" 
 
         with open(filename,"w") as arff_file:
             arff_file.write(header)
@@ -81,17 +79,15 @@ class DataLoader(object):
                 obs = game[0]
                 acts = game[1]
                 for step in range(len(obs)):
-                    arff_file.write("%d,%s,%d,%d\n" % (obs[step], agent_name, weight, self.bool_to_int(acts[step])))
+                    ob = self.int_to_bool(obs[step])
+                    act = self.bool_to_int(acts[step])
+                    string = ",".join([str(num) for num in ob])
+                    arff_file.write(string + ",%d\n" % act)
 
-    def int_to_bool(self, intvec):
+    def int_to_bool(self,num):
         boolvec = np.array([])
-        for num in np.array(intvec):
-            temp=np.array(list('{0:b}'.format(num)), dtype=int)
-            #print (len(temp))
-            if(len(boolvec)==0):
-                boolvec=[np.pad(temp, ((658-len(temp)),0), 'constant', constant_values=(0,0 ))]
-            else:
-                boolvec = np.append(boolvec,[np.pad(temp, ((658-len(temp)),0), 'constant', constant_values=(0,0 ))],axis=0)
+        temp = np.array(list('{0:b}'.format(num)), dtype=int)
+        boolvec=np.pad(temp, ((658-len(temp)),0), 'constant', constant_values=(0,0 ))
         return boolvec
 
     def bool_to_int(self, onehot):
@@ -111,8 +107,8 @@ TwoStageTransfer (T, S, m, k, b)
 '''
 class TwoStageTransfer:
     def __init__(self,
-            target = {},
-            source = {},
+            targetpath="",
+            sourcepath="",
             boosting_iter = 5,
             fold = 10,
             max_source_dataset = 1,
@@ -128,11 +124,20 @@ class TwoStageTransfer:
         - F is weighted source data
         '''
         self.model = model
-        self.target = target
-        self.source = source
+        self.targetpath = targetpath
+        self.sourcepath = sourcepath
+        self.source = ""
+        self.target = ""
         self.boosting_iter = boosting_iter
         self.fold = fold
         self.max_source_dataset = max_source_dataset
+    
+    def load_data_from_arff(self):
+        loader = Loader(classname="weka.core.converters.ArffLoader")
+        data = loader.load_file(self.targetpath + os.listdir(self.targetpath)[0])
+
+        print(data)
+        return
 
     def calculate_optimal_weight(self, target, w_source, source, boosting_iter, fold, err):
         '''
@@ -272,20 +277,19 @@ def main():
     '''
     #print(data.train_data)
     #`10 games from 1 agent for target datasset, i.e: prior knowledge
-    target = data_loader.target
     # thousands of games from all other agents for source data set, except the target data set agent,  ex: 1000 games from Quux, 1000 games from Walton,...
-    source = data_loader.source
     
     print("**************************************************")
     print("*                 TRAINING                       *")
     print("**************************************************")
     model = Classifier(classname="weka.classifiers.trees.REPTree")
-    classifier = TwoStageTransfer(target,
-            source,
+    classifier = TwoStageTransfer(targetpath = "target/",
+            sourcepath="source/",
             boosting_iter=10,
             fold=10,
-            max_source_dataset=len(source),
+            max_source_dataset=15,
             model = model)
+    classifier.load_data_from_arff()
     model = classifier.train()
 
 if __name__== '__main__':
