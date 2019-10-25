@@ -197,10 +197,20 @@ class TwoStageTransfer:
             wi <- CalculateOptimalWeight(T,∅,Si,m,k)
         Sort S in decreasing order of wi’s
         '''
+        best_weights_arr = []
         for source in self.source:
-            bestT, bestError = self.process_source(source)
-            print("BestT: ", bestT, " Best Error ", bestError)
+            bestWeight, bestError = self.process_source(source)
+            best_weights_arr.append(bestWeight)
 
+        #sort the data based on the weights
+        self.source = [source for _, source in sorted(zip(best_weights_arr, self.source), reverse=True)]
+
+        '''
+        for i from 1 to b do
+            w <- CalculateOptimalWeight(T, F, Si, m, k)
+            F ← F ∪ S iw
+        '''
+        
     def process_source(self, source):
         '''
         for i from 1 to m do
@@ -208,8 +218,8 @@ class TwoStageTransfer:
         Calculate erri from k-fold cross validation on T using F
         and Swi as additional training data return wj such that j = argmax(erri)
         '''
-        bestT = 0
         bestError = math.inf
+        bestWeight = 0.0
         for i in range(1, self.boosting_iter+1):
             print ("Process with boosting iteration:", i)
             target_w, source_w = self.calculate_weights(i, source)
@@ -217,10 +227,10 @@ class TwoStageTransfer:
             print("The error of this boosing iteration is:", error)
             if error < bestError:
                 bestError = error
-                bestT = i
+                bestWeight = source_w
             print()
 
-        return bestT, bestError
+        return bestWeight, bestError
 
     def evaluateWeighting(self, t, source, target_w, source_w):
         '''Calculate erri from k-fold cross validation on T using F'''
