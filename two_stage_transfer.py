@@ -11,14 +11,12 @@ import numpy as np
 import math
 import weka.core.jvm as jvm
 from utils import parse_args
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.model_selection import KFold
-from sklearn.metrics import accuracy_score
 
 jvm.start()
 from weka.classifiers import Classifier
 from weka.core.converters import Loader
 from weka.classifiers import Evaluation
+from weka.core.dataset import Instances
 '''
 DATA LOADER FOR TWO STAGE TRANSFER
 '''
@@ -199,7 +197,7 @@ class TwoStageTransfer:
         '''
         best_weights_arr = []
         for source in self.source:
-            bestWeight, bestError = self.process_source(source)
+            bestWeight, bestError = self.process_source(source, "")
             best_weights_arr.append(bestWeight)
 
         #sort the data based on the weights
@@ -210,20 +208,27 @@ class TwoStageTransfer:
             w <- CalculateOptimalWeight(T, F, Si, m, k)
             F ← F ∪ S iw
         '''
+        F = Instances() 
+        for i in range(self.max_source_dataset):
+            weight = self.process_source(self.source[i], F)
+            for inst in self.source[i]:
+                inst.weight = weight
+                F.add_instance(inst)
         
-    def process_source(self, source):
+    def process_source(self, source, F):
         '''
         for i from 1 to m do
                cal wi based on formula
         Calculate erri from k-fold cross validation on T using F
         and Swi as additional training data return wj such that j = argmax(erri)
         '''
+        
         bestError = math.inf
         bestWeight = 0.0
         for i in range(1, self.boosting_iter+1):
             print ("Process with boosting iteration:", i)
             target_w, source_w = self.calculate_weights(i, source)
-            error = self.evaluateWeighting(i, source, target_w, source_w)
+            error = self.evaluateWeighting(i, source, F, target_w, source_w)
             print("The error of this boosing iteration is:", error)
             if error < bestError:
                 bestError = error
@@ -232,11 +237,21 @@ class TwoStageTransfer:
 
         return bestWeight, bestError
 
-    def evaluateWeighting(self, t, source, target_w, source_w):
+    def evaluateWeighting(self, t, source, F, target_w, source_w):
         '''Calculate erri from k-fold cross validation on T using F'''
         classifier = Classifier(classname="weka.classifiers.trees.REPTree")
-        for inst in source:
-            inst.weight = source_w
+        trainDataSet = Instances()
+
+        if F != "":
+            for inst in source:
+                inst.weight = source_w
+                F.add_instance(inst)
+            trainDataSet = F
+        else:
+            for inst in source:
+                inst.weight = source_w
+            trainDataSet = source
+
         target = self.target
         for inst in target:
             inst.weight = target_w
@@ -247,7 +262,6 @@ class TwoStageTransfer:
             test = target.test_cv(self.fold, i)
             
             #append train target set to source set
-            trainDataSet = source
             for instance in train:
                 trainDataSet.add_instance(instance)
             
@@ -262,16 +276,7 @@ class TwoStageTransfer:
 
     # train decision tree with data of prev games using scikitlearn lib
     def train(self):
-        training_data = self.first_stage()
 
-        classifier = self.model.build_classifier(self.target)
-        return classifier
-
-    def sort_data_by_weight(self, weight_agent):
-        weight_agent = sorted(weight_agent, reverse=True)
-        sorted_agent_by_weight = [elem[1] for elem in weight_agent]
-
-        return sorted_agent_by_weight
                                                                 
                                                                 
 def main():
