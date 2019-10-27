@@ -10,7 +10,7 @@ import random, pickle
 import numpy as np
 import math
 import weka.core.jvm as jvm
-from utils import parse_args
+#from utils import parse_args
 
 jvm.start()
 from weka.classifiers import Classifier
@@ -184,7 +184,7 @@ class TwoStageTransfer:
         evl = Evaluation(test_data_of_kfold)
         evl.test_model(newModel, test_data_of_kfold)
 
-        print("The percent incorrect is: ", 100 - evl.percent_correct)
+       print("The percent incorrect is: ", 100 - evl.percent_correct)
 
         return 100 - evl.percent_correct
 
@@ -208,12 +208,15 @@ class TwoStageTransfer:
             w <- CalculateOptimalWeight(T, F, Si, m, k)
             F ← F ∪ S iw
         '''
-        F = Instances() 
+        #F = Instances() 
         for i in range(self.max_source_dataset):
             weight = self.process_source(self.source[i], F)
             for inst in self.source[i]:
                 inst.weight = weight
-                F.add_instance(inst)
+                if not F:
+                    F = Instances(inst);
+                else:
+                    F.add_instance(inst)
         
     def process_source(self, source, F):
         '''
@@ -222,7 +225,7 @@ class TwoStageTransfer:
         Calculate erri from k-fold cross validation on T using F
         and Swi as additional training data return wj such that j = argmax(erri)
         '''
-        
+        print("the type of source is", type(source))
         bestError = math.inf
         bestWeight = 0.0
         for i in range(1, self.boosting_iter+1):
@@ -240,17 +243,19 @@ class TwoStageTransfer:
     def evaluateWeighting(self, t, source, F, target_w, source_w):
         '''Calculate erri from k-fold cross validation on T using F'''
         classifier = Classifier(classname="weka.classifiers.trees.REPTree")
-        trainDataSet = Instances()
+        trainDataSet = Instances.copy_instances(source)
 
         if F != "":
-            for inst in source:
+            for inst in trainDataSet:
                 inst.weight = source_w
-                F.add_instance(inst)
-            trainDataSet = F
+                
+                #F.add_instance(inst)
+            F = Instances.append_instances(F,trainDataSet)
+            #trainDataSet = F
         else:
-            for inst in source:
+            for inst in trainDataSet:
                 inst.weight = source_w
-            trainDataSet = source
+            #trainDataSet = source
 
         target = self.target
         for inst in target:
@@ -275,7 +280,7 @@ class TwoStageTransfer:
 
 
     # train decision tree with data of prev games using scikitlearn lib
-    def train(self):
+#    def train(self):
 
                                                                 
                                                                 
