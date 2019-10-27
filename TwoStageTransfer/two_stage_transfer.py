@@ -184,7 +184,7 @@ class TwoStageTransfer:
         evl = Evaluation(test_data_of_kfold)
         evl.test_model(newModel, test_data_of_kfold)
 
-       print("The percent incorrect is: ", 100 - evl.percent_correct)
+        print("The percent incorrect is: ", 100 - evl.percent_correct)
 
         return 100 - evl.percent_correct
 
@@ -196,8 +196,9 @@ class TwoStageTransfer:
         Sort S in decreasing order of wi’s
         '''
         best_weights_arr = []
+        F = Instances.template_instances(self.source[0])
         for source in self.source:
-            bestWeight, bestError = self.process_source(source, "")
+            bestWeight, bestError = self.process_source(source, F)
             best_weights_arr.append(bestWeight)
 
         #sort the data based on the weights
@@ -245,33 +246,26 @@ class TwoStageTransfer:
         classifier = Classifier(classname="weka.classifiers.trees.REPTree")
         trainDataSet = Instances.copy_instances(source)
 
-        if F != "":
-            for inst in trainDataSet:
-                inst.weight = source_w
-                
-                #F.add_instance(inst)
-            F = Instances.append_instances(F,trainDataSet)
-            #trainDataSet = F
-        else:
-            for inst in trainDataSet:
-                inst.weight = source_w
-            #trainDataSet = source
+        for inst in trainDataSet:
+            inst.weight = source_w
+        if F.num_instances != 0:
+            trainDataSet = Instances.append_instances(trainDataSet,F)
 
         target = self.target
         for inst in target:
             inst.weight = target_w
 
-        error = 0.0 
+        error = 0.0
+        fix_set = Instances.copy_instances(trainDataSet)
         for i in range(self.fold):
             train = target.train_cv(self.fold, i)
             test = target.test_cv(self.fold, i)
             
             #append train target set to source set
-            for instance in train:
-                trainDataSet.add_instance(instance)
+            fix_set = Instances.append_instances(fix_set,train)
             
             #train classifier
-            classifier.build_classifier(trainDataSet)
+            classifier.build_classifier(fix_set)
 
             #calculate error
             error += self.calcError(classifier, test)
