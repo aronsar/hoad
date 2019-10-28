@@ -17,81 +17,6 @@ from weka.classifiers import Classifier
 from weka.core.converters import Loader
 from weka.classifiers import Evaluation
 from weka.core.dataset import Instances
-'''
-DATA LOADER FOR TWO STAGE TRANSFER
-'''
-class DataLoader(object):
-    def __init__(self,
-            datapath):
-        self.datapath = datapath
-        self.all_agents_datadir = []
-        self.target = {}
-        self.source = {}
-    
-    def load_target_source_data(self):
-        self.__get_all_agents()
-        if len(self.all_agents_datadir)==0:
-            assert("No agent available")
-        
-        self.get_target_data()
-        self.get_source_data()
-
-    def get_target_data(self):
-        target_agent_dir = "quux_blindbot_data_2_500000"
-        target_agent_name = "_".join(target_agent_dir.split("_")[:-3])
-        print("Getting target data for ", target_agent_name)
-        data = self.__get_25k_data(os.path.join(self.datapath,target_agent_dir))
-        
-        self.target[target_agent_name] = self.write_data_to_arff(data[:10], target_agent_name, "target")
-   
-    def get_source_data(self):
-        target_agent = list(self.target.keys())[0]
-        source_agents_dir = []
-        for agent_dir in self.all_agents_datadir:
-            agent_name = "_".join(agent_dir.split("_")[:-3])
-            if agent_name != target_agent:
-                print("Getting source data for ", agent_name)
-                data = self.__get_25k_data(os.path.join(self.datapath, agent_dir))
-                self.source[agent_name] = self.write_data_to_arff(data[:100], agent_name, "source")
-
-    def __get_all_agents(self):
-        self.all_agents_datadir = [name for name in os.listdir(self.datapath)]
-
-    def __get_25k_data(self, datadir):
-        all_dir = [name for name in os.listdir(datadir)]
-        first_dir = os.path.join(datadir, all_dir[0])
-        file_name = os.listdir(first_dir)[0]
-        path_to_file = os.path.join(first_dir, file_name)
-        return pickle.load(open(path_to_file, "rb"), encoding='latin1')
-
-    def write_data_to_arff(self, games, agent_name, datapath):
-        filename = os.path.join(datapath, agent_name + ".arff")
-        header = "@RELATION ObsActs\n"
-        
-        for i in range(658):
-            header += "@ATTRIBUTE obs%d NUMERIC\n" % i
-        header += "@ATTRIBUTE class {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19}\n"
-        header += "@DATA\n" 
-
-        with open(filename,"w") as arff_file:
-            arff_file.write(header)
-            for game in games:
-                obs = game[0]
-                acts = game[1]
-                for step in range(len(obs)):
-                    ob = self.int_to_bool(obs[step])
-                    act = self.bool_to_int(acts[step])
-                    string = ",".join([str(num) for num in ob])
-                    arff_file.write(string + ",%d\n" % act)
-
-    def int_to_bool(self,num):
-        boolvec = np.array([])
-        temp = np.array(list('{0:b}'.format(num)), dtype=int)
-        boolvec=np.pad(temp, ((658-len(temp)),0), 'constant', constant_values=(0,0 ))
-        return boolvec
-
-    def bool_to_int(self, onehot):
-        return np.argmax(onehot)
 
 '''
 TwoStageTransfer (T, S, m, k, b)
@@ -109,6 +34,7 @@ class TwoStageTransfer:
     def __init__(self,
             targetpath="",
             sourcepath="",
+            evalpath="",
             boosting_iter = 5,
             fold = 10,
             max_source_dataset = 1,
@@ -126,8 +52,10 @@ class TwoStageTransfer:
         self.model = model
         self.targetpath = targetpath
         self.sourcepath = sourcepath
+        self.evalpath = evalpath
         self.source = []
         self.target = ""
+        self.eval = ""
         self.boosting_iter = boosting_iter
         self.fold = fold
         self.max_source_dataset = max_source_dataset
@@ -140,16 +68,21 @@ class TwoStageTransfer:
         loader = Loader(classname="weka.core.converters.ArffLoader")
         
         #target dataset
-        print("Get instance of target data set")
+        print("Get instances of target data set")
         self.target = loader.load_file(self.targetpath + os.listdir(self.targetpath)[0])
         self.target.class_is_last()
 
         #source dataset
-        print("Get instance of source data set")
+        print("Get instances of source data set")
         for filename in os.listdir(self.sourcepath):
             source = loader.load_file(self.sourcepath + filename)
             source.class_is_last()
             self.source.append(source)
+
+        #eval dataset
+        print("Get instances of eval dataset")
+        self.eval = loader.load_file(self.evalpath + os.listdir(self.evalpath)[0])
+        self.eval.class_is_last()
 
     def calculate_weights(self, t, source):
         #for i from 1 to m do
@@ -196,6 +129,7 @@ class TwoStageTransfer:
         Sort S in decreasing order of wi’s
         '''
         best_weights_arr = []
+        #create an empty F with source as template
         F = Instances.template_instances(self.source[0])
         for source in self.source:
             bestWeight, bestError = self.process_source(source, F)
@@ -214,10 +148,10 @@ class TwoStageTransfer:
             weight = self.process_source(self.source[i], F)
             for inst in self.source[i]:
                 inst.weight = weight
-                if not F:
-                    F = Instances(inst);
-                else:
-                    F.add_instance(inst)
+            F = Instances.append_instances(F, self.source[i])
+        
+        F.class_is_last()
+        return F
         
     def process_source(self, source, F):
         '''
@@ -244,61 +178,43 @@ class TwoStageTransfer:
     def evaluateWeighting(self, t, source, F, target_w, source_w):
         '''Calculate erri from k-fold cross validation on T using F'''
         classifier = Classifier(classname="weka.classifiers.trees.REPTree")
-        trainDataSet = Instances.copy_instances(source)
 
-        for inst in trainDataSet:
+        for inst in source:
             inst.weight = source_w
-        if F.num_instances != 0:
-            trainDataSet = Instances.append_instances(trainDataSet,F)
 
+        trainDataSet = Instances.append_instances(source,F)
+        
         target = self.target
         for inst in target:
             inst.weight = target_w
 
         error = 0.0
-        fix_set = Instances.copy_instances(trainDataSet)
         for i in range(self.fold):
             train = target.train_cv(self.fold, i)
             test = target.test_cv(self.fold, i)
             
             #append train target set to source set
-            fix_set = Instances.append_instances(fix_set,train)
-            
+            fix_set = Instances.append_instances(trainDataSet,train)
+            fix_set.class_is_last()
+
             #train classifier
             classifier.build_classifier(fix_set)
 
             #calculate error
+            test.class_is_last()
             error += self.calcError(classifier, test)
 
         return error
 
+    def train(self):
+        F = self.train_internal()
+        final_train_set = Instances.append(F, self.target)
+        final_train_set.class_is_last()
 
-    # train decision tree with data of prev games using scikitlearn lib
-#    def train(self):
+        self.model.build_classifier(final_train_set)
 
-                                                                
-                                                                
-def main():
-    #loading data
-    print("**************************************************")
-    print("*                 LOADING DATA                   *")
-    print("**************************************************")
+    def evaluate_model(self):
+        evl = Evaluation(self.eval)
+        evl.test_model(self.model, self.eval)
 
-    #data_loader = DataLoader("/data1/shared/agent_data/")
-    #data_loader.load_target_source_data()
-    
-    print("**************************************************")
-    print("*                 TRAINING                       *")
-    print("**************************************************")
-    model = Classifier(classname="weka.classifiers.trees.REPTree")
-    classifier = TwoStageTransfer(targetpath = "target/",
-            sourcepath="source/",
-            boosting_iter=10,
-            fold=10,
-            max_source_dataset=15,
-            model = model)
-    classifier.load_data_from_arff()
-    classifier.train_internal()
-
-if __name__== '__main__':
-    main()
+        print("Accuracy score: ", evl.percent_correct)
