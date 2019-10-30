@@ -4,8 +4,8 @@
 - Python 3.6.8
 - Java jdk1.8.0_231
 
-## Run
-python main.py
+## Run with default settings
+`python main.py`
 
 ## Options
 #### Agent options:
@@ -24,6 +24,6 @@ python main.py
 - rainbow
 - van_den_bergh
 - WTFWT
-- fireflower
-python main --target_agent fireflower
+- fireflower <br/>
+`python main --target_agent flawed`
 
