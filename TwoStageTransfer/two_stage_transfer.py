@@ -13,6 +13,7 @@ from weka.classifiers import Classifier
 from weka.core.converters import Loader
 from weka.classifiers import Evaluation
 from weka.core.dataset import Instances
+import weka.core.converters as converters
 from DataLoader import create_header
 '''
 TwoStageTransfer (T, S, m, k, b)
@@ -118,35 +119,25 @@ class TwoStageTransfer:
         F = Instances.template_instances(self.source[0])
         
         print("Find weight for each source data set")
-        '''
         for source in self.source:
             bestWeight, bestError = self.process_source(source, F)
             best_weights_arr.append(bestWeight)
         
         #sort the data based on the weights
         self.source = [source for _, source in sorted(zip(best_weights_arr, self.source), reverse=True, key=operator.itemgetter(0))]
-        '''
+    
         '''
         for i from 1 to b do
             w <- CalculateOptimalWeight(T, F, Si, m, k)
             F ← F ∪ S iw
         '''
         print("Train for final stage")
-        if not os.path.exists(self.savepath):
-            os.mkdir(self.savepath)
-        filename = os.path.join(self.savepath, self.target_name+"_final.arff")
-        header = create_header()
-
-        with open(filename, "w") as save_final:
-            save_final.write(header)
-            for i in range(self.max_source_dataset):
-                weight, _ = self.process_source(self.source[i], F)
-                for inst in self.source[i]:
-                    inst.weight = weight
-                    save_final.write(str(inst) + "\n")
-                F = Instances.append_instances(F, self.source[i])
+        for i in range(self.max_source_dataset):
+            weight, _ = self.process_source(self.source[i], F)
+            for inst in self.source[i]:
+                inst.weight = weight
+            F = Instances.append_instances(F, self.source[i])
         
-        F.class_is_last()
         return F
         
     def process_source(self, source, F):
@@ -201,11 +192,32 @@ class TwoStageTransfer:
         return error
 
     def train(self):
-        F = self.train_internal()
+        if not os.path.exists(self.savepath):
+            os.mkdir(self.savepath)
+
+        filename = os.path.join(self.savepath, self.target_name+"_final.arff")
+        if os.path.exists(filename):
+            print("loading pretrain data for final training")
+            loader = Loader(classname="weka.core.converters.ArffLoader")
+            F = loader.load_file(filename)
+        else:
+            print("Start internal training")
+            F = self.train_internal()
+            self.saveFinal(filename, F)
+        
+        F.class_is_last()
         final_train_set = Instances.append_instances(F, self.target)
         final_train_set.class_is_last()
-
+        
+        print("Building final model")
         self.model.build_classifier(final_train_set)
+
+    def saveFinal(self, filename, F):
+        header = create_header()
+        
+        with open(filename, "w") as save_final:
+            save_final.write(header)
+            converters.save_any_file(F, filename)
 
     def evaluate_model(self):
         evl = Evaluation(self.eval)

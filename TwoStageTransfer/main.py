@@ -27,5 +27,10 @@ def main():
     classifier.load_data_from_arff()
     classifier.train()
 
+    print("**************************************************")
+    print("*                EVALUATING                      *")
+    print("**************************************************")
+    classifier.evaluating_model()
+
 if __name__== '__main__':
     main()
