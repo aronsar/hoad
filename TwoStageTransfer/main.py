@@ -92,9 +92,9 @@ def main():
 
     data_loader = DataLoader(datapath = args.Datapath, 
             target_name = args.target_agent,
-            num_games_for_target = args.num_games_target,
-            num_games_for_eval = args.num_games_eval,
-            num_games_for_source = args.num_games_source)
+            sourcepath = args.sourcepath,
+            targetpath = args.targetpath,
+            evalpath = args.evalpath)
     data_loader.load_target_source_data()
     
     print("**************************************************")
@@ -106,6 +106,9 @@ def main():
             evalpath = args.evalpath,
             savepath = args.savepath,
             target_name = args.target_agent,
+            num_target = args.num_games_target,
+            num_source = args.num_games_source,
+            num_eval = args.num_games_eval,
             boosting_iter=args.boosting_iter,
             fold=args.fold,
             max_source_dataset=args.max_source,

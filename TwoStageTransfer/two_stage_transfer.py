@@ -32,6 +32,9 @@ class TwoStageTransfer:
             evalpath="",
             savepath="",
             target_name="",
+            num_target=10,
+            num_source=100,
+            num_eval=1000
             boosting_iter = 5,
             fold = 10,
             max_source_dataset = 1,
@@ -42,6 +45,9 @@ class TwoStageTransfer:
         self.evalpath = evalpath
         self.savepath = savepath
         self.target_name = target_name
+        self.num_games_target = num_target
+        self.num_games_source = num_source
+        self.num_games_eval = num_eval
         self.source = []
         self.target = ""
         self.eval = ""
