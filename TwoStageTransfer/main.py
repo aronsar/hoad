@@ -93,7 +93,7 @@ def main():
     print("**************************************************")
     print("*                EVALUATING                      *")
     print("**************************************************")
-    classifier.evaluating_model()
+    classifier.evaluate_model()
 
 if __name__== '__main__':
     main()
