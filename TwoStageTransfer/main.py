@@ -8,8 +8,8 @@ def main():
     print("*                 LOADING DATA                   *")
     print("**************************************************")
 
-    data_loader = DataLoader("/data1/shared/agent_data/")
-    data_loader.load_target_source_data()
+    #data_loader = DataLoader("/data1/shared/agent_data/")
+    #data_loader.load_target_source_data()
     
     print("**************************************************")
     print("*                 TRAINING                       *")

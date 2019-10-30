@@ -2,15 +2,11 @@
 # pseudo-code to implement two stage transfer learning
 import sys
 import os
-#FIXME: add ganabi path to sys
-#FIXME: add data path to sys
-
-import gin, os
 import random, pickle
 import numpy as np
 import math
+import operator
 import weka.core.jvm as jvm
-#from utils import parse_args
 
 jvm.start()
 from weka.classifiers import Classifier
@@ -93,23 +89,10 @@ class TwoStageTransfer:
         fracSourceWeight = (m/(n+m)) * (1 - (t/(self.boosting_iter)))
         fracTargetWeight = 1 - fracSourceWeight
 
-        #calculate for each instance
-        #totalWeight = n / fracSourceWeight
-        #targetWeight = fracTargetWeight * totalWeight / m
-        #sourceWeight = fracSourceWeight * totalWeight / n
-        
         print("taret", fracTargetWeight)
         print("source", fracSourceWeight)
         return fracTargetWeight, fracSourceWeight
 
-
-    def getNumInstances(self, data_array):
-        '''Return the number of instances from all games of the agents inside data_array'''
-        numInstances = 0
-        for agent in data_array:
-            numInstances += agent.num_instances()
-            
-        return numInstances
 
     def calcError(self, newModel, test_data_of_kfold):
         '''Return the error from the model with test data from k fold cross validation'''
@@ -131,21 +114,25 @@ class TwoStageTransfer:
         best_weights_arr = []
         #create an empty F with source as template
         F = Instances.template_instances(self.source[0])
-        for source in self.source:
+        
+        print("Find weight for each source data set")
+        '''
+        for source in self.source[:3]:
             bestWeight, bestError = self.process_source(source, F)
             best_weights_arr.append(bestWeight)
-
+        '''
+        best_weights_arr = [2,3,4]
         #sort the data based on the weights
-        self.source = [source for _, source in sorted(zip(best_weights_arr, self.source), reverse=True)]
+        self.source = [source for _, source in sorted(zip(best_weights_arr, self.source[:3]), reverse=True, key=operator.itemgetter(0))]
 
         '''
         for i from 1 to b do
             w <- CalculateOptimalWeight(T, F, Si, m, k)
             F ← F ∪ S iw
         '''
-        #F = Instances() 
-        for i in range(self.max_source_dataset):
-            weight = self.process_source(self.source[i], F)
+        print("Train for final stage")
+        for i in range(3):#self.max_source_dataset):
+            weight, _ = self.process_source(self.source[i], F)
             for inst in self.source[i]:
                 inst.weight = weight
             F = Instances.append_instances(F, self.source[i])
@@ -160,14 +147,12 @@ class TwoStageTransfer:
         Calculate erri from k-fold cross validation on T using F
         and Swi as additional training data return wj such that j = argmax(erri)
         '''
-        print("the type of source is", type(source))
         bestError = math.inf
         bestWeight = 0.0
         for i in range(1, self.boosting_iter+1):
             print ("Process with boosting iteration:", i)
             target_w, source_w = self.calculate_weights(i, source)
             error = self.evaluateWeighting(i, source, F, target_w, source_w)
-            print("The error of this boosing iteration is:", error)
             if error < bestError:
                 bestError = error
                 bestWeight = source_w
@@ -208,7 +193,7 @@ class TwoStageTransfer:
 
     def train(self):
         F = self.train_internal()
-        final_train_set = Instances.append(F, self.target)
+        final_train_set = Instances.append_instances(F, self.target)
         final_train_set.class_is_last()
 
         self.model.build_classifier(final_train_set)
