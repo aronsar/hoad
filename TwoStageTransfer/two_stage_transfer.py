@@ -222,8 +222,9 @@ class TwoStageTransfer:
     def evaluate_model(self):
         evl = Evaluation(self.eval)
         evl.test_model(self.model, self.eval)
-
+        
+        print(evl.summary())
         print("Accuracy score: ", evl.percent_correct)
 
     def predict(self, instance):
-        #TODO: implement this
+        return self.model.classify_instance(instance)
