@@ -63,7 +63,7 @@ class TwoStageTransfer:
     
     def load_data_from_arff(self):
         print("Load data from target and source folder")
-        if self.targetpath=="" or self.sourcepath=="":
+        if self.targetpath=="" or self.sourcepath=="" or self.evalpath=="" or self.savepath=="":
             assert "No path specify, please create data first"
 
         loader = Loader(classname="weka.core.converters.ArffLoader")
@@ -224,3 +224,6 @@ class TwoStageTransfer:
         evl.test_model(self.model, self.eval)
 
         print("Accuracy score: ", evl.percent_correct)
+
+    def predict(self, instance):
+        #TODO: implement this

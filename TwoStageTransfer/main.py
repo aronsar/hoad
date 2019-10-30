@@ -7,24 +7,29 @@ import argparse
 def parse():
     parser = argparse.ArgumentParser()
     parser.add_argument(
+            '--target_agent',
+            default = 'quux_blindbot',
+            help = "Name of the target agent. Choose one of these options: flawed, iggi, legal_random, outer, piers, quux_blindbot, quux_cheatbot, quux_holmesbot, quux_infobot, quux_newcheatbot, quux_simplebot, quux_valuebot, rainbow, van_den_bergh, WTFWT, fireflower"
+            )
+    parser.add_argument(
             '--targetpath',
             default = 'target/',
-            help = 'the target path'
+            help = 'the path to save target agent data in arff format'
             )
     parser.add_argument(
             '--sourcepath',
             default = 'source/',
-            help = 'the source path'
+            help = 'the path to save source agents data in arff format'
             )
     parser.add_argument(
             '--evalpath',
             default = 'eval/',
-            help = 'the evaluation path'
+            help = 'the path to save target data used for testing the model'
             )
     parser.add_argument(
             '--savepath',
             default = 'final/',
-            help = 'the save path'
+            help = 'the path to save the data after train internal. With this file, the final can be trained immediately'
             )
     parser.add_argument(
             '--boosting_iter',
@@ -40,11 +45,6 @@ def parse():
             '--fold',
             default = 10,
             help = 'the number of k in k-fold validation'
-            )
-    parser.add_argument(
-            '--target_name',
-            default = 'quux_blindbot',
-            help = 'name of the desired target'
             )
     parser.add_argument(
             '--Datapath',
@@ -71,7 +71,7 @@ def main():
     print("*                 LOADING DATA                   *")
     print("**************************************************")
 
-    data_loader = DataLoader(args.Datapath)
+    data_loader = DataLoader(args.Datapath, args.target_agent)
     data_loader.load_target_source_data()
     
     print("**************************************************")
@@ -81,8 +81,8 @@ def main():
     classifier = TwoStageTransfer(targetpath = args.targetpath,
             sourcepath = args.sourcepath,
             evalpath = args.evalpath,
-            savepath = "final/",
-            target_name = data_loader.target_name,
+            savepath = args.savepath,
+            target_name = data_loader.target_agent,
             boosting_iter=args.boosting_iter,
             fold=args.fold,
             max_source_dataset=args.max_source,

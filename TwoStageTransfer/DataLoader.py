@@ -4,13 +4,14 @@ import numpy as np
 
 class DataLoader(object):
     def __init__(self,
-            datapath):
+            datapath,
+            target_name):
         self.datapath = datapath
         self.all_agents_datadir = []
         self.target = {}
         self.eval = {}
         self.source = {}
-        self.target_name = ""
+        self.target_name = target_name
 
     def load_target_source_data(self):
         self.__get_all_agents()
@@ -21,8 +22,7 @@ class DataLoader(object):
         self.get_source_data()
 
     def get_target_data(self):
-        target_agent_dir = "quux_blindbot_data_2_500000"
-        self.target_name = "_".join(target_agent_dir.split("_")[:-3])
+        target_agent_dir = self.target_name + "_data_2_500000"
         print("Getting target data for ", self.target_name)
         data = self.__get_25k_data(os.path.join(self.datapath,target_agent_dir))
         filename = self.target_name + ".arff"
@@ -52,6 +52,9 @@ class DataLoader(object):
         return pickle.load(open(path_to_file, "rb"), encoding='latin1')
 
     def write_data_to_arff(self, games, filename, datapath):
+        if not os.path.exists(datapath):
+            os.mkdir(datapath)
+
         f = os.path.join(datapath, filename)
         header = create_header()
 
