@@ -13,7 +13,7 @@ from weka.classifiers import Classifier
 from weka.core.converters import Loader
 from weka.classifiers import Evaluation
 from weka.core.dataset import Instances
-
+from DataLoader import create_header
 '''
 TwoStageTransfer (T, S, m, k, b)
     for all S_i in S: do
@@ -31,6 +31,8 @@ class TwoStageTransfer:
             targetpath="",
             sourcepath="",
             evalpath="",
+            savepath="",
+            target_name="",
             boosting_iter = 5,
             fold = 10,
             max_source_dataset = 1,
@@ -49,6 +51,8 @@ class TwoStageTransfer:
         self.targetpath = targetpath
         self.sourcepath = sourcepath
         self.evalpath = evalpath
+        self.savepath = savepath
+        self.target_name = target_name
         self.source = []
         self.target = ""
         self.eval = ""
@@ -100,8 +104,6 @@ class TwoStageTransfer:
         evl = Evaluation(test_data_of_kfold)
         evl.test_model(newModel, test_data_of_kfold)
 
-        print("The percent incorrect is: ", 100 - evl.percent_correct)
-
         return 100 - evl.percent_correct
 
 
@@ -117,25 +119,32 @@ class TwoStageTransfer:
         
         print("Find weight for each source data set")
         '''
-        for source in self.source[:3]:
+        for source in self.source:
             bestWeight, bestError = self.process_source(source, F)
             best_weights_arr.append(bestWeight)
-        '''
-        best_weights_arr = [2,3,4]
+        
         #sort the data based on the weights
-        self.source = [source for _, source in sorted(zip(best_weights_arr, self.source[:3]), reverse=True, key=operator.itemgetter(0))]
-
+        self.source = [source for _, source in sorted(zip(best_weights_arr, self.source), reverse=True, key=operator.itemgetter(0))]
+        '''
         '''
         for i from 1 to b do
             w <- CalculateOptimalWeight(T, F, Si, m, k)
             F ← F ∪ S iw
         '''
         print("Train for final stage")
-        for i in range(3):#self.max_source_dataset):
-            weight, _ = self.process_source(self.source[i], F)
-            for inst in self.source[i]:
-                inst.weight = weight
-            F = Instances.append_instances(F, self.source[i])
+        if not os.path.exists(self.savepath):
+            os.mkdir(self.savepath)
+        filename = os.path.join(self.savepath, self.target_name+"_final.arff")
+        header = create_header()
+
+        with open(filename, "w") as save_final:
+            save_final.write(header)
+            for i in range(self.max_source_dataset):
+                weight, _ = self.process_source(self.source[i], F)
+                for inst in self.source[i]:
+                    inst.weight = weight
+                    save_final.write(str(inst) + "\n")
+                F = Instances.append_instances(F, self.source[i])
         
         F.class_is_last()
         return F
