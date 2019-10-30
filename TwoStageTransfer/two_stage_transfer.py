@@ -6,9 +6,7 @@ import random, pickle
 import numpy as np
 import math
 import operator
-import weka.core.jvm as jvm
 
-jvm.start()
 from weka.classifiers import Classifier
 from weka.core.converters import Loader
 from weka.classifiers import Evaluation
@@ -38,16 +36,6 @@ class TwoStageTransfer:
             fold = 10,
             max_source_dataset = 1,
             model = ""):
-        '''
-        - target is target data set (10 adhoc games from same agent)
-        - S is set of source data sets S = {S_1, S_2, ..., S_n} (games from previously observed teammates,
-        which can be thousands of data points in length)
-        - m is num of boosting iterations
-        - k is num of folds for cross validation, k should be 10 as we have 10 games
-        - b is max num of source data sets to include
-        - S^w means data set S taken with weight w spread over instances
-        - F is weighted source data
-        '''
         self.model = model
         self.targetpath = targetpath
         self.sourcepath = sourcepath
@@ -94,8 +82,8 @@ class TwoStageTransfer:
         fracSourceWeight = (m/(n+m)) * (1 - (t/(self.boosting_iter)))
         fracTargetWeight = 1 - fracSourceWeight
 
-        print("taret", fracTargetWeight)
-        print("source", fracSourceWeight)
+        print("taret weight", fracTargetWeight)
+        print("source weight", fracSourceWeight)
         return fracTargetWeight, fracSourceWeight
 
 
@@ -109,11 +97,6 @@ class TwoStageTransfer:
 
 
     def train_internal(self):
-        '''
-        for all Si in S do:
-            wi <- CalculateOptimalWeight(T,∅,Si,m,k)
-        Sort S in decreasing order of wi’s
-        '''
         best_weights_arr = []
         #create an empty F with source as template
         F = Instances.template_instances(self.source[0])
@@ -126,11 +109,6 @@ class TwoStageTransfer:
         #sort the data based on the weights
         self.source = [source for _, source in sorted(zip(best_weights_arr, self.source), reverse=True, key=operator.itemgetter(0))]
     
-        '''
-        for i from 1 to b do
-            w <- CalculateOptimalWeight(T, F, Si, m, k)
-            F ← F ∪ S iw
-        '''
         print("Train for final stage")
         for i in range(self.max_source_dataset):
             weight, _ = self.process_source(self.source[i], F)
@@ -141,12 +119,6 @@ class TwoStageTransfer:
         return F
         
     def process_source(self, source, F):
-        '''
-        for i from 1 to m do
-               cal wi based on formula
-        Calculate erri from k-fold cross validation on T using F
-        and Swi as additional training data return wj such that j = argmax(erri)
-        '''
         bestError = math.inf
         bestWeight = 0.0
         for i in range(1, self.boosting_iter+1):
@@ -213,11 +185,14 @@ class TwoStageTransfer:
         self.model.build_classifier(final_train_set)
 
     def saveFinal(self, filename, F):
+        print("Saving final F to train ",self.target_name)
         header = create_header()
         
         with open(filename, "w") as save_final:
             save_final.write(header)
             converters.save_any_file(F, filename)
+
+        print("F saved")
 
     def evaluate_model(self):
         evl = Evaluation(self.eval)
