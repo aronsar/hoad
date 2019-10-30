@@ -337,6 +337,7 @@ class DataLoader(object):
 
         self.train_data = {}  # gameplay data given to model
         self.validation_data = {}  # data not given to model, from same agents as train
+        self.raw_data = {}
         self.test_data = {}  # data from agents totally unseen to model
 
     def train_val_test_split(self, raw_data):  # previously named "read"
@@ -359,8 +360,8 @@ class DataLoader(object):
             split_idx = int(0.9 * len(raw_data[agent]))
             self.train_data[agent] = raw_data[agent][:split_idx]
             self.validation_data[agent] = raw_data[agent][split_idx:]
-
-        # self.test_data[test_agent] = raw_data[test_agent]
+            self.raw_data[agent] = raw_data[agent]
+         #self.test_data[test_agent] = raw_data[test_agent]
 
 
 def create_load_data(args):

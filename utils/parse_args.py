@@ -36,7 +36,7 @@ def parse():
              '    etc...')
 
     parser.add_argument('--run_dir')
-    parser.add_argument('--checkpoints_dir')
+    parser.add_argument('--checkpoints_dir', default='.checkpoint')
     parser.add_argument('--results_dir')
 
     parser.add_argument(
@@ -75,7 +75,7 @@ def resolve_run_directory(args):
         os.mkdir(args.results_dir)
         # TODO: copy over gin config file
         # TODO: save git commit hash in result directory as well
-    elif args.checkpoint_dir is None or args.results_dir is None:
+    elif args.checkpoints_dir is None or args.results_dir is None:
         raise ValueError("Please either specify the -newrun flag "
                          "or provide paths for both --ckptdir and --resultdir")
     return args
@@ -98,7 +98,7 @@ def resolve_datapath(
 def resolve_configpath(args):
     if args.config_path == None:
         config_filename = args.mode + ".config.gin"
-        args.config_path = os.path.join(args.modedir, config_filename)
+        args.config_path = os.path.join(os.getcwd(), config_filename)
 
     return args
 
