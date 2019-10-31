@@ -64,19 +64,19 @@ def parse():
     parser.add_argument(
             '--num_games_target',
             type=int,
-            default = 10,
+            default = 1,
             help = 'number of games from target agent used for training'
             )
     parser.add_argument(
             '--num_games_source',
             type=int,
-            default = 10000,
+            default = 10,
             help = 'number of games from each source agent used for training'
             )
     parser.add_argument(
             '--num_games_eval',
             type=int,
-            default = 1000,
+            default = 1,
             help = 'number of games from target agent used for evaluation'
             )
     args = parser.parse_args()

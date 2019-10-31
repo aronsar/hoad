@@ -34,7 +34,7 @@ class TwoStageTransfer:
             target_name="",
             num_target=10,
             num_source=100,
-            num_eval=1000
+            num_eval=1000,
             boosting_iter = 5,
             fold = 10,
             max_source_dataset = 1,
