@@ -83,7 +83,7 @@ def parse():
     return args
 
 def main():
-    jvm.start()
+    jvm.start(max_heap_size="4g")
     args = parse()
     #loading data
     print("**************************************************")
