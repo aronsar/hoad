@@ -1,4 +1,4 @@
-eval/*
-final/*
-source/*
-target/*
+/eval/*.arff
+/final/*.arff
+/source/*.arff
+/target/*.arff
