@@ -54,7 +54,26 @@ class TwoStageTransfer:
         self.boosting_iter = boosting_iter
         self.fold = fold
         self.max_source_dataset = max_source_dataset
-    
+
+    def load_data_from_raw(self):
+        print("loading data from raw")
+        loader = Loader(classname="weka.core.converters.ArffLoader")
+        #target
+        self.target = loader.load_file(self.targetpath + self.target_name + ".arff")
+        self.target.class_is_last()
+        self.target = self.target[:self.num_games_target]
+        #source
+        for filename in os.listdir(self.sourcepath):
+            if(filename!= target_name+".arff"):
+                source = loader.load_file(self.sourcepath + filename)
+                source.class_is_last()
+                source = source[:self.num_games_source]
+                self.source.append(source)
+        #eval
+        self.eval = loader.load_file(self.targetpath + self.target_name + ".arff")
+        self.eval.class_is_last()
+        self.eval = self.eval[:self.num_games_eval]
+
     def load_data_from_arff(self):
         print("Load data from target and source folder")
         if self.targetpath=="" or self.sourcepath=="" or self.evalpath=="" or self.savepath=="":

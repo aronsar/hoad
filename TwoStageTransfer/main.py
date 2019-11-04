@@ -16,19 +16,19 @@ def parse():
     parser.add_argument(
             '--targetpath',
             type=str,
-            default = 'target/',
+            default = 'raw/',
             help = 'the path to save target agent data in arff format'
             )
     parser.add_argument(
             '--sourcepath',
             type=str,
-            default = 'source/',
+            default = 'raw/',
             help = 'the path to save source agents data in arff format'
             )
     parser.add_argument(
             '--evalpath',
             type=str,
-            default = 'eval/',
+            default = 'raw/',
             help = 'the path to save target data used for testing the model'
             )
     parser.add_argument(
@@ -75,7 +75,7 @@ def parse():
             )
     parser.add_argument(
             '--num_games_eval',
-            type=int,
+            type=int, 
             default = 1,
             help = 'number of games from target agent used for evaluation'
             )
@@ -95,7 +95,8 @@ def main():
             sourcepath = args.sourcepath,
             targetpath = args.targetpath,
             evalpath = args.evalpath)
-    data_loader.load_target_source_data()
+    #data_loader.load_target_source_data()
+
     
     print("**************************************************")
     print("*                 TRAINING                       *")
@@ -113,7 +114,9 @@ def main():
             fold=args.fold,
             max_source_dataset=args.max_source,
             model = model)
-    classifier.load_data_from_arff()
+    
+    #classifier.load_data_from_arff()
+    classifier.load_data_from_raw()
     classifier.train()
 
     print("**************************************************")
