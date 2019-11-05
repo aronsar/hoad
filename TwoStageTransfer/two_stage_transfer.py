@@ -31,6 +31,7 @@ class TwoStageTransfer:
             sourcepath="",
             evalpath="",
             savepath="",
+            rawpath="raw/",
             target_name="",
             num_target=10,
             num_source=100,
@@ -44,6 +45,7 @@ class TwoStageTransfer:
         self.sourcepath = sourcepath
         self.evalpath = evalpath
         self.savepath = savepath
+        self.rawpath = rawpath
         self.target_name = target_name
         self.num_games_target = num_target
         self.num_games_source = num_source
@@ -59,20 +61,22 @@ class TwoStageTransfer:
         print("loading data from raw")
         loader = Loader(classname="weka.core.converters.ArffLoader")
         #target
-        self.target = loader.load_file(self.targetpath + self.target_name + ".arff")
-        self.target.class_is_last()
-        self.target = self.target[:self.num_games_target]
+        print("Loading target data") 
+        all_target = loader.load_file(self.rawpath + self.target_name + ".arff")
+        all_target.class_is_last()
+        self.target, self.eval = all_target.train_test_split(1)
+        print("target size:", self.target.num_instances)
+        print("Eval size:", self.eval.num_instances)
+
         #source
-        for filename in os.listdir(self.sourcepath):
-            if(filename!= target_name+".arff"):
-                source = loader.load_file(self.sourcepath + filename)
+        print("Loading source data")
+        for filename in os.listdir(self.rawpath)[:5]:
+            if(filename!= self.target_name+".arff"):
+                print("Loading", filename)
+                source = loader.load_file(self.rawpath + filename)
                 source.class_is_last()
-                source = source[:self.num_games_source]
+                print("Size:", source.num_instances)
                 self.source.append(source)
-        #eval
-        self.eval = loader.load_file(self.targetpath + self.target_name + ".arff")
-        self.eval.class_is_last()
-        self.eval = self.eval[:self.num_games_eval]
 
     def load_data_from_arff(self):
         print("Load data from target and source folder")
@@ -135,11 +139,12 @@ class TwoStageTransfer:
         self.source = [source for _, source in sorted(zip(best_weights_arr, self.source), reverse=True, key=operator.itemgetter(0))]
     
         print("Train for final stage")
-        for i in range(self.max_source_dataset):
+        for i in range(len(self.source)):#self.max_source_dataset):
             weight, _ = self.process_source(self.source[i], F)
             for inst in self.source[i]:
                 inst.weight = weight
             F = Instances.append_instances(F, self.source[i])
+            self.source.pop(i)
         
         return F
         
