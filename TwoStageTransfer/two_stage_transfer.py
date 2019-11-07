@@ -70,13 +70,17 @@ class TwoStageTransfer:
 
         #source
         print("Loading source data")
-        for filename in os.listdir(self.rawpath)[:5]:
-            if(filename!= self.target_name+".arff"):
+        i=0
+        allFiles = os.listdir(self.rawpath)
+        while len(self.source) < 3:
+            filename = allFiles[i]
+            if(filename!= self.target_name+".arff" and filename!="flawed.arff"):
                 print("Loading", filename)
                 source = loader.load_file(self.rawpath + filename)
                 source.class_is_last()
                 print("Size:", source.num_instances)
                 self.source.append(source)
+            i+=1
 
     def load_data_from_arff(self):
         print("Load data from target and source folder")
@@ -111,8 +115,6 @@ class TwoStageTransfer:
         fracSourceWeight = (m/(n+m)) * (1 - (t/(self.boosting_iter)))
         fracTargetWeight = 1 - fracSourceWeight
 
-        print("taret weight", fracTargetWeight)
-        print("source weight", fracSourceWeight)
         return fracTargetWeight, fracSourceWeight
 
 
@@ -129,63 +131,60 @@ class TwoStageTransfer:
         best_weights_arr = []
         #create an empty F with source as template
         F = Instances.template_instances(self.source[0])
-        
+        withF = False
         print("Find weight for each source data set")
         for source in self.source:
-            bestWeight, bestError = self.process_source(source, F)
+            bestWeight, bestError = self.process_source(source, F, withF)
             best_weights_arr.append(bestWeight)
         
         #sort the data based on the weights
         self.source = [source for _, source in sorted(zip(best_weights_arr, self.source), reverse=True, key=operator.itemgetter(0))]
     
         print("Train for final stage")
-        for i in range(len(self.source)):#self.max_source_dataset):
-            weight, _ = self.process_source(self.source[i], F)
-            for inst in self.source[i]:
+        withF = True
+        while len(self.source) > 0:#self.max_source_dataset):
+            weight, _ = self.process_source(self.source[0], F, withF)
+            for inst in self.source[0]:
                 inst.weight = weight
-            F = Instances.append_instances(F, self.source[i])
-            self.source.pop(i)
+            F = Instances.append_instances(F, self.source[0])
+            F.class_is_last()
+            self.source.pop(0)
         
         return F
         
-    def process_source(self, source, F):
+    def process_source(self, source, F, withF):
         bestError = math.inf
         bestWeight = 0.0
-        for i in range(1, self.boosting_iter+1):
+        for i in range(1, self.boosting_iter):
             print ("Process with boosting iteration:", i)
             target_w, source_w = self.calculate_weights(i, source)
-            error = self.evaluateWeighting(i, source, F, target_w, source_w)
+            error = self.evaluateWeighting(i, source, F, target_w, source_w, withF)
             if error < bestError:
                 bestError = error
                 bestWeight = source_w
-            print()
 
         return bestWeight, bestError
 
-    def evaluateWeighting(self, t, source, F, target_w, source_w):
+    def evaluateWeighting(self, t, source, F, target_w, source_w, withF):
         '''Calculate erri from k-fold cross validation on T using F'''
-        classifier = Classifier(classname="weka.classifiers.trees.REPTree")
-
         for inst in source:
             inst.weight = source_w
 
-        trainDataSet = Instances.append_instances(source,F)
-        
         target = self.target
         for inst in target:
             inst.weight = target_w
 
         error = 0.0
         for i in range(self.fold):
+            classifier = Classifier(classname="weka.classifiers.trees.REPTree")
             train = target.train_cv(self.fold, i)
             test = target.test_cv(self.fold, i)
             
-            #append train target set to source set
-            fix_set = Instances.append_instances(trainDataSet,train)
-            fix_set.class_is_last()
-
             #train classifier
-            classifier.build_classifier(fix_set)
+            if F.num_instances !=0:
+                classifier.build_classifier(F)
+            classifier.build_classifier(source)
+            classifier.build_classifier(train)
 
             #calculate error
             test.class_is_last()
