@@ -37,7 +37,7 @@ class TwoStageTransfer:
             num_source=100,
             num_eval=1000,
             boosting_iter = 5,
-            fold = 10,
+            fold = 2,
             max_source_dataset = 1,
             model = ""):
         self.model = model
