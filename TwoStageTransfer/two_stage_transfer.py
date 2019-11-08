@@ -64,7 +64,7 @@ class TwoStageTransfer:
         print("Loading target data") 
         all_target = loader.load_file(self.rawpath + self.target_name + ".arff")
         all_target.class_is_last()
-        self.target, self.eval = all_target.train_test_split(1)
+        self.target, self.eval = all_target.train_test_split(2)
         print("target size:", self.target.num_instances)
         print("Eval size:", self.eval.num_instances)
 
@@ -72,7 +72,8 @@ class TwoStageTransfer:
         print("Loading source data")
         i=0
         allFiles = os.listdir(self.rawpath)
-        while len(self.source) < 3:
+        random.shuffle(allFiles)
+        while len(self.source) < 6:
             filename = allFiles[i]
             if(filename!= self.target_name+".arff" and filename!="flawed.arff"):
                 print("Loading", filename)
