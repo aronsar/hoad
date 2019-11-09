@@ -34,13 +34,13 @@ def parse():
     parser.add_argument(
             '--savepath',
             type=str,
-            default = 'final/',
+            default = 'rulebased_final/',
             help = 'the path to save the data after train internal. With this file, the final can be trained immediately'
             )
     parser.add_argument(
             '--boosting_iter',
             type=int,
-            default = 10,
+            default = 5,
             help = 'the number of boosting iteration'
             )
     parser.add_argument(
@@ -52,7 +52,7 @@ def parse():
     parser.add_argument(
             '--fold',
             type=int,
-            default = 10,
+            default = 2,
             help = 'the number of k in k-fold validation'
             )
     parser.add_argument(
@@ -83,7 +83,7 @@ def parse():
     return args
 
 def main():
-    jvm.start(max_heap_size="16g")
+    jvm.start(max_heap_size="40g")
     args = parse()
     #loading data
     print("**************************************************")

@@ -64,7 +64,7 @@ class TwoStageTransfer:
         print("Loading target data") 
         all_target = loader.load_file(self.rawpath + self.target_name + ".arff")
         all_target.class_is_last()
-        self.target, self.eval = all_target.train_test_split(2)
+        self.target, self.eval = all_target.train_test_split(1)
         print("target size:", self.target.num_instances)
         print("Eval size:", self.eval.num_instances)
 
