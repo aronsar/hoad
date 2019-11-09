@@ -73,9 +73,9 @@ class TwoStageTransfer:
         i=0
         allFiles = os.listdir(self.rawpath)
         random.shuffle(allFiles)
-        while len(self.source) < 6:
+        while len(self.source) < 15:
             filename = allFiles[i]
-            if(filename!= self.target_name+".arff" and filename!="flawed.arff"):
+            if filename!= self.target_name+".arff":
                 print("Loading", filename)
                 source = loader.load_file(self.rawpath + filename)
                 source.class_is_last()
