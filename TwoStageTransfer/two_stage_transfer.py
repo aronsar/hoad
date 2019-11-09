@@ -73,7 +73,7 @@ class TwoStageTransfer:
         i=0
         allFiles = os.listdir(self.rawpath)
         random.shuffle(allFiles)
-        while len(self.source) < 15:
+        while i < len(self.source):
             filename = allFiles[i]
             if filename!= self.target_name+".arff":
                 print("Loading", filename)
