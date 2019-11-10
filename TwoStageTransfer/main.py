@@ -83,7 +83,7 @@ def main():
             arff_data_path = args.arff_data_path,
             num_games = args.num_games_source,
             )
-    data_loader.load_target_source_data()
+    #data_loader.load_target_source_data()
 
     
     print("**************************************************")
