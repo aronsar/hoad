@@ -25,5 +25,7 @@
 - van_den_bergh
 - WTFWT
 - fireflower <br/>
-`python main --target_agent flawed`
+
+#### Running example
+`python main.py --target_agent flawed --arff_data_path raw/ --boosting_iter 5 --fold 2`
 
