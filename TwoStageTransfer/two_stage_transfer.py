@@ -27,29 +27,21 @@ TwoStageTransfer (T, S, m, k, b)
 '''
 class TwoStageTransfer:
     def __init__(self,
-            targetpath="",
-            sourcepath="",
-            evalpath="",
             savepath="",
-            rawpath="raw/",
+            arff_data_path="raw/",
             target_name="",
             num_target=10,
-            num_source=100,
-            num_eval=1000,
+            num_source=1000,
             boosting_iter = 5,
             fold = 2,
             max_source_dataset = 1,
             model = ""):
         self.model = model
-        self.targetpath = targetpath
-        self.sourcepath = sourcepath
-        self.evalpath = evalpath
         self.savepath = savepath
-        self.rawpath = rawpath
+        self.arff_data_path = arff_data_path
         self.target_name = target_name
         self.num_games_target = num_target
         self.num_games_source = num_source
-        self.num_games_eval = num_eval
         self.source = []
         self.target = ""
         self.eval = ""
@@ -57,55 +49,32 @@ class TwoStageTransfer:
         self.fold = fold
         self.max_source_dataset = max_source_dataset
 
-    def load_data_from_raw(self):
+    def load_data_from_arff(self):
         print("loading data from raw")
         loader = Loader(classname="weka.core.converters.ArffLoader")
         #target
         print("Loading target data") 
-        all_target = loader.load_file(self.rawpath + self.target_name + ".arff")
+        all_target = loader.load_file(self.arff_data_path + self.target_name + ".arff")
         all_target.class_is_last()
-        self.target, self.eval = all_target.train_test_split(1)
+        train_vs_test_percent = (self.num_games_target/self.num_games_source)*100
+        self.target, self.eval = all_target.train_test_split(train_vs_test_percent)
         print("target size:", self.target.num_instances)
         print("Eval size:", self.eval.num_instances)
 
         #source
         print("Loading source data")
         i=0
-        allFiles = os.listdir(self.rawpath)
+        allFiles = os.listdir(self.arff_data_path)
         random.shuffle(allFiles)
         while i < len(allFiles):
             filename = allFiles[i]
             if filename!= self.target_name+".arff":
                 print("Loading", filename)
-                source = loader.load_file(self.rawpath + filename)
+                source = loader.load_file(self.arff_data_path + filename)
                 source.class_is_last()
                 print("Size:", source.num_instances)
                 self.source.append(source)
             i+=1
-
-    def load_data_from_arff(self):
-        print("Load data from target and source folder")
-        if self.targetpath=="" or self.sourcepath=="" or self.evalpath=="" or self.savepath=="":
-            assert "No path specify, please create data first"
-
-        loader = Loader(classname="weka.core.converters.ArffLoader")
-        
-        #target dataset
-        print("Get instances of target data set")
-        self.target = loader.load_file(self.targetpath + os.listdir(self.targetpath)[0])
-        self.target.class_is_last()
-
-        #source dataset
-        print("Get instances of source data set")
-        for filename in os.listdir(self.sourcepath):
-            source = loader.load_file(self.sourcepath + filename)
-            source.class_is_last()
-            self.source.append(source)
-
-        #eval dataset
-        print("Get instances of eval dataset")
-        self.eval = loader.load_file(self.evalpath + os.listdir(self.evalpath)[0])
-        self.eval.class_is_last()
 
     def calculate_weights(self, t, source):
         #for i from 1 to m do

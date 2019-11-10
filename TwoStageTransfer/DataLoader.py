@@ -2,27 +2,21 @@ import os
 import random, pickle
 import numpy as np
 
+'''
+Load data from datapath and write to arff files. Save those arff files in arff_data_path
+'''
 class DataLoader(object):
     def __init__(self,
             datapath,
-            targetpath="",
-            sourcepath="",
-            evalpath="",
+            arff_data_path="",
             target_name="", 
-            num_games_target=10,
-            num_games_source=1000,
-            num_games_eval=1000):
+            num_games=1000):
         self.datapath = datapath
         self.all_agents_datadir = []
         self.target = {}
-        self.eval = {}
         self.source = {}
-        self.targetpath = targetpath
-        self.sourcepath = sourcepath
-        self.evalpath = evalpath
-        self.num_games_target = num_games_target
-        self.num_games_source = num_games_source
-        self.num_games_eval = num_games_eval
+        self.arff_data_path = arff_data_path
+        self.num_games = num_games
         self.target_name = target_name
 
     def load_target_source_data(self):
@@ -38,10 +32,8 @@ class DataLoader(object):
         print("Getting target data for ", self.target_name)
         data = self.__get_25k_data(os.path.join(self.datapath,target_agent_dir))
         filename = self.target_name + ".arff"
-        self.target[self.target_name] = self.write_data_to_arff(data[:self.num_games_target], filename, self.targetpath)
+        self.target[self.target_name] = self.write_data_to_arff(data[:self.num_games], filename, self.arff_data_path)
         filename = self.target_name + "_test.arff"
-        self.eval[self.target_name] = self.write_data_to_arff(data[self.num_games_target+1 : self.num_games_target+self.num_games_eval+1], filename, self.evalpath)
-       
 
     def get_source_data(self):
         source_agents_dir = []
@@ -51,7 +43,7 @@ class DataLoader(object):
                 print("Getting source data for ", agent_name)
                 data = self.__get_25k_data(os.path.join(self.datapath, agent_dir))
                 filename = agent_name + ".arff"
-                self.source[agent_name] = self.write_data_to_arff(data[:self.num_games_source], filename, self.sourcepath)
+                self.source[agent_name] = self.write_data_to_arff(data[:self.num_games], filename, self.arff_data_path)
 
     def __get_all_agents(self):
         self.all_agents_datadir = [name for name in os.listdir(self.datapath)]

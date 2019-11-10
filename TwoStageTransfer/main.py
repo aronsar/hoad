@@ -14,19 +14,7 @@ def parse():
             help = "Name of the target agent. Choose one of these options: flawed, iggi, legal_random, outer, piers, quux_blindbot, quux_cheatbot, quux_holmesbot, quux_infobot, quux_newcheatbot, quux_simplebot, quux_valuebot, rainbow, van_den_bergh, WTFWT, fireflower"
             )
     parser.add_argument(
-            '--targetpath',
-            type=str,
-            default = 'raw/',
-            help = 'the path to save target agent data in arff format'
-            )
-    parser.add_argument(
-            '--sourcepath',
-            type=str,
-            default = 'raw/',
-            help = 'the path to save source agents data in arff format'
-            )
-    parser.add_argument(
-            '--evalpath',
+            '--arff_data_path',
             type=str,
             default = 'raw/',
             help = 'the path to save target data used for testing the model'
@@ -64,27 +52,27 @@ def parse():
     parser.add_argument(
             '--num_games_target',
             type=int,
-            default = 1,
+            default = 10,
             help = 'number of games from target agent used for training'
             )
     parser.add_argument(
             '--num_games_source',
             type=int,
-            default = 10,
+            default = 1000,
             help = 'number of games from each source agent used for training'
             )
     parser.add_argument(
-            '--num_games_eval',
-            type=int, 
-            default = 1,
-            help = 'number of games from target agent used for evaluation'
+            '--max_heap_size',
+            type=str,
+            default='16g',
+            help = 'Maximum heap size for jvm'
             )
     args = parser.parse_args()
     return args
 
 def main():
-    jvm.start(max_heap_size="40g")
     args = parse()
+    jvm.start(max_heap_size=args.max_heap_size)
     #loading data
     print("**************************************************")
     print("*                 LOADING DATA                   *")
@@ -92,31 +80,27 @@ def main():
 
     data_loader = DataLoader(datapath = args.Datapath, 
             target_name = args.target_agent,
-            sourcepath = args.sourcepath,
-            targetpath = args.targetpath,
-            evalpath = args.evalpath)
-    #data_loader.load_target_source_data()
+            arff_data_path = args.arff_data_path,
+            num_games = args.num_games_source,
+            )
+    data_loader.load_target_source_data()
 
     
     print("**************************************************")
     print("*                 TRAINING                       *")
     print("**************************************************")
     model = Classifier(classname="weka.classifiers.trees.REPTree")
-    classifier = TwoStageTransfer(targetpath = args.targetpath,
-            sourcepath = args.sourcepath,
-            evalpath = args.evalpath,
+    classifier = TwoStageTransfer(arff_data_path = args.arff_data_path,
             savepath = args.savepath,
             target_name = args.target_agent,
             num_target = args.num_games_target,
             num_source = args.num_games_source,
-            num_eval = args.num_games_eval,
             boosting_iter=args.boosting_iter,
             fold=args.fold,
             max_source_dataset=args.max_source,
             model = model)
     
-    #classifier.load_data_from_arff()
-    classifier.load_data_from_raw()
+    classifier.load_data_from_arff()
     classifier.train()
 
     print("**************************************************")
