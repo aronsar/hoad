@@ -32,7 +32,7 @@ class DataLoader(object):
         print("Getting target data for ", self.target_name)
         data = self.__get_25k_data(os.path.join(self.datapath,target_agent_dir))
         filename = self.target_name + ".arff"
-        self.target[self.target_name] = self.write_data_to_arff(data[:self.num_games], filename, self.arff_data_path)
+        self.target[self.target_name] = self.write_data_to_arff(random.sample(data, self.num_games), filename, self.arff_data_path)
         filename = self.target_name + "_test.arff"
 
     def get_source_data(self):
@@ -43,7 +43,7 @@ class DataLoader(object):
                 print("Getting source data for ", agent_name)
                 data = self.__get_25k_data(os.path.join(self.datapath, agent_dir))
                 filename = agent_name + ".arff"
-                self.source[agent_name] = self.write_data_to_arff(data[:self.num_games], filename, self.arff_data_path)
+                self.source[agent_name] = self.write_data_to_arff(random.sample(data,self.num_games), filename, self.arff_data_path)
 
     def __get_all_agents(self):
         self.all_agents_datadir = [name for name in os.listdir(self.datapath)]
