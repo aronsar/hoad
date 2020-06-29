@@ -1,0 +1,10 @@
+#$ -cwd
+#$ -V
+#$ -l h_rt=00:05:00
+#$ -q iggi-cluster
+#$ -m e
+#$ -M jwr518@york.ac.uk
+#$ -o ./results/
+#$ -e ./results/
+
+echo "Finished Job"

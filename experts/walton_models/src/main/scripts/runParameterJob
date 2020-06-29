@@ -1,0 +1,17 @@
+#$ -cwd
+#$ -V
+#$ -l h_vmem=4G
+#$ -l h_rt=10:00:00
+#$ -q iggi-cluster
+#$ -t 1-5000
+#$ -tc 150
+#$ -m e
+#$ -M jwr518@york.ac.uk
+#$ -o ./results/mx_yarcc
+#$ -e ./results/mx_yarcc
+
+export MALLOC_ARENA_MAX=4
+export FIREWORKS_RUN_COUNT=1 # Repeat each game only once
+vmArgs="-Xmx1024m -XX:ParallelGCThreads=1"
+filename=$(awk NR=$SGE_TASK_ID arguments.txt)
+java $vmArgs -cp target/fireworks-0.1-SNAPSHOT.jar com.fossgalaxy.game.fireworks.cluster.MixedAgentGameSingle $filename

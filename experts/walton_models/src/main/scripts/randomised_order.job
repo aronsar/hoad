@@ -1,0 +1,15 @@
+#$ -cwd
+#$ -V
+#$ -l h_vmem=4G
+#$ -l h_rt=24:00:00
+#$ -q iggi-cluster
+#$ -t 1-5000
+#$ -tc 165
+#$ -o ./results/mx_yarcc
+#$ -e ./results/mx_yarcc
+
+export MALLOC_ARENA_MAX=4
+export FIREWORKS_RUN_COUNT=2
+vmArgs="-Xmx1024m -XX:ParallelGCThreads=1"
+filename=$(awk NR==$SGE_TASK_ID mixedOrderArgs.txt)
+java $vmArgs -cp fireworks-0.2.3-SNAPSHOT-jar-with-dependencies.jar com.fossgalaxy.games.fireworks.cluster.FreeForAllGameSingle $JOB_ID-$SGE_TASK_ID $filename
