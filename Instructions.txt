@@ -1,0 +1,6 @@
+./build_env+agents.sh
+# produce or download replay data
+    # producing the replay data:
+    # install rust
+    $ pip install absl-py gin-config tensorflow-gpu cffi
+
