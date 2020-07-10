@@ -396,7 +396,7 @@ class HanabiEnv(Environment):
          - The next possible card; None is returned if @deck == None,
     """
     if deck is None:
-      return None
+      return
     i = 0
     while i < len(deck):
       yield deck[i]

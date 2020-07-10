@@ -23,11 +23,11 @@ import rl_env  # nopep8
 
 def parse():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--agent_name', default='iggi')
-    parser.add_argument('--num_players', type=int)
-    parser.add_argument('--num_games', type=int)
+    parser.add_argument('--agent_name', '--a', type=str, default='iggi')
+    parser.add_argument('--num_games', '--n', type=int, default=10, help='Number of games to produce.')
+    parser.add_argument('--num_players', '--p', type=int, default=2, help='Number of players.')
+    parser.add_argument('--savedir', '--s', type=str, default='.')
     parser.add_argument('--seed', type=int, default=1)
-    parser.add_argument('--datapath')
 
     args = parser.parse_args()
     return args
@@ -51,9 +51,8 @@ def create_data_filenames(args):
     # Config csv & pkl file path
     agent_data_filename = args.agent_name + "_" + \
         str(args.num_players) + "_" + str(args.num_games)
-    datapath = os.path.dirname(args.datapath)
-    csv_filename = os.path.join(datapath, agent_data_filename + ".csv")
-    pkl_filename = os.path.join(datapath, agent_data_filename + ".pkl")
+    csv_filename = os.path.join(args.savedir, agent_data_filename + ".csv")
+    pkl_filename = os.path.join(args.savedir, agent_data_filename + ".pkl")
 
     # Config jar file path
     jar_path = os.path.join(os.path.dirname(

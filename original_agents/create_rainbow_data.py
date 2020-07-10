@@ -5,10 +5,10 @@
 import os, sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 
-from utils import dir_utils, parse_args
+from utils import parse_args
 from utils import binary_list_to_int as b2int
 from collections import defaultdict
-from original_agents.rainbow_models import rainbow_agent_wrapper as rainbow
+from original_agents.rainbow import rainbow_agent_wrapper as rainbow
 import pickle
 from hanabi_env import rl_env
 import gin
@@ -16,15 +16,6 @@ import tensorflow as tf # version 1.x
 import importlib
 import argparse
 
-def import_agents(agent_name, rainbowdir, agent_config):
-    #sys.path.insert(0, rainbowdir)
-
-    if 'rainbow' in agent_name:
-      rainbow_num = filter(str.isdigit, agent_name)
-      return rainbow.Agent(agent_config, rainbow_num)
-    else:
-      import pdb; pdb.set_trace()
-      print('rainbow must be in the name of the agent')
 
 def one_hot_vectorized_action(agent, num_moves, obs):
     '''
@@ -54,7 +45,7 @@ class DataCreator(object):
                 'players': self.num_players,
                 'num_moves': self.environment.num_moves(),
                 'observation_size': self.environment.vectorized_observation_shape()[0]}
-        self.agent_object = import_agents(args.agent_name, args.rainbowdir, self.agent_config)
+        self.agent_object = rainbow.Agent(self.agent_config)
 
 
     def create_data(self):
@@ -100,18 +91,10 @@ class DataCreator(object):
 
 def parse():
   parser = argparse.ArgumentParser()
-  parser.add_argument('--agent_name',
-                      default='rainbow1')
-
-  parser.add_argument('--num_players',
-                      type=int)
-
-  parser.add_argument('--num_games',
-                      type=int)
-
-  parser.add_argument('--datapath')
-
-  parser.add_argument('--rainbowdir') #FIXME
+  parser.add_argument('--agent_name', '--a', type=str, default='rainbow')
+  parser.add_argument('--num_games', '--n', type=int, default=10, help='Number of games to produce')
+  parser.add_argument('--num_players', '--p', type=int, default=2, help='Number of players.')
+  parser.add_argument('--savedir', '--s', type=str, default='.')
 
   args = parser.parse_args()
   return args
@@ -120,7 +103,8 @@ def parse():
 def main(args):
     data_creator = DataCreator(args)
     rainbow_data = data_creator.create_data()
-    pickle.dump(rainbow_data, open(args.datapath, "wb"))
+    savepath = os.path.join(args.savedir, "rainbow_" + str(args.num_players) + "_" + str(args.num_games) + ".pkl")
+    pickle.dump(rainbow_data, open(savepath, "wb"))
 
 if __name__ == '__main__':
     args = parse()

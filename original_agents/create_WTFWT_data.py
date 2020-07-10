@@ -130,7 +130,7 @@ def comp_test(env, row, obs, args):
     assert(csv_fw == env_fw)
     # b2-y1-b2-w5,g2-b4-r4-w2,g1-r3-b4-g3,y1-w3-g1-r4,w3-b3-y5-w2
     env_hands = env.state.player_hands()
-    for i in range(args.p):
+    for i in range(args.num_players):
         # [B2, Y1, B2, W5] as in HanabiCard class obj
         cur_env_hands = env_hands[i]
         # ['b2', 'y1', 'b2', 'w5']
@@ -163,7 +163,7 @@ def parallel_generation(args):
         os.mkdir(os.path.join(PATH_TMP, str(i)))
         cmd = '(cd {}/{} && '.format(PATH_TMP, i)
         cmd += 'python3 {}/create_WTFWT_data.py '.format(PATH_EXPERTS)
-        cmd += '--n {} --p {} -q --m 1)'.format(args.n, args.p)
+        cmd += '--n {} --p {} -q --m 1)'.format(args.num_games, args.num_players)
         pool.append(subprocess.Popen(cmd, shell=True))
 
     code = [p.wait() for p in pool]
@@ -171,12 +171,12 @@ def parallel_generation(args):
     # Combine the generated data
     combined = []
     for i in range(args.m):
-        filename = 'WTFWT_{}_{}.pkl'.format(args.p, args.n)
+        filename = 'WTFWT_{}_{}.pkl'.format(args.num_players, args.num_games)
         with open(os.path.join(PATH_TMP, str(i), filename), 'rb') as f:
             combined += pickle.load(f)
 
-    name_tar = 'WTFWT_data_{}_{}'.format(args.p, args.m * args.n)
-    cmd = 'tar -czvf {}/{}.tar.gz '.format(args.P, name_tar)
+    name_tar = 'WTFWT_data_{}_{}'.format(args.num_players, args.m * args.num_games)
+    cmd = 'tar -czvf {}/{}.tar.gz '.format(args.savedir, name_tar)
     cmd += '--transform s/.WTFWT_TMP_{}/{}/ '.format(ts, name_tar)
     cmd += '.WTFWT_TMP_{}/*'.format(ts)
     run(cmd)
@@ -205,21 +205,21 @@ def main(args):
         - Assertion errors for mismatches in WTFWT and DM HanabiEnv
         - Value Errors for parsing unknown formats.
     """
-    print('Seed used: %d' % args.s)
+    print('Seed used: %d' % args.seed)
     # Handle by build_env.sh
     # Make hanabi_env & import it
     # run('(cd {}/ && cmake -Wno-dev . && make)'.format(PATH_HANABI_ENV), args.q)
     import rl_env
 
-    random.seed(args.s)
+    random.seed(args.seed)
     combined_data = []
     # For specified number of games
-    for i in range(args.n):
+    for i in range(args.num_games):
         game_data = [[], []]
         # Generate the game logs and decks
         s = random.randint(0, 2**31-1) # seed for WTFWT
         cmd = ('cargo run -q --manifest-path {}/WTFWT/Cargo.toml -- -n 1 -o 1 '
-               '-s {} -p {} -g info').format(PATH_EXPERTS, s, args.p)
+               '-s {} -p {} -g info').format(PATH_EXPERTS, s, args.num_players)
         debug = ['', ' -l debug'][args.debug]
         run(cmd + debug, args.q)
 
@@ -229,11 +229,11 @@ def main(args):
             # Deck in Rust Env starts from right and indexed from 1
             dk = [x[0] + str(int(x[1])-1) for x in dk.split('-')[::-1]]
 
-            env = rl_env.make('Hanabi-Full', num_players=args.p)
+            env = rl_env.make('Hanabi-Full', num_players=args.num_players)
             obs = env.reset(dk)
 
             header = (['pid', 'turn']
-                   + ['p%d_cards' % i for i in range(args.p)]
+                   + ['p%d_cards' % i for i in range(args.num_players)]
                    + ['discards', 'action', 'firework',
                       'rem_life', 'rem_info', 'rem_deck'])
 
@@ -243,7 +243,7 @@ def main(args):
                 row = dict(zip(header, row))
                 if args.debug:
                     comp_test(env, row, obs, args)
-                action = parse_action(row, args.p)
+                action = parse_action(row, args.num_players)
                 # Store the data
                 cur_obs = obs['player_observations'][obs['current_player']]
                 vec_act = one_hot_vectorized_action(
@@ -255,8 +255,8 @@ def main(args):
         assert(done is True)
         combined_data.append(game_data)
 
-    fn = '{}'.format(args.P)
-    with open(fn, 'wb') as f:
+    savepath = os.path.join(args.savedir, 'wtfwt_' + str(args.num_players) + '_' + str(args.num_games) + '.pkl')
+    with open(savepath, 'wb') as f:
         pickle.dump(combined_data, f)
     os.remove('dk_cards.csv')
     os.remove('rust_agent.csv')
@@ -264,10 +264,10 @@ def main(args):
 if __name__ == '__main__':
     s = random.randint(0, 2**31-1) # seed for random.seed()
     parser = argparse.ArgumentParser()
-    parser.add_argument('--n', type=int, default=1, help='Num of Games')
-    parser.add_argument('--p', type=int, default=5, help='Num of Players')
-    parser.add_argument('--s', type=int, default=s, help='Seed for RNG')
-    parser.add_argument('--P', type=str, default='.',
+    parser.add_argument('--num_games', '--n', type=int, default=10, help='Number of games to produce.')
+    parser.add_argument('--num_players', '--p', type=int, default=2, help='Num of Players')
+    parser.add_argument('--seed', type=int, default=s, help='Seed for RNG')
+    parser.add_argument('--savedir', '--s', type=str, default='.',
         help='Path to the directory where the .pkl data file is saved.')
     parser.add_argument('-q', action='store_true', help='Quiet mode')
     parser.add_argument('-debug', action='store_true',
