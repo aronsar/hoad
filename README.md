@@ -4,12 +4,11 @@ Because DeepMind wrote their Rainbow agents in Py 2.7 and tf 1.x, the data creat
 
 ### Getting Started:
 ```
-# use venvg for python 3
-source /data1/shared/venvg/bin/activate
+# Install necessary programs/packages:
+sudo apt install cmake
 
-# Build the Hanabi Env, Walton Agent, & Quux Agent for now
-./build_env.sh
-# For fireflowers, please add build scripts in scripts/ if necessary
+# Build the Hanabi Environment
+sh hanabi_env/build_hanabi.sh
 
 # You might need to change the permission to run the build_env.sh script
 chmod 755 build_env.sh
@@ -161,3 +160,6 @@ Since the new agents we'll make available are all written in different languages
 **train.py**: this file is not changing structurally; only debugging type changes. The purpose of this file is to load in the model architecture, and to train the model based on the gin config file. Saves the model in checkpoint file when done. #TODO: implement regular checkpointing once the training process is taking a long time so if interrupted, the trainer knows where to pick back up. If the -evalonly flag is set, then train attempts to load the model instead of training it. Note: the checkpoint file is saved to outputs/runxxx/checkpoints. Any tensorboard info is saved to outputs/runxxx/results
 
 **eval.py**: this script is provided so that given just a runxxx directory, you can recreate results months from now. Also so that other researchers can recreate our results. To evaulate the performance of a model on a dataset, this script uses a gin config file, an optionally specified set of agents, and an optionally specified checkpoint path. It loads in the checkpoint, calls create_load_data, and then on each agent in the returned dictionary it runs a bunch of forward passes of the model on the data to get an accuracy, which it prints. 
+<!--stackedit_data:
+eyJoaXN0b3J5IjpbLTQ5MzQ5OTc1MCwtMTMxMjAwMTY0NF19
+-->
