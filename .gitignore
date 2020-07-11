@@ -8,14 +8,14 @@ cmake_install.cmake
 *.a
 *.o
 *.dylib
-experts/WTFWT/target
 .java-version
 .idea/
 *.vscode/*
 *__pycache__/*
-data
-output
 replay_data
+original_agents/venv2
+original_agents/venv3
+
 
 # Quux Executables
 run_*Bot
@@ -26,6 +26,7 @@ exp_*Bot
 
 # Rainbow models
 original_agents/rainbow/pretrained_model
+original_agents/rainbow/tmp
 
 # WTFWT executables
 original_agents/WTFWT/target

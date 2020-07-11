@@ -56,7 +56,7 @@ def create_data_filenames(args):
 
     # Config jar file path
     jar_path = os.path.join(os.path.dirname(
-        os.path.abspath(__file__)), "walton_models")
+        os.path.abspath(__file__)), "walton")
     jar_filename = os.path.join(jar_path, "walton.jar")
 
     return csv_filename, pkl_filename, jar_filename

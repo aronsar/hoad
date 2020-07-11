@@ -3,7 +3,7 @@
 ROOT_DIR=`pwd`
 
 # Deal with QUUX Agent
-QUUX_DIR=$ROOT_DIR/original_agents/quux_models
+QUUX_DIR=$ROOT_DIR/quux
 cd $QUUX_DIR
 
 # Build for quux

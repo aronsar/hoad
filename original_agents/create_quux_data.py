@@ -24,20 +24,20 @@ from utils import binary_list_to_int as b2int
 import random
 
 RUN_SCRIPT_MAP = {
-    'quux_blindbot': "InfoBot",
-    'quux_simplebot': "SimpleBot",
-    'quux_valuebot': "ValueBot",
-    'quux_holmesbot': "HolmesBot",
-    'quux_smartbot': "SmartBot",
-    'quux_infobot': "InfoBot",
-    'quux_cheatbot': "CheatBot",
-    'quux_newcheatbot': "NewCheatBot"
+    'blindbot': "InfoBot",
+    'simplebot': "SimpleBot",
+    'valuebot': "ValueBot",
+    'holmesbot': "HolmesBot",
+    'smartbot': "SmartBot",
+    'infobot': "InfoBot",
+    'cheatbot': "CheatBot",
+    'newcheatbot': "NewCheatBot"
 }
 
 
 def parse():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--agent_name', '--a', type=str, default='quux_simplebot')
+    parser.add_argument('--agent_name', '--a', type=str, default='simplebot')
     parser.add_argument('--num_games', '--n', type=int, default=10, help='Number of games to produce.')
     parser.add_argument('--num_players', '--p', type=int, default=2, help='Number of players.')
     parser.add_argument('--savedir', '--s', type=str, default='.')
@@ -68,13 +68,13 @@ def create_data_filenames(args):
     pkl_filename = os.path.join(args.savedir, agent_data_filename + ".pkl")
 
     # Config quux file path
-    quux_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "quux_models")
+    quux_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "quux")
     for file in os.listdir(quux_path):
         if file != "run_all.sh" and file.startswith("run_" + RUN_SCRIPT_MAP[args.agent_name]):
             quux_bot_script_path = os.path.join(quux_path, file)
             return csv_filename, pkl_filename, quux_bot_script_path
 
-    subprocess.Popen(["make"], stdout=subprocess.PIPE, cwd="./quux_models/")
+    subprocess.Popen(["make"], stdout=subprocess.PIPE, cwd="./quux/")
 
     for file in os.listdir(quux_path):
         if file != "run_all.sh" and file.startswith("run_" + RUN_SCRIPT_MAP[args.agent_name]):
@@ -191,9 +191,10 @@ def act_based_pipeline(args):
     seed = random.randint(0, 2**31-1)
     print("Create quux data. seed:", seed)
 
-    OLD_STDOUT = sys.stdout
-    sys.stdout = open(os.devnull, 'w')
+    #OLD_STDOUT = sys.stdout
+    #sys.stdout = open(os.devnull, 'w')
 
+    #import pdb; pdb.set_trace()
     csv_filename, pkl_filename, quux_bot_script_path = create_data_filenames(args)
 
     # Create csv on Disk by using Java code
@@ -213,7 +214,7 @@ def act_based_pipeline(args):
     if (remove_csv):
         os.remove(csv_filename)
 
-    sys.stdout = OLD_STDOUT
+    #sys.stdout = OLD_STDOUT
 
 def main(args):
     act_based_pipeline(args)
