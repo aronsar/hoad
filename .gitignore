@@ -26,3 +26,6 @@ exp_*Bot
 
 # Rainbow models
 original_agents/rainbow/pretrained_model
+
+# WTFWT executables
+original_agents/WTFWT/target

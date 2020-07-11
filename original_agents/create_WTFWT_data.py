@@ -276,6 +276,7 @@ if __name__ == '__main__':
         help='Number of processes to run in parallel. M >= 0.')
     args = parser.parse_args()
 
+    
     if args.m == 0: # Childless parent: single process, so make once
         cmd = '(cd {}/ && cmake -Wno-dev . && make)'.format(PATH_HANABI_ENV)
         run(cmd, args.q)
@@ -289,3 +290,4 @@ if __name__ == '__main__':
     else:
         msg = 'M cannot be negative in --m. Use -h to see details.'
         raise ValueError(msg)
+    
