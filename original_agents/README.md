@@ -24,6 +24,7 @@ Once the above script has ran for about 2000 iterations, it should be close to c
 cd original_agent/rainbow && mkdir pretrained_model && cd pretrained_model
 cp ../tmp/checkpoints/*2000* . # to copy over the checkpoint files corresponding to the 2000th iteration
 cp ../tmp/checkpoints/checkpoint .
+python create_rainbow_data.py --num_games 10 --savedir ../replay_data/
 ```
 ### WTFWThat
 ```
