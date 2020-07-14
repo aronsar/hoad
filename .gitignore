@@ -16,6 +16,8 @@ experts/WTFWT/target
 data
 output
 replay_data
+venv
+venv3
 
 # Quux Executables
 run_*Bot
