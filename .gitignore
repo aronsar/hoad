@@ -13,8 +13,8 @@ cmake_install.cmake
 *.vscode/*
 *__pycache__/*
 replay_data
-original_agents/venv2
-original_agents/venv3
+venv2
+venv3
 
 # Quux Executables
 run_*Bot
@@ -29,3 +29,6 @@ original_agents/rainbow/tmp
 
 # WTFWT executables
 original_agents/WTFWT/target
+
+# imitator agents
+imitator_agents/*.save

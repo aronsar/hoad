@@ -1,6 +1,6 @@
 First we give instructions on how to install the necessary packages and languages to run each of the original agents in this repository (ie. agents taken from other authors), as well as the command to generate new replay data. TODO: Then we present a short exposition on the play-style of each agent.
 TODO: add table of contents
-
+TODO: make the fireflower agent work
 
 ## Setup Instructions
 Before setting up any of the agents below, please be sure to follow the setup directions in `hoad/README.md`. The instructions below are written to be followed in order from Rainbow to Quux.
