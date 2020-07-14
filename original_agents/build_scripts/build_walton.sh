@@ -3,7 +3,7 @@
 ROOT_DIR=`pwd`
 
 # Deal with Walton Agent
-WALTON_DIR=$ROOT_DIR/original_agents/walton_models
+WALTON_DIR=$ROOT_DIR/walton
 cd $WALTON_DIR
 
 # Run maven to rebuild

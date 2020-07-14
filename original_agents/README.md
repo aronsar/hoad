@@ -1,19 +1,70 @@
-Below are introductions to each of the agents contained herein.
+First we give instructions on how to install the necessary packages and languages to run each of the original agents in this repository (ie. agents taken from other authors), as well as the command to generate new replay data. TODO: Then we present a short exposition on the play-style of each agent.
+TODO: add table of contents
 
-## WTFWThat
 
-### To run:
+## Setup Instructions
+Before setting up any of the agents below, please be sure to follow the setup directions in `hoad/README.md`. The instructions below are written to be followed in order from Rainbow to Quux.
+### Rainbow
+```
+# ROOT=/path/to/hoad
+cd $ROOT/original_agents
+virtualenv venv2 -p python2 --no-site-packages
+source venv2/bin/activate
+pip install gin-config tensorflow-gpu==1.15.0 numpy cffi absl-py
+```
 
-The following command will create 10 games of data with 5 players under existing directory `output`:
+To train the rainbow agent from scratch takes about a day on a K80. Now, I know it's strange to run the training script from the root directory, but Python 2's import scheme is very obtuse, and this worked for me. Please feel free to file a pull request if you can do better.
+```
+cd $ROOT 
+RAINBOW=$ROOT/original_agents/rainbow
+python2 -um $RAINBOW/train --base_dir=$RAINBOW/tmp/ --gin_files=$RAINBOW/configs/hanabi_rainbow.gin
+```
+Once the above script has ran for about 2000 iterations, it should be close to convergence, although marginal performance could be gained by training for a few more days.
+```
+cd original_agent/rainbow && mkdir pretrained_model && cd pretrained_model
+cp ../tmp/checkpoints/*2000* . # to copy over the checkpoint files corresponding to the 2000th iteration
+cp ../tmp/checkpoints/checkpoint .
+python create_rainbow_data.py --num_games 10 --savedir ../replay_data/
+```
+### WTFWThat
+```
+cd $ROOT/original_agents
+deactivate # make sure you're not still in venv2
+virtualenv venv3 -p python3
+source venv3/bin/activate
+pip install cffi
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+source $HOME/.cargo/env
+python create_WTFWT_data.py --num_games 10 --savedir ../replay_data/
+```
+### Walton-Rivers
+```
+cd $ROOT/original_agents
+deactivate # make sure you're not still in venv2
+source venv3/bin/activate # same virtualenv as for WTFWThat
+pip install numpy pandas
+sudo apt install default-jdk # this installs OpenJDK 11 for me on my Ubuntu 18.04 system (as of July 2020)
+sudo apt install maven
+sh build_scripts/ build_walton.sh
+```
+The following Walton-Rivers agents are available: `iggi`, `internal`, `outer`, `legal_random`, `vdb-paper`, `flawed`, and `piers`. Create the data for each of these agents by running:
+```
+python create_walton_data.py --num_games 10 --savedir ../replay_data/ --agent_name <agent name>
+```
+### Quux
+```
+cd $ROOT/original_agents
+deactivate # make sure you're not still in venv2
+source venv3/bin/activate # same virtualenv as for WTFWThat and Walton-Rivers
+sh build_scripts/build_quux.sh
+```
+The following Quux agents are available: `blindbot`, `simplebot`, `valuebot`, `holmesbot`, `smartbot`, `infobot`, `cheatbot`, `newcheatbot`.
+```
+python create_quux_data.py --num_games 10 --savedir ../replay_data/ --agent_name <agent name>
+```
 
-`python3 experts/create_WTFWT_data.py --n 10 --p 5 --P output -q `
-
-Run `python3  experts/create_WTFWT_data.py -h` for details.
-
-Overview
-------
-
-### Output Data format
+## Implementation Details
+### Replay Data Format
 The output data is saved as a Pickle file with the following format:
 
 ```py
@@ -27,29 +78,17 @@ The output data is saved as a Pickle file with the following format:
 """
 ```
 
-### Goal
+### How Games are Recorded - Rust Example
 
 Our goal is to incorporate WTFWThat, which is implemented in Rust, into our existing code base that uses Deepmind's Hanabi Learning Environment (HLE) written in Python. In order to do so, we have to convert the observations of the agents at each turn to the same format that HLE uses, which can be challenging since the format involves binary encodings that contain detailed information of game states at various stages. This implies that we'd have to translate HLE's encoding functions to Rust and even perhaps rebuild the WTFWThat's environment, and this complicated process leaves a lot of room for mistakes. 
 
-### Implementation
-
 To overcome this challenge, we developed an approach that does not involve how encoding works but replies on simply replaying the WTFWThat agent's actions in HLE and encode the observations with HLE's existing API. We first create a history of self-play games played by the WTFWThat agent and saved it in a .csv file where each line contains crucial information of a turn, such as the current hands of all players and the corresponding actions. For each of the self-play games, we also save the order of the deck generated at the beginning. With these data, we then replay these games in HLE by initializing the deck and dealing the cards to each player in the same order and performing the actions accordingly at each turn. After each turn is finished, we simply saved the encoded observations with HLE's encoding functions. 
 
-### Agent Strategy
-WTFWThat Agent utilized a variation of ["information strategy"](https://sites.google.com/site/rmgpgrwc/research-papers/Hanabi_final.pdf?attredirects=0) which is a type of hat guessing strategy where all players follow a predefined protocol to give hint at each turn. The given hint does not carry its original meaning and is encoded to carry more information which can be decoded by the other plays with their common protocol. With this technique, players are able to gain much more information from every hint to the extent that they can perform almost as well as if they were playing knowing their own cards as shown in the table below (`cheat` strategy means players can see their own cards, and `info` strategy is the information strategy used by WTFWThat. Result are created from 20,000 games).
-
-| Strategy  |   2p    |   3p    |   4p    |   5p    |
-|---------|------------------|------------------|------------------|------------------|
-| cheat   | 24.8594 ± 0.0036 | 24.9785 ± 0.0012 | 24.9720 ± 0.0014 | 24.9557 ± 0.0018 |
-|         | 90.59 ± 0.21 % | 98.17 ± 0.09 % | 97.76 ± 0.10 % | 96.42 ± 0.13 % |
-| info    | 22.5194 ± 0.0125 | 24.7942 ± 0.0039 | 24.9354 ± 0.0022 | 24.9220 ± 0.0024 |
-|         | 12.58 ± 0.23 % | 84.46 ± 0.26 % | 95.03 ± 0.15 % | 94.01 ± 0.17 % |
-
-
-## Walton-Rivers Bots
-
-## FireFlower
-
-## Rainbow
-
-## Smartbot AI set
+## Agent Strategies
+<!--stackedit_data:
+eyJoaXN0b3J5IjpbNDMzMzE2NTEsLTE4MzAwNjg0MzAsMTQ0ND
+UwMTY4LC0xMDEwNDc2MDEsMTIzMDI3MzA1LDQ1MDk3NjU1Mywx
+NzUwNTc1MTE5LDQ3MzY2OTE2NCwtNjgwMjQ2MDM5LDQzNzg2Nz
+c3MSwtMjEzNzk5NDQwNyw5ODY0MTY4MDUsMTY0NTM4NzUzMyw0
+ODgxNTYzMzRdfQ==
+-->

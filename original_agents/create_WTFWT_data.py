@@ -8,12 +8,12 @@ import os
 import shutil
 from datetime import datetime
 
-PATH_GANABI = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-PATH_HANABI_ENV = os.path.join(PATH_GANABI, "hanabi_env")
-PATH_EXPERTS = os.path.join(PATH_GANABI, 'original_agents')
-PATH_UTILS = os.path.join(PATH_GANABI, 'utils')
+PATH_HOAD = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+PATH_HANABI_ENV = os.path.join(PATH_HOAD, "hanabi_env")
+PATH_ORIGINAL_AGENTS = os.path.join(PATH_HOAD, 'original_agents')
+PATH_UTILS = os.path.join(PATH_HOAD, 'utils')
 
-sys.path.insert(0, PATH_GANABI)
+sys.path.insert(0, PATH_HOAD)
 sys.path.insert(0, PATH_HANABI_ENV)
 sys.path.insert(0, PATH_UTILS)
 
@@ -162,7 +162,7 @@ def parallel_generation(args):
     for i in range(args.m):
         os.mkdir(os.path.join(PATH_TMP, str(i)))
         cmd = '(cd {}/{} && '.format(PATH_TMP, i)
-        cmd += 'python3 {}/create_WTFWT_data.py '.format(PATH_EXPERTS)
+        cmd += 'python3 {}/create_WTFWT_data.py '.format(PATH_ORIGINAL_AGENTS)
         cmd += '--n {} --p {} -q --m 1)'.format(args.num_games, args.num_players)
         pool.append(subprocess.Popen(cmd, shell=True))
 
@@ -219,7 +219,7 @@ def main(args):
         # Generate the game logs and decks
         s = random.randint(0, 2**31-1) # seed for WTFWT
         cmd = ('cargo run -q --manifest-path {}/WTFWT/Cargo.toml -- -n 1 -o 1 '
-               '-s {} -p {} -g info').format(PATH_EXPERTS, s, args.num_players)
+               '-s {} -p {} -g info').format(PATH_ORIGINAL_AGENTS, s, args.num_players)
         debug = ['', ' -l debug'][args.debug]
         run(cmd + debug, args.q)
 
@@ -276,6 +276,7 @@ if __name__ == '__main__':
         help='Number of processes to run in parallel. M >= 0.')
     args = parser.parse_args()
 
+    
     if args.m == 0: # Childless parent: single process, so make once
         cmd = '(cd {}/ && cmake -Wno-dev . && make)'.format(PATH_HANABI_ENV)
         run(cmd, args.q)
@@ -289,3 +290,4 @@ if __name__ == '__main__':
     else:
         msg = 'M cannot be negative in --m. Use -h to see details.'
         raise ValueError(msg)
+    
