@@ -32,3 +32,4 @@ original_agents/WTFWT/target
 
 # imitator agents
 imitator_agents/*.save
+imitator_agents/saved_models

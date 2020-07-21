@@ -266,6 +266,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--num_games', '--n', type=int, default=10, help='Number of games to produce.')
     parser.add_argument('--num_players', '--p', type=int, default=2, help='Num of Players')
+    parser.add_argument('--agent_name', '--a',  type=str, help='Not used, but needs to exist.')
     parser.add_argument('--seed', type=int, default=s, help='Seed for RNG')
     parser.add_argument('--savedir', '--s', type=str, default='.',
         help='Path to the directory where the .pkl data file is saved.')

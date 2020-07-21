@@ -15,6 +15,24 @@ from tensorflow.keras.layers import ReLU
 from tensorflow.keras.layers import Softmax
 import h5py_cache
 
+parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+parser.add_argument('--datadir', '--p', type=str, default='../replay_data/iggi_data_2_500000',
+        help='path to parent directory of agent data or path/to/data.hdf5')
+parser.add_argument('--savedir', '--m', type=str, default='saved_models',
+        help='Path to parent directory where the subdirs of models are or will '
+             'be saved. If the directory exists, training will continue from '
+             'where it was left off. Otherwise, a new directory will be created '
+             'and a new training will begin.')
+parser.add_argument('--num_workers', '--w', type=int, default=2, 
+        help='More workers speed up training. Reduce if out of memory.')
+parser.add_argument('--queue_size', '--q', type=int, default=3, 
+        help='Size of queue of the pipline. Reduce if out of memory.')
+parser.add_argument('--epochs', type=int, default=5, 
+        help='Number of training epochs.')
+args = parser.parse_args()
+
+
+
 class bc:
     HEADER = '\033[95m'
     OKBLUE = '\033[94m'
@@ -75,7 +93,6 @@ def model_exists(path_m, dir_agent):
             or not os.path.exists(PATH_DIR_CKPT)
             or len(os.listdir(PATH_DIR_CKPT)) == 0
         )
-        import pdb; pdb.set_trace()
         if missing_files:
             msg = 'Corruption: missing training.log, best.h5, or ckpts'
             raise ValueError(msg)
@@ -130,11 +147,11 @@ def main(args):
 
     n_epoch = args.epochs
     hypers = {'lr': 0.00015,
-              'batch_size': 512,
-              'hl_activations': [ReLU, ReLU, ReLU],
-              'hl_sizes': [1024, 512, 256],
+              'batch_size': 128,
+              'hl_activations': [ReLU, ReLU, ReLU, ReLU, ReLU, ReLU],
+              'hl_sizes': [1024,1024,512,512,512,256],
               'decay': 0.,
-              'bNorm': False,
+              'bNorm': True,
               'dropout': True,
               'regularizer': None}
 
@@ -192,20 +209,4 @@ def main(args):
         initial_epoch=initial_epoch)
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    msg_h = 'path/to/root/pickle/data/directory/ or path/to/data.hdf5'
-    parser.add_argument('--p', type=str, help=msg_h)
-    msg_h = ('Path to parent directory where the subdirs of models are or will '
-             'be saved. If the directory exists, trianing will continue from '
-             'where it was left off. Otherwise, a new directory will be created '
-             'and a new training will begin.')
-    parser.add_argument('--m', type=str, help=msg_h)
-    msg_h = 'Number of workers. Default 2.'
-    parser.add_argument('--w', type=int, default=2, help=msg_h)
-    msg_h = 'Size of queue of the pipline. Deefault 3.'
-    parser.add_argument('--q', type=int, default=3, help=msg_h)
-    msg_h = 'Number of training epochs. Default 50'
-    parser.add_argument('--epochs', type=int, default=50, help=msg_h)
-    args = parser.parse_args()
-
     main(args)
