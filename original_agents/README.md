@@ -21,10 +21,15 @@ python2 -um $RAINBOW/train --base_dir=$RAINBOW/tmp/ --gin_files=$RAINBOW/configs
 ```
 Once the above script has ran for about 2000 iterations, it should be close to convergence, although marginal performance could be gained by training for a few more days.
 ```
-cd original_agent/rainbow && mkdir pretrained_model && cd pretrained_model
+cd original_agent/rainbow
+mkdir pretrained_model
+cd pretrained_model
 cp ../tmp/checkpoints/*2000* . # to copy over the checkpoint files corresponding to the 2000th iteration
 cp ../tmp/checkpoints/checkpoint .
-python create_rainbow_data.py --num_games 10 --savedir ../replay_data/
+cd ../.. # back to hoad/original_agents
+
+python create_rainbow_data.py --num_games 10 --savedir ../replay_data/ # for one batch
+bash create_batched_data.sh rainbow rainbow # for many batches using correct file tree structure
 ```
 ### WTFWThat
 ```
@@ -35,7 +40,9 @@ source venv3/bin/activate
 pip install cffi
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 source $HOME/.cargo/env
-python create_WTFWT_data.py --num_games 10 --savedir ../replay_data/
+
+python create_WTFWT_data.py --num_games 10 --savedir ../replay_data/ # for one batch
+bash create_batched_data.sh WTFWT WTFWT # for many batches using correct file tree structure
 ```
 ### Walton-Rivers
 ```
@@ -49,7 +56,8 @@ sh build_scripts/ build_walton.sh
 ```
 The following Walton-Rivers agents are available: `iggi`, `internal`, `outer`, `legal_random`, `vdb-paper`, `flawed`, and `piers`. Create the data for each of these agents by running:
 ```
-python create_walton_data.py --num_games 10 --savedir ../replay_data/ --agent_name <agent name>
+python create_walton_data.py --num_games 10 --savedir ../replay_data/ --agent_name <agent name> # for one batch
+bash create_batched_data.sh walton <agent name> # for many batches using correct file tree structure
 ```
 ### Quux
 ```
@@ -60,8 +68,11 @@ sh build_scripts/build_quux.sh
 ```
 The following Quux agents are available: `blindbot`, `simplebot`, `valuebot`, `holmesbot`, `smartbot`, `infobot`, `cheatbot`, `newcheatbot`.
 ```
-python create_quux_data.py --num_games 10 --savedir ../replay_data/ --agent_name <agent name>
+python create_quux_data.py --num_games 10 --savedir ../replay_data/ --agent_name <agent name> # for one batch
+bash create_batched_data.sh quux <agent name> # for many batches using correct file tree structure
 ```
+## 
+
 
 ## Implementation Details
 ### Replay Data Format
@@ -83,12 +94,3 @@ The output data is saved as a Pickle file with the following format:
 Our goal is to incorporate WTFWThat, which is implemented in Rust, into our existing code base that uses Deepmind's Hanabi Learning Environment (HLE) written in Python. In order to do so, we have to convert the observations of the agents at each turn to the same format that HLE uses, which can be challenging since the format involves binary encodings that contain detailed information of game states at various stages. This implies that we'd have to translate HLE's encoding functions to Rust and even perhaps rebuild the WTFWThat's environment, and this complicated process leaves a lot of room for mistakes. 
 
 To overcome this challenge, we developed an approach that does not involve how encoding works but replies on simply replaying the WTFWThat agent's actions in HLE and encode the observations with HLE's existing API. We first create a history of self-play games played by the WTFWThat agent and saved it in a .csv file where each line contains crucial information of a turn, such as the current hands of all players and the corresponding actions. For each of the self-play games, we also save the order of the deck generated at the beginning. With these data, we then replay these games in HLE by initializing the deck and dealing the cards to each player in the same order and performing the actions accordingly at each turn. After each turn is finished, we simply saved the encoded observations with HLE's encoding functions. 
-
-## Agent Strategies
-<!--stackedit_data:
-eyJoaXN0b3J5IjpbNDMzMzE2NTEsLTE4MzAwNjg0MzAsMTQ0ND
-UwMTY4LC0xMDEwNDc2MDEsMTIzMDI3MzA1LDQ1MDk3NjU1Mywx
-NzUwNTc1MTE5LDQ3MzY2OTE2NCwtNjgwMjQ2MDM5LDQzNzg2Nz
-c3MSwtMjEzNzk5NDQwNyw5ODY0MTY4MDUsMTY0NTM4NzUzMyw0
-ODgxNTYzMzRdfQ==
--->

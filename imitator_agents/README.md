@@ -1,27 +1,29 @@
 # Imitator Models
 
-A directory with everything related to constructing, training, and testing imitator models.
+A directory with everything related to constructing, training, and testing imitator models. It is expected that data for the original agents has already been saved to `../replay_data` with the file-tree structure used by  `../original_agents/create_batched_data.sh` (namely, each agent must have sub-folders containing smaller batches of data).
 
-## Training Workflow on local machine w/ required dependencies installed beforehand
-
-In this case, simply run the commands below
+## Setup and Training Workflow
 
 ```
-# Download & extract the data
-wget https://storage.googleapis.com/ganabi/iggi_data_2_500000.tar.gz
-tar -zxvf iggi_data_2_500000.tar.gz
-# Train the model for 50 epochs and save the models & training checkpoints under ~/saved_models
-# Training is resumed if saved files are found under ~/saved_models
-python3 ./ganabi/experts/imitator_models/train.py --p ./iggi_data_2_500000 --m ~/saved_models --epochs 50
+cd hoad/imitator_agents
+virtualenv venv3 -p python3
+source venv3/bin/activate
+pip install tensorflow h5py_cache # tested with tensorflow 2.2
+
+python train.py --datadir ../replay_data/iggi_data_2_500000 \
+			    --savedir saved_models \
+			    --num_workers 4 \
+			    --queue_size 5 \ 
+			    --epochs 5
 ```
 
-Run `python3 ./ganabi/experts/imitator_models/train.py --h` for more details.
+Run `python train.py --h` for details on the command line options. 
 
-## Training Workflow w/ CSIF:
-
+## Training Workflow using CSIF:
+Note: these instructions are meant for the CSIF computer lab at UC Davis, but may prove valuable for adapting this repository to parallel training across multiple VMs/computers at other institutions as well. Additionally there are some good notes under "Possible common errors."
 ### Important things regarding CSIF
 
-1. Every user only has an awfully tiny quota of 2 gB.
+1. Every user has a disk quota of 2 gB.
 2. Only files under `~/` counts towards this quota.
 3. Everything under `~/` is shared across all CSIF machines.
 4. There's no limit on how much a user can store under`/tmp`.
@@ -31,9 +33,9 @@ Run `python3 ./ganabi/experts/imitator_models/train.py --h` for more details.
 8. Status of all machines can be checked [here](http://iceman.cs.ucdavis.edu/nagios3/cgi-bin/status.cgi?hostgroup=all).
 
 ### Setup
-For demonstration purposes, let's assume that our current working directory is inside this repository at `~/ganabi/experts/imitator_models/scripts`, the data we will be training on is `iggi_data_2_500000.tar.gz`. The CUDA's installation package and the training data are stored on Google Cloud at https://console.cloud.google.com/storage/browser/ganabi (Thanks to Aron's guide on how to setup CUDA on CSIF).
+For demonstration purposes, let's assume that our current working directory is inside this repository at `~/hoad/imitator_agents/scripts`, the data we will be training on is `iggi_data_2_500000.tar.gz`. The CUDA's installation package and the training data are stored on Google Cloud at https://console.cloud.google.com/storage/browser/ganabi (Thanks to Aron's guide on how to setup CUDA on CSIF).
 
-1. Clone this repository with`git clone https://github.com/3tz/ganabi.git`.
+1. Clone this repository with`git clone https://github.com/aronsar/hoad.git`.
 2. This step is optional, but it is strongly recommended for users to setup keyless login on CSIF. Otherwise, users will have to type passwords multiple times during the following steps.
 3. Clean up your disk on CSIF. A user only has a quota of 2GB, but TF 2.0 will take ~1.3GB. The remaining space will be used to save checkpoints during training.
 4. Once it's cleaned, install the required packages for training the models with `bash csif_install_pkgs.sh {username} {pc#}` where `username` is users' KERBROS login ID & `pc#`
@@ -46,7 +48,7 @@ For demonstration purposes, let's assume that our current working directory is i
 
 ### Resuming Training
 1. `/tmp` is reset daily. Thus, `csif_setup.sh` has to be run if `/tmp` has been reset. Once making sure all the key files created by `csif_setup.sh` exist under `/tmp`, proceed to the next step.
-2. Training is automatically resumed if `~/saved_models/{agent_name}.save` is found and not corrupted (see `train.py` for details about corrupted model). Thus, simply run `bash csif_train.sh {username} {pc#} {directory name of data}` to continue training.
+2. Training is automatically resumed if `hoad/imitator_agents/saved_models/{agent_name}.save` is found and not corrupted (see `train.py` for details about corrupted model). Thus, simply run `bash csif_train.sh {username} {pc#} {directory name of data}` to continue training.
 
 ### Sample code
 
