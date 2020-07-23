@@ -1,11 +1,10 @@
 import os, sys
-
 import numpy as np
 import keras
 from keras.layers import Input, Dense, ReLU, Dropout, Softmax
 from keras.models import Model, load_model
 from keras.optimizers import Adam
-from mlp import Mlp
+from imitator_agents.mlp import Mlp
 
 def format_legal_moves(legal_moves, action_dim):
   """Returns formatted legal moves.

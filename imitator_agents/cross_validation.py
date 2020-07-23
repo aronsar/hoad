@@ -8,6 +8,7 @@ from datetime import datetime
 from tensorflow.keras.utils import Progbar
 
 # Set path TODO: remove the ones that won't be used in the end
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 from utils import binary_list_to_int as b2int
 
 # Global Variable Class

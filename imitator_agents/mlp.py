@@ -10,8 +10,6 @@ from tensorflow.keras.layers import PReLU
 from tensorflow.keras.activations import sigmoid, tanh
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.regularizers import l2
-# from tensorflow.keras.utils import plot_model
-from DataGenerator import *
 
 # suppress TF warnings
 logging.getLogger("tensorflow").setLevel(logging.ERROR)

@@ -1,18 +1,6 @@
-import os, sys
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
-
-# from utils import dir_utils, parse_args
-from collections import defaultdict
-import agent_wrapper as model
-import pickle
 from hanabi_env import rl_env
-import gin
-import tensorflow as tf # version 1.x #FIX ME are we using tensorflow 2.
-import importlib
-import argparse
+from experiments.cross_play.wrappers import agent_wrapper
 
-def import_agents(agent_path):
-    return model.Agent(agent_path)
 
 def one_hot_vectorized_action(agent, num_moves, obs):
     action, action_idx = agent.act(obs,num_moves)
@@ -36,8 +24,8 @@ class DataCreator(object):
         self.num_games = num_games
         self.environment = rl_env.HanabiEnv(config)
         self.agent_object = []
-        self.agent_object.append(import_agents(path_model_0))
-        self.agent_object.append(import_agents(path_model_1))
+        self.agent_object.append(agent_wrapper.Agent(path_model_0))
+        self.agent_object.append(agent_wrapper.Agent(path_model_1))
 
     def create_data(self):
         raw_data = []
