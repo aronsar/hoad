@@ -29,7 +29,7 @@ cp ../tmp/checkpoints/checkpoint .
 cd ../.. # back to hoad/original_agents
 
 python create_rainbow_data.py --num_games 10 --savedir ../replay_data/ # for one batch
-bash create_batched_data.sh rainbow rainbow # for many batches using correct file tree structure
+bash batched_create_data.sh rainbow rainbow # for many batches using correct file tree structure
 ```
 ### WTFWThat
 ```
@@ -42,7 +42,7 @@ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 source $HOME/.cargo/env
 
 python create_WTFWT_data.py --num_games 10 --savedir ../replay_data/ # for one batch
-bash create_batched_data.sh WTFWT WTFWT # for many batches using correct file tree structure
+bash batched_create_data.sh WTFWT WTFWT # for many batches using correct file tree structure
 ```
 ### Walton-Rivers
 ```
@@ -57,7 +57,7 @@ sh build_scripts/ build_walton.sh
 The following Walton-Rivers agents are available: `iggi`, `internal`, `outer`, `legal_random`, `vdb-paper`, `flawed`, and `piers`. Create the data for each of these agents by running:
 ```
 python create_walton_data.py --num_games 10 --savedir ../replay_data/ --agent_name <agent name> # for one batch
-bash create_batched_data.sh walton <agent name> # for many batches using correct file tree structure
+bash batched_create_data.sh walton <agent name> # for many batches using correct file tree structure
 ```
 ### Quux
 ```
@@ -69,7 +69,7 @@ sh build_scripts/build_quux.sh
 The following Quux agents are available: `blindbot`, `simplebot`, `valuebot`, `holmesbot`, `smartbot`, `infobot`, `cheatbot`, `newcheatbot`.
 ```
 python create_quux_data.py --num_games 10 --savedir ../replay_data/ --agent_name <agent name> # for one batch
-bash create_batched_data.sh quux <agent name> # for many batches using correct file tree structure
+bash batched_create_data.sh quux <agent name> # for many batches using correct file tree structure
 ```
 ## 
 

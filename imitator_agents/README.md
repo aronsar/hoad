@@ -1,6 +1,6 @@
 # Imitator Models
 
-A directory with everything related to constructing, training, and testing imitator models. It is expected that data for the original agents has already been saved to `../replay_data` with the file-tree structure used by  `../original_agents/create_batched_data.sh` (namely, each agent must have sub-folders containing smaller batches of data).
+A directory with everything related to constructing, training, and testing imitator models. It is expected that data for the original agents has already been saved to `../replay_data` with the file-tree structure used by  `../original_agents/batched_create_data.sh` (namely, each agent must have sub-folders containing smaller batches of data).
 
 ## Setup and Training Workflow
 

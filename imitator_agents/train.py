@@ -16,16 +16,16 @@ from tensorflow.keras.layers import Softmax
 import h5py_cache
 
 parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-parser.add_argument('--datadir', '--p', type=str, default='../replay_data/iggi_data_2_500000',
+parser.add_argument('--p', '--datadir', type=str, default='../replay_data/iggi_data_2_500000',
         help='path to parent directory of agent data or path/to/data.hdf5')
-parser.add_argument('--savedir', '--m', type=str, default='saved_models',
+parser.add_argument('--m', '--savedir', type=str, default='saved_models',
         help='Path to parent directory where the subdirs of models are or will '
              'be saved. If the directory exists, training will continue from '
              'where it was left off. Otherwise, a new directory will be created '
              'and a new training will begin.')
-parser.add_argument('--num_workers', '--w', type=int, default=2, 
+parser.add_argument('--w', '--num_workers', type=int, default=2, 
         help='More workers speed up training. Reduce if out of memory.')
-parser.add_argument('--queue_size', '--q', type=int, default=3, 
+parser.add_argument('--q', '--queue_size', type=int, default=3, 
         help='Size of queue of the pipline. Reduce if out of memory.')
 parser.add_argument('--epochs', type=int, default=5, 
         help='Number of training epochs.')
