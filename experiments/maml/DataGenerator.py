@@ -14,7 +14,7 @@ import random
 import time
 from itertools import repeat
 
-from Dataset import Ganabi, Omniglot
+from Dataset import PKL_Ganabi, Omniglot
 
 
 def _mp_batching(mp_func, task_ids_list, config, process_count=4):

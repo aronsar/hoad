@@ -16,6 +16,9 @@ class TrainConfig(object):
                  test_query,
                  batch_size,
                  shuffle,
+                 data_type,
+                 data_path,
+                 data_preprocess,
                  num_meta_train,
                  num_task_train,
                  meta_lr,
@@ -48,8 +51,8 @@ class TrainConfig(object):
         if dataset == "ganabi":
             num_classes = num_task
 
-            if test_agent not in all_agents:
-                raise("Unknown Test Agent {}".format(test_agent))
+            #if test_agent not in all_agents:
+            #    raise("Unknown Test Agent {}".format(test_agent))
 
         # Dataset
         self.dataset = dataset
@@ -64,6 +67,9 @@ class TrainConfig(object):
         self.test_query = test_query
         self.batch_size = batch_size
         self.shuffle = shuffle
+        self.data_type = data_type
+        self.data_path = data_path
+        self.data_preprocess = data_preprocess
 
         # Iterations
         self.num_meta_train = num_meta_train
@@ -94,6 +100,9 @@ class TrainConfig(object):
             "test_query": self.test_query,
             "batch_size": self.batch_size,
             "shuffle": self.shuffle,
+            "data_type": self.data_type,
+            "data_path": self.data_path,
+            "data_preprocess": self.data_preprocess,
             "num_meta_train": self.num_meta_train,
             "num_task_train": self.num_task_train,
             "meta_lr": self.meta_lr,

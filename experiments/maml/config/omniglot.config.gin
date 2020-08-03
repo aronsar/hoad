@@ -1,0 +1,28 @@
+import TrainConfig
+import models
+
+TrainConfig.TrainConfig.dataset = "omniglot"
+TrainConfig.TrainConfig.test_agent = "omniglot" # Name this omniglot
+
+TrainConfig.TrainConfig.num_task = 16
+TrainConfig.TrainConfig.num_classes = 5
+TrainConfig.TrainConfig.train_support = 2
+TrainConfig.TrainConfig.train_query = 1  # Not Used
+TrainConfig.TrainConfig.test_support = 2 # Not Used
+TrainConfig.TrainConfig.test_query = 1   # Not Used
+TrainConfig.TrainConfig.batch_size = 64  # Not Used
+TrainConfig.TrainConfig.shuffle = True   # Not Used
+
+TrainConfig.TrainConfig.num_meta_train = 50000
+TrainConfig.TrainConfig.num_task_train = 1
+
+TrainConfig.TrainConfig.meta_lr = 1e-4
+TrainConfig.TrainConfig.task_lr = 0.4
+TrainConfig.TrainConfig.reduce_lr_rate = 0.1
+TrainConfig.TrainConfig.patience = 5000
+
+TrainConfig.TrainConfig.num_process = 1
+TrainConfig.TrainConfig.num_verbose_interval = 100
+
+TrainConfig.TrainConfig.obs_dim = 0 # Not Used
+TrainConfig.TrainConfig.act_dim = 0 # Not Used
