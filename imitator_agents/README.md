@@ -8,7 +8,7 @@ A directory with everything related to constructing, training, and testing imita
 cd hoad/imitator_agents
 virtualenv venv3 -p python3
 source venv3/bin/activate
-pip install tensorflow h5py_cache # tested with tensorflow 2.2
+pip install tensorflow h5py_cache cffi # tested with tensorflow 2.2
 
 python train.py --datadir ../replay_data/iggi_data_2_500000 \
 			    --savedir saved_models \
