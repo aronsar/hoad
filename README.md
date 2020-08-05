@@ -9,12 +9,6 @@ sudo apt install cmake
 
 # Build the Hanabi Environment
 sh hanabi_env/build_hanabi.sh
-
-# You might need to change the permission to run the build_env.sh script
-chmod 755 build_env.sh
-
-# Create Data Example
-python create_load_data.py --new_run --mode=“naive_mlp” --agents_to_use=iggi --config_path="./config/naive_mlp.config.gin" --output_dir="./output"
 ```
 Trying not to run individual scripts in scripts/ , might cause some issue with pathing
 
