@@ -4,6 +4,9 @@ warnings.filterwarnings("ignore", category=FutureWarning)
 import argparse
 import csv
 import os
+import sys
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
+
 import tensorflow as tf
 # import multiprocessing
 from mlp import Mlp

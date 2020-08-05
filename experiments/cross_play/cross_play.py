@@ -6,7 +6,7 @@ sys.path.insert(0, opd(opd(opd(opr(__file__))))) # place /path/to/hoad/ in sys.p
 import csv
 import glob
 import numpy as np
-from experiments.cross_play.wrappers import create_agent_data
+from experiments.cross_play.wrappers.create_agent_data import DataCreator
 import argparse 
 
 parser = argparse.ArgumentParser() 
@@ -30,7 +30,7 @@ def cross_play(num_games, pattern):
         scores_list = []
         avg_list = []
         for agent1 in agents:
-            scores = create_agent_data.DataCreator(num_games, agent0, agent1).create_data()
+            scores = DataCreator(num_games, agent0, agent1).create_data()
             scores_list.append(scores)
             avg_list.append(sum(scores) * 1.0 / num_games)
         score_matrix.append(scores_list)

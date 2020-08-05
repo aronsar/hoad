@@ -4,7 +4,9 @@ import pickle
 import numpy as np
 from tensorflow import keras
 
-from cross_validation import *
+#from cross_validation import * FIXME: delete
+from utils import binary_list_to_int as b2int
+from cross_validation import glb
 
 # suppress TF warnings
 logging.getLogger("tensorflow").setLevel(logging.ERROR)
