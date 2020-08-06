@@ -18,6 +18,9 @@ parser.add_argument(
     '--agent', '--a', type=str, default='iggi',
     help='Imitator agent for which to create data. Must have model'
     'present in ./saved_models/<agent>.save/best.h5')
+parser.add_argument(
+    '--batch_num', '--b', type=int, required=True,
+    help='The subdirectory where the games will be saved.')
 args = parser.parse_args()
 
 '''
@@ -48,11 +51,7 @@ if __name__ == '__main__':
     
     if not os.path.exists(agentpath):
         Path(agentpath).mkdir(parents=True, exist_ok=True)
-    if os.listdir(agentpath):
-        next_number = max([int(f) for f in os.listdir(agentpath)]) + 1
-    else:
-        next_number = 0
     
-    Path(agentpath + str(next_number)).mkdir()
-    savepath = agentpath + str(next_number) + '/' + args.agent + '.pkl'
+    Path(agentpath + str(args.batch_num)).mkdir()
+    savepath = agentpath + str(args.batch_num) + '/' + args.agent + '.pkl'
     pickle.dump(raw_data, open(savepath, 'wb'))
