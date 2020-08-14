@@ -14,7 +14,7 @@ parser.add_argument(
     '--num_games', '--n', type=int, default=50, 
     help='The number of games to run per agent-agent combo.') 
 parser.add_argument(
-    '--pattern', '--p', type=str, default='./best_models/*.h5', 
+    '--pattern', '--p', type=str, default='../../imitator_agents/saved_models/*.save/best.h5', 
     help='A bash file pattern for the replica agent model files.')
                
 args = parser.parse_args()
@@ -22,6 +22,7 @@ args = parser.parse_args()
 
 def cross_play(num_games, pattern):
     agents = glob.glob(pattern)
+    print(agents)
     agents.sort()
     full_score = 25
     score_matrix = []

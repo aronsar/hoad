@@ -54,19 +54,17 @@ def sample_task_batch(labels, config):
     return res
 
 
-def read_pkl(pkl_path, config):
+def read_pkl(agent_top_level_path, config):
     """
     A Multi-Processing Function that reads an agent's pickle file and instantiate a generator
     """
-    obs_dim, act_dim, batch_size, num_support, num_query, shuffle, preprocess = config
-    name = re.split('/', pkl_path)[-1]
-    pkl_files = os.listdir(pkl_path)
-    # TODO: Handle Multiple Pickle Files in a given directory
-    for pkl_file in pkl_files:
-        with open(os.path.join(pkl_path, pkl_file), 'rb') as f:
-            f.seek(0)
-            data = pickle.load(f)
-            f.close()
+    epoch_num, obs_dim, act_dim, batch_size, num_support, num_query, shuffle, preprocess = config
+    name = re.split('/', agent_top_level_path)[-1]
+    pkl_path = os.path.join(agent_top_level_path, epoch_num, name + '.pkl')
+    
+    with open(pkl_path, 'rb') as f:
+        print(pkl_path)
+        data = pickle.load(f)
 
     if preprocess:
         X, Y = data
@@ -79,6 +77,7 @@ def read_pkl(pkl_path, config):
     return AgentGenerator(X=X,
                           Y=Y,
                           name=name,
+                          epoch_num=epoch_num,
                           obs_dim=obs_dim,
                           act_dim=act_dim,
                           batch_size=batch_size,
@@ -91,12 +90,14 @@ def read_pkl(pkl_path, config):
 class AgentGenerator(tf.keras.utils.Sequence):
     """Generate data from preset directory containing pickle files"""
 
-    def __init__(self, X, Y, name, obs_dim=658, act_dim=20, batch_size=32, num_support=10,
-                 num_query=1, shuffle=True, preprocess=False):
+    def __init__(self, X, Y, name, epoch_num, obs_dim=658, act_dim=20, 
+                 batch_size=32, num_support=10, num_query=1, 
+                 shuffle=True, preprocess=False):
         """
         Arguments:
-.
+
         """
+        self.epoch_num = epoch_num
         self.name = name
         self.obs_dim = obs_dim
         self.act_dim = act_dim
@@ -199,6 +200,10 @@ class AgentGenerator(tf.keras.utils.Sequence):
 
         return (x_support, y_support, x_query, y_query)
 
+    def epoch_is_over(self):
+        if self.index >= self.__len__() - 120:
+            return True
+    
     def check_epoch_end(self):
         """Calls on_epoch_end if reaches end of an epoch"""
         if self.index >= self.__len__():
@@ -258,7 +263,8 @@ class Dataset(object):
 
         # Argument wrapper
         mp_args = zip(agent_paths,
-                      repeat((self.obs_dim,
+                      repeat((str(0), # epoch num
+                              self.obs_dim,
                               self.act_dim,
                               self.batch_size,
                               self.train_support,
@@ -292,6 +298,22 @@ class Dataset(object):
 
         batch = []
         for agent_name in tasks:
+            agent_idx = self.get_agent_idx_by_name(agent_name, is_train)
+            #print(agent_name, self.generators[agent_idx].epoch_num, self.generators[agent_idx].index, end='')
+            if self.generators[agent_idx].epoch_is_over():
+                next_epoch = str((int(self.generators[agent_idx].epoch_num) + 1) % 10)
+                agent_top_level_path = os.path.join(self.agent_path, agent_name)
+                config = (next_epoch,
+                          self.obs_dim,
+                          self.act_dim,
+                          self.batch_size,
+                          self.train_support,
+                          self.train_query,
+                          self.shuffle,
+                          self.preprocess)
+
+                self.generators[agent_idx] = read_pkl(agent_top_level_path, config)
+            
             data = self.retrieve_agent_batch(agent_name, is_train)
             batch.append(data)
 

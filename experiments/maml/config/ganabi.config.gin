@@ -2,7 +2,7 @@ import TrainConfig
 import models
 
 TrainConfig.TrainConfig.dataset = "ganabi"
-TrainConfig.TrainConfig.test_agent = "iggi"
+TrainConfig.TrainConfig.test_agent = "quux-simplebot"
 
 TrainConfig.TrainConfig.num_task = 4
 TrainConfig.TrainConfig.num_classes = 4
@@ -13,21 +13,11 @@ TrainConfig.TrainConfig.test_query = 10
 TrainConfig.TrainConfig.batch_size = 64
 TrainConfig.TrainConfig.shuffle = True
 
-
-
 TrainConfig.TrainConfig.data_type = "pkl"
-#TrainConfig.TrainConfig.data_path = "/home/aronsar/hoad/replay_data"
-TrainConfig.TrainConfig.data_path = "/home/aronsar/hoad/experiments/maml/data"
+TrainConfig.TrainConfig.data_path = "/home/aronsar/hoad/experiments/maml/replay_data"
 TrainConfig.TrainConfig.data_preprocess = False # True only when using preprocessed pkl
 
-
-
-#TrainConfig.TrainConfig.data_type = "npz"
-#TrainConfig.TrainConfig.data_path = "/home/james/Coding/ganabi/james_ganabi/maml/data/ganabi/train_npz"
-#TrainConfig.TrainConfig.data_preprocess = False # True only when using preprocessed pkl
-
-
-TrainConfig.TrainConfig.num_meta_train = 500000
+TrainConfig.TrainConfig.num_meta_train = 15000 # prev 500000
 TrainConfig.TrainConfig.num_task_train = 1
 
 TrainConfig.TrainConfig.meta_lr = 1e-4
