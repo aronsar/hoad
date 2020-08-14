@@ -14,7 +14,7 @@ TrainConfig.TrainConfig.batch_size = 64
 TrainConfig.TrainConfig.shuffle = True
 
 TrainConfig.TrainConfig.data_type = "pkl"
-TrainConfig.TrainConfig.data_path = "/home/aronsar/hoad/experiments/maml/replay_data"
+TrainConfig.TrainConfig.data_path = "/home/aronsar/hoad/adhoc_agents/maml/replay_data"
 TrainConfig.TrainConfig.data_preprocess = False # True only when using preprocessed pkl
 
 TrainConfig.TrainConfig.num_meta_train = 15000 # prev 500000
