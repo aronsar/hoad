@@ -54,6 +54,7 @@ class DataCreator(object):
                     observations, _, game_done, _ = self.environment.step(
                             current_player_action)
                     if game_done:
-                        print("game done")
+                        if game_num % 1000 == 0:
+                            print("game " + str(game_num) + " done")
                         break
         return raw_data
