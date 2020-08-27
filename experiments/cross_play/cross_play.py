@@ -24,7 +24,6 @@ def cross_play(num_games, pattern):
     agents = glob.glob(pattern)
     print(agents)
     agents.sort()
-    full_score = 25
     score_matrix = []
     avg_scores = []
     for agent0 in agents:
@@ -42,5 +41,4 @@ def cross_play(num_games, pattern):
 
 if __name__ == "__main__":
     score_matrix, avg_scores, agent_names = cross_play(args.num_games, args.pattern)
-    import pdb; pdb.set_trace()
     print(np.array(avg_scores), agent_names)

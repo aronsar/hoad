@@ -2,7 +2,7 @@ import TrainConfig
 import models
 
 TrainConfig.TrainConfig.dataset = "ganabi"
-TrainConfig.TrainConfig.test_agent = "quux-simplebot"
+TrainConfig.TrainConfig.test_agent = "rainbow"
 
 TrainConfig.TrainConfig.num_task = 4
 TrainConfig.TrainConfig.num_classes = 4
@@ -17,7 +17,7 @@ TrainConfig.TrainConfig.data_type = "pkl"
 TrainConfig.TrainConfig.data_path = "/home/aronsar/hoad/adhoc_agents/maml/replay_data"
 TrainConfig.TrainConfig.data_preprocess = False # True only when using preprocessed pkl
 
-TrainConfig.TrainConfig.num_meta_train = 15000 # prev 500000
+TrainConfig.TrainConfig.num_meta_train = 40000 # prev 500000
 TrainConfig.TrainConfig.num_task_train = 1
 
 TrainConfig.TrainConfig.meta_lr = 1e-4

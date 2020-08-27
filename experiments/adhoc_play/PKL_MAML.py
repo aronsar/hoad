@@ -329,7 +329,6 @@ class MAML(object):
         # Eval Task
         for task in range(len(eval_batch)):
             x_support, y_support, x_query, y_query = eval_batch[task]
-            import pdb; pdb.set_trace()
             self.eval_task(x_support,
                            y_support,
                            x_query,
