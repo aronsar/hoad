@@ -1,7 +1,7 @@
 import os
 import numpy as np
 import gin
-from TrainConfig import TrainConfig
+import TrainConfig
 from models import GanabiModel
 import tensorflow.keras as tk
 import tensorflow as tf

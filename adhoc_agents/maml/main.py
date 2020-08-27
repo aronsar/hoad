@@ -32,8 +32,8 @@ def train_omniglot():
     maml.train_manager(data_generator)
 
 
-def train_ganabi():
-    config_file = './config/ganabi.config.gin'
+def train_hoad():
+    config_file = './config/hoad.config.gin'
     gin.parse_config_file(config_file)
     config_obj = TrainConfig()
 
@@ -59,7 +59,7 @@ def main():
     tf.config.experimental.set_memory_growth(physical_devices[0], True)
 
     # train_omniglot()
-    train_ganabi()
+    train_hoad()
 
 
 if __name__ == "__main__":

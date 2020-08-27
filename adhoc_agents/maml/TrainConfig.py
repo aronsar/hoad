@@ -48,7 +48,7 @@ class TrainConfig(object):
             "WTFWT"
         ]
 
-        if dataset == "ganabi":
+        if dataset == "hoad":
             num_classes = num_task
 
             #if test_agent not in all_agents:

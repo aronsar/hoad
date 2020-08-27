@@ -1,8 +1,8 @@
 import TrainConfig
 import models
 
-TrainConfig.TrainConfig.dataset = "ganabi"
-TrainConfig.TrainConfig.test_agent = "rainbow"
+TrainConfig.TrainConfig.dataset = "hoad"
+TrainConfig.TrainConfig.test_agent = "iggi"
 
 TrainConfig.TrainConfig.num_task = 4
 TrainConfig.TrainConfig.num_classes = 4

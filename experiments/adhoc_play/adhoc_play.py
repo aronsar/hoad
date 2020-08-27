@@ -4,11 +4,12 @@ from os.path import realpath as opr
 sys.path.insert(0, opd(opd(opd(opr(__file__))))) # place /path/to/hoad/ in sys.path
 
 import os
+import pickle
 import numpy as np
 import argparse
 from utils import binary_list_to_int as b2int
-from experiments.adhoc_play import imitator_wrapper
-from experiments.adhoc_play import maml_agent_wrapper
+import imitator_wrapper
+import maml_agent_wrapper
 from hanabi_env import rl_env
 
 parser = argparse.ArgumentParser()
@@ -112,8 +113,9 @@ def create_maml_agents(maml_agents_path):
     maml_agents = {}
     for agent in os.listdir(maml_agents_path):
         path = os.path.join(maml_agents_path, agent, 'weights', '30000-weights.h5')
-        agent_obj = maml_agent_wrapper.MamlAgent(path)
-        maml_agents[agent] = agent_obj
+        if os.path.exists(path):
+            agent_obj = maml_agent_wrapper.MamlAgent(path)
+            maml_agents[agent] = agent_obj
     return maml_agents
 
 
@@ -122,6 +124,5 @@ if __name__ == "__main__":
     maml_agents = create_maml_agents(args.maml_agents_path)
     names = os.listdir(args.maml_agents_path)
     score_dict, avg_scores, std_scores = adhoc_play(imitator_agents, maml_agents, names)
-    import pdb; pdb.set_trace()
-    pass
+    pickle.dump(open("scores.pkl","rb"), (score_dict, avg_scores, std_scores))
 

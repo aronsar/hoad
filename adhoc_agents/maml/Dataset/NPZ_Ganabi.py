@@ -166,7 +166,7 @@ class Dataset(object):
         self.task_num = config_obj.get("num_tasks")
 
         # self.agent_path = "/media/james/D/Ganabi/raw_npz"
-        # self.agent_path = "/home/james/Coding/ganabi/james_ganabi/maml/data/ganabi/train_npz"
+        # self.agent_path = "/home/james/Coding/hoad/james_hoad/maml/data/hoad/train_npz"
         self.agent_path = config_obj.get("data_path")
 
         # Define multi-process function name, can be reused

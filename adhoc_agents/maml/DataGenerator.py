@@ -96,7 +96,7 @@ class DataGenerator(object):
             self.train_config = (self.num_shots, self.num_classes, True)
             self.eval_config = (self.num_shots, self.num_classes, False)
             self.mp_func = Omniglot.sample_task_batch_v2
-        elif self.dataset_name == 'ganabi':
+        elif self.dataset_name == 'hoad':
             DataGenerator.dataset_obj = Ganabi.Dataset(config_obj, data_dir)
             self.batch_size = config_obj.get("batch_size")
             self.train_config = (True, 1)
@@ -106,11 +106,11 @@ class DataGenerator(object):
             raise("Unknown Dataset")
 
     def get_task_ids(self, is_train=True):
-        # For ganabi, self.num_classes should be 10 games
+        # For hoad, self.num_classes should be 10 games
         if self.dataset_name == 'omniglot':
             return [_sample_task(self.num_classes, is_train=is_train)
                     for _ in range(self.num_tasks)]
-        elif self.dataset_name == 'ganabi':
+        elif self.dataset_name == 'hoad':
             num_classes = self.num_classes if is_train else 1  # Only one test agent availble
             return [[t] for t in _sample_task(num_classes, is_train=is_train)]
         else:

@@ -11,7 +11,7 @@ Author: Chu-Hung Cheng
 import tensorflow as tf
 import tensorflow.keras as tk
 import numpy as np
-import models
+from adhoc_agents.maml import models
 import time
 import datetime
 import os

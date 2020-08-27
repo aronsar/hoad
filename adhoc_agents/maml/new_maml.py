@@ -130,7 +130,7 @@ class MAML(object):
                                 for _ in range(self.num_tasks)]
             # input_dim = (self.num_classes, 28, 28, 1)
             input_dim = (None, 28, 28, 1)
-        elif self.dataset == 'ganabi':
+        elif self.dataset == 'hoad':
             self.model = models.GanabiModel(model_name="Meta")
             self.task_models = [models.GanabiModel(model_name="Task{}".format(i))
                                 for i in range(self.num_tasks)]
@@ -287,7 +287,7 @@ class MAML(object):
             self.train_loss(loss)
             self.train_accuracy(acc)
 
-            if self.dataset == "ganabi":
+            if self.dataset == "hoad":
                 agent_name = train_classes[task]
                 self.agent_metric[agent_name]['loss'](loss)
                 self.agent_metric[agent_name]['acc'](acc)
@@ -368,7 +368,7 @@ class MAML(object):
             self.eval_loss.reset_states()
             self.eval_accuracy.reset_states()
 
-            if self.dataset == 'ganabi':
+            if self.dataset == 'hoad':
                 self.record_agent_metrics(meta_step)
 
             return eval_loss, eval_acc
