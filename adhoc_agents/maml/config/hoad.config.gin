@@ -17,7 +17,7 @@ TrainConfig.TrainConfig.data_type = "pkl"
 TrainConfig.TrainConfig.data_path = "/home/aronsar/hoad/adhoc_agents/maml/replay_data"
 TrainConfig.TrainConfig.data_preprocess = False # True only when using preprocessed pkl
 
-TrainConfig.TrainConfig.num_meta_train = 40000 # prev 500000
+TrainConfig.TrainConfig.num_meta_train = 400 # prev 500000
 TrainConfig.TrainConfig.num_task_train = 1
 
 TrainConfig.TrainConfig.meta_lr = 1e-4

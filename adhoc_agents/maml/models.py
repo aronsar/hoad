@@ -81,28 +81,28 @@ class GanabiModel(tk.Model):
 
         model_layers = []
         for i, h_size in enumerate(hidden_sizes):
+            layer, bn_layer, dropout_layer = None, None, None
+
             # Dense
             layer = tk.layers.Dense(h_size,
                                     activation=None,
                                     name="{}-dense-{}".format(self.model_name, i))
-            model_layers.append(layer)
 
             # BNorm
             if self.bNorm:
                 bn_layer = tk.layers.BatchNormalization(
                     name="{}-bn-{}".format(self.model_name, i))
-                model_layers.append(bn_layer)
 
             # Activation
             act_layer = self.get_act_fn(act_fn, i)
-            model_layers.append(act_layer)
 
             # Dropout
             if self.dropout_rate > 0.0:
                 dropout_layer = tk.layers.Dropout(
                     rate=self.dropout_rate,
                     name="{}-dropout-{}".format(self.model_name, i))
-                model_layers.append(dropout_layer)
+
+            model_layers.append((layer, bn_layer, act_layer, dropout_layer))
 
         self.model_layers = model_layers
         self.out = tk.layers.Dense(output_shape, activation='softmax')
@@ -125,9 +125,19 @@ class GanabiModel(tk.Model):
         return self.forward(x)
 
     def forward(self, x):
-        for i in range(len(self.model_layers)):
-            x = self.model_layers[i](x)
+        for block in self.model_layers:
+            layer, bn_layer, act_layer, dropout_layer = block
+            x1 = layer(x)
+            if bn_layer:
+                x1 = bn_layer(x1)
+            x1 = act_layer(x1)
+            if dropout_layer:
+                x1 = dropout_layer(x1)
 
+            if x.shape[1] == x1.shape[1]:
+                x = x + x1
+            else:
+                x = x1
         x = self.out(x)
 
         return x
