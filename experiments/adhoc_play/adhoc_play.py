@@ -27,6 +27,12 @@ parser.add_argument(
 parser.add_argument(
     '--naive_agents_path', '--n', type=str, default='./naive_mlp_models',
     help='')
+parser.add_argument(
+    '--games_per_test', '--gpt', type=int, default=10)
+parser.add_argument(
+    '--num_adhoc_tests', '--nat', type=int, default=10)
+parser.add_argument(
+    '--naive_retests', '--nr', type=int, default=10)
 
 args = parser.parse_args()
 
@@ -41,8 +47,6 @@ env_config = {'colors': 5,
           'observation_type': 1,  # FIXME: NEEDS CONFIRMATION
           'random_start_player': False}
 env = rl_env.HanabiEnv(env_config)
-NUM_ADHOC_TESTS = 3
-GAMES_PER_TEST = 3
 
 
 def one_hot_vectorized_action(agent, num_moves, obs):
@@ -96,12 +100,12 @@ def adhoc_play(imitator_agents, adhoc_agents, names, is_maml=False):
         imitator_agent = imitator_agents[name]
         adhoc_agent = adhoc_agents[name]
         scores_list = []
-        for test in range(NUM_ADHOC_TESTS):
+        for test in range(args.num_adhoc_tests):
             print("num: " + str(test))
             if is_maml:
                 _, imitator_games = play_games(imitator_agent, imitator_agent, num_games=10)
                 adhoc_agent.task_update(imitator_games)
-            scores, _ = play_games(imitator_agent, adhoc_agent, num_games=GAMES_PER_TEST)
+            scores, _ = play_games(imitator_agent, adhoc_agent, num_games=args.games_per_test)
             scores_list.append(scores)
         scores_dict[name] = np.array(scores_list)
         avg_scores[name] = np.average(scores_dict[name]) 
@@ -136,16 +140,29 @@ def create_naive_agents(naive_agents_path):
 
 if __name__ == "__main__":
     imitator_agents = create_imitator_agents(args.imitators_path)
-    maml_agents = create_maml_agents(args.maml_agents_path)
-    naive_agents = create_naive_agents(args.naive_agents_path)
-
+    
+    # First we do the maml agents
+    #maml_agents = create_maml_agents(args.maml_agents_path)
     #names = os.listdir(args.maml_agents_path)
     #score_dict, avg_scores, std_scores = adhoc_play(imitator_agents, maml_agents, names, is_maml=True)
     #pickle.dump((score_dict, avg_scores, std_scores), open("maml_scores.pkl","wb"))
 
+
+    # And now we handle the naive agents
     names = os.listdir(args.naive_agents_path)
-    score_dict, avg_scores, std_scores = adhoc_play(imitator_agents, naive_agents, names)
-    pickle.dump((score_dict, avg_scores, std_scores), open("naive_mlp_scores.pkl","wb"))
+    run_scores_list = []
+    for _ in range(10):
+        naive_agents = create_naive_agents(args.naive_agents_path)
+        run_scores, _, _ = adhoc_play(imitator_agents, naive_agents, names)
+        run_scores_list.append(run_scores)
+    
+    all_scores, avg_scores, std_scores = {}, {}, {}
+    for agent in names:
+        all_scores[agent] = np.concatenate([run_scores[agent] for run_scores in run_scores_list])
+        avg_scores[agent] = np.average(all_scores[agent])
+        std_scores[agent] = np.std(all_scores[agent])
+     
+    pickle.dump((all_scores, avg_scores, std_scores), open("naive_mlp_scores.pkl","wb"))
     import pdb; pdb.set_trace()
     pass
     

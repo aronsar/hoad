@@ -5,7 +5,7 @@ ROOT_DIR=`pwd`
 # Create CMake build dir
 printf "\n######################### Step 1 #########################\n"
 printf "Create cmake build dir for Hanabi\n\n"
-HANABI_BUILD_DIR=$ROOT_DIR/hanabi_env/build/
+HANABI_BUILD_DIR=$ROOT_DIR/build/
 if [ -d "$HANABI_BUILD_DIR" ]; then
     rm -rf $HANABI_BUILD_DIR
 fi
@@ -23,19 +23,19 @@ cd $ROOT_DIR
 # Move libraries and clean up
 printf "\n######################### Step 3 #########################\n"
 printf "Move libraries and clean up\n\n"
-HANABI_SO_FILE=$ROOT_DIR/hanabi_env/libpyhanabi.so
+HANABI_SO_FILE=$ROOT_DIR/libpyhanabi.so
 if [ -f "$HANABI_SO_FILE" ]; then
     rm $HANABI_SO_FILE
 fi
 echo "Moving libpyhanabi.so to $HANABI_SO_FILE"
-mv $ROOT_DIR/hanabi_env/build/libpyhanabi.so $HANABI_SO_FILE
+mv $ROOT_DIR/build/libpyhanabi.so $HANABI_SO_FILE
 
-HANABI_A_FILE=$ROOT_DIR/hanabi_env/hanabi_lib/libhanabi.a
+HANABI_A_FILE=$ROOT_DIR/hanabi_lib/libhanabi.a
 if [ -f "$HANABI_A_FILE" ]; then
     rm $HANABI_A_FILE
 fi
 echo "Moving libhanabi.a to $HANABI_A_FILE"
-mv $ROOT_DIR/hanabi_env/build/hanabi_lib/libhanabi.a $HANABI_A_FILE
+mv $ROOT_DIR/build/hanabi_lib/libhanabi.a $HANABI_A_FILE
 
 rm -rf $HANABI_BUILD_DIR
 
