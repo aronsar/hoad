@@ -1,4 +1,4 @@
-# HOAD
+# Hanabi Open Agent Dataset (HOAD)
 
 This is a repository for Hanabi playing agents that can all play with each
 other in the Hanabi Learning Environment (HLE). One of the main advantages of
