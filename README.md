@@ -17,11 +17,11 @@ cd hanabi_env
 sh build_hanabi.sh
 ```
 
-Follow setup instructions in `original_agents/README.md`
-Follow setup instructions in `imitator_agents/README.md`
-At this point you may run the cross-play experiments.
-Follow setup instructions in `adhoc_play/maml/README.md`
-At this point you may run the maml adhoc-play experiment.
-Follow setup instructions in `adhoc_play/naive_mlp/README.md`
+Follow setup instructions in `original_agents/README.md`  
+Follow setup instructions in `imitator_agents/README.md`  
+At this point you may run the cross-play experiments.  
+Follow setup instructions in `adhoc_play/maml/README.md`  
+At this point you may run the maml adhoc-play experiment.  
+Follow setup instructions in `adhoc_play/naive_mlp/README.md`  
 At this point you may run the naive mlp adhoc-play experiment
 
