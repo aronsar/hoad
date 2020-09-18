@@ -2,7 +2,7 @@ import TrainConfig
 import models
 
 TrainConfig.TrainConfig.dataset = "hoad"
-TrainConfig.TrainConfig.test_agent = "outer"
+TrainConfig.TrainConfig.test_agent = "quux-valuebot"
 
 TrainConfig.TrainConfig.num_task = 4
 TrainConfig.TrainConfig.num_classes = 4

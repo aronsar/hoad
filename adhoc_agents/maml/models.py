@@ -134,6 +134,7 @@ class GanabiModel(tk.Model):
             if dropout_layer:
                 x1 = dropout_layer(x1)
 
+            # skip connection
             if x.shape[1] == x1.shape[1]:
                 x = x + x1
             else:

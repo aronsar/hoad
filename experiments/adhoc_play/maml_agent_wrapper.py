@@ -10,7 +10,7 @@ import tensorflow as tf
 
 class MamlAgent:
     def __init__(self, model_path):
-        config_file = 'adhoc_agents/maml/config/ganabi.config.gin'
+        config_file = 'adhoc_agents/maml/config/hoad.config.gin'
         config_file = os.path.join(os.path.dirname(os.path.dirname(model_path)), 'config.gin')
         gin.parse_config_file(config_file)
 

@@ -361,9 +361,9 @@ std::string HanabiState::ToString() const {
 }
 
 int HanabiState::Score() const {
-  //if (LifeTokens() <= 0) {
-  //  return 0;
-  //}
+  if (LifeTokens() <= 0) {
+    return 0;
+  }
   return std::accumulate(fireworks_.begin(), fireworks_.end(), 0);
 }
 
