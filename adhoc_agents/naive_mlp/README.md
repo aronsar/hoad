@@ -4,10 +4,11 @@ We use the same virtual environment for this agent as we did for the imitator
 training. So please run: 
 ``` 
 $ source ../../imitator_agents/venv3/bin/activate
+$ mkdir saved_models
 $ python train.py --agent <agent_name> 
 ```
 
-The possible agent names are `iggi`, `outer`, `piers, `quux-holmesbot`,
+The possible agent names are `iggi`, `outer`, `piers`, `quux-holmesbot`,
 `quux-simplebot`, `quux-valuebot`, `rainbow`, and `van-den-bergh`.
 
 Be sure to run the script at least 10 times for each agent. This is necessary

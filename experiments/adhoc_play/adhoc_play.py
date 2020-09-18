@@ -16,9 +16,6 @@ from hanabi_env import rl_env
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
-    '--num_games', '--g', type=int, default=10,
-    help='The number of games to run per agent-agent combo.')
-parser.add_argument(
     '--imitators_path', '--i', type=str, default='./imitator_models',
     help='')
 parser.add_argument(
@@ -28,11 +25,14 @@ parser.add_argument(
     '--naive_agents_path', '--n', type=str, default='./naive_mlp_models',
     help='')
 parser.add_argument(
-    '--games_per_test', '--gpt', type=int, default=10)
+    '--games_per_test', '--gpt', type=int, default=10,
+    help='The number of games to play per agent-agent combo.')
 parser.add_argument(
-    '--num_adhoc_tests', '--nat', type=int, default=10)
+    '--num_adhoc_tests', '--nat', type=int, default=10,
+    help='Number of adhoc tests to perform; each test, the maml agent is updated on the 10 games it recieves.')
 parser.add_argument(
-    '--naive_retests', '--nr', type=int, default=10)
+    '--naive_retests', '--nr', type=int, default=10,
+    help='The naive mlp agent must be retested because of low training data size (only 10 games).')
 parser.add_argument(
     '--teammate', '--tm', type=str, default='maml', help='Options are "maml" and "naive_mlp"')
 
