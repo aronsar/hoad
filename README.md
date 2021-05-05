@@ -10,6 +10,11 @@ the HLE. In `experiments`, we include our code for the cross-play results of
 the imitator agents, as well as the adhoc play results of the meta-learning
 agents and the naive agents. 
 
+### Datasets and Pretrained Models
+
+At the below link you will find the original agent replay data, the imitator agent replay data, and a zipped directory structure containing multiple models:
+https://drive.google.com/drive/folders/1BTI3NPEs1BYNhrY-J42_X-KgZklkyWJK?usp=sharing
+
 ### Getting Started:
 ```
 # Build the Hanabi Environment
